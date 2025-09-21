@@ -2,13 +2,14 @@ import { Divider, List, Stack } from '@mui/material';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import StarBorder from '@mui/icons-material/StarBorder';
+import Collapse from '@mui/material/Collapse';
 import { Box } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { setIsOpen } from '../../../redux/slice/sibarSlice';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -77,7 +78,7 @@ export default function Sidebar() {
                     onClick={() => switchActiveSidebar('/')}
                 >
                     <ListItemIcon sx={{ minWidth: '40px' }}>
-                        <StarBorder sx={commonIconStyle} />
+                        <HomeOutlinedIcon sx={commonIconStyle} />
                     </ListItemIcon>
                     <ListItemText primary={!isOpen || 'DashBoard'} primaryTypographyProps={{ sx: commonTextStyle }} />
                 </ListItemButton>
