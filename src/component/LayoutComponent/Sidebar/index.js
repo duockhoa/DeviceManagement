@@ -63,9 +63,9 @@ export default function Sidebar() {
             }}
         >
             <List>
-                {/* Menu Quan trọng */}
+                {/* Menu DashBoard */}
                 <ListItemButton
-                    id="Quan trọng"
+                    id="DashBoard"
                     sx={{
                         '&:hover': {
                             backgroundColor: '#f5f5f5',
@@ -79,7 +79,7 @@ export default function Sidebar() {
                     <ListItemIcon sx={{ minWidth: '40px' }}>
                         <StarBorder sx={commonIconStyle} />
                     </ListItemIcon>
-                    <ListItemText primary={!isOpen || 'Quan trọng'} primaryTypographyProps={{ sx: commonTextStyle }} />
+                    <ListItemText primary={!isOpen || 'DashBoard'} primaryTypographyProps={{ sx: commonTextStyle }} />
                 </ListItemButton>
 
                 <Divider />
