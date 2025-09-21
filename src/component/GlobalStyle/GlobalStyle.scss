@@ -1,0 +1,31 @@
+@import 'normalize.css';
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary: #fe2c55;
+    --back: #000;
+    --text-color: #333;
+    --white-color: #fff;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-size: 1.6rem;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+}
+
+input:-webkit-autofill {
+    box-shadow: 0 0 0px 1000px transparent inset !important;
+    -webkit-text-fill-color: black !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
