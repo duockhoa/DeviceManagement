@@ -2,21 +2,33 @@ import { Divider, List, Stack } from '@mui/material';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import SettingsIcon from '@mui/icons-material/Settings';
 import Collapse from '@mui/material/Collapse';
 import { Box } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { setIsOpen } from '../../../redux/slice/sibarSlice';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import { setActiveCollapse } from '../../../redux/slice/sibarSlice';
+import DevicesIcon from '@mui/icons-material/Devices';
+import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
     const dispatch = useDispatch();
     const navigator = useNavigate();
-    const activeSidebar = useSelector((state) => state.sidebar.activeSidebar);
+    const location = useLocation(); // Thêm hook để lấy path hiện tại
+    const activeCollapse = useSelector((state) => state.sidebar.activeCollapse);
     const isOpen = useSelector((state) => state.sidebar.isOpen);
+
+    const handleClick = (event) => {
+        const buttonId = event.currentTarget.id;
+        dispatch(setActiveCollapse(buttonId));
+    };
 
     const switchActiveSidebar = (path) => {
         // Xử lý external links (bắt đầu với http/https)
@@ -72,8 +84,7 @@ export default function Sidebar() {
                             backgroundColor: '#f5f5f5',
                         },
                         py: 0.7,
-                        borderRadius: '800px',
-                        backgroundColor: activeSidebar === '/' ? '#e3f2fd' : 'inherit',
+                        backgroundColor: location.pathname === '/' ? '#e3f2fd' : 'inherit',
                     }}
                     onClick={() => switchActiveSidebar('/')}
                 >
@@ -82,6 +93,63 @@ export default function Sidebar() {
                     </ListItemIcon>
                     <ListItemText primary={!isOpen || 'DashBoard'} primaryTypographyProps={{ sx: commonTextStyle }} />
                 </ListItemButton>
+
+                <div>
+                    <ListItemButton
+                        onClick={handleClick}
+                        id="deviceManagement"
+                        sx={{
+                            '&:hover': {
+                                backgroundColor: '#f5f5f5',
+                            },
+                            py: 0.7,
+                        }}
+                    >
+                        <ListItemIcon sx={{ minWidth: '40px' }}>
+                            <SettingsIcon sx={commonIconStyle} />
+                        </ListItemIcon>
+                        <ListItemText
+                            primaryTypographyProps={{ sx: commonTextStyle }}
+                            primary={!isOpen || 'Quản lý thiết bị'}
+                        />
+                        {activeCollapse.includes('deviceManagement') ? (
+                            <ExpandMoreIcon sx={{ ml: 'auto', fontSize: '2.2rem' }} />
+                        ) : (
+                            <ArrowForwardIosIcon sx={{ ml: 'auto' }} />
+                        )}
+                    </ListItemButton>
+                    <Collapse in={activeCollapse.includes('deviceManagement')} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    '&:hover': {
+                                        backgroundColor: '#f5f5f5',
+                                    },
+                                    backgroundColor: location.pathname === '/device-category' ? '#e3f2fd' : 'inherit',
+                                }}
+                                onClick={() => switchActiveSidebar('/device-category')}
+                            >
+                                <ListItemIcon>
+                                    <DevicesIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primary={!isOpen || 'Danh mục thiết bị'}
+                                />
+                            </ListItemButton>
+                            <ListItemButton sx={{ pl: 4 }}>
+                                <ListItemIcon>
+                                    <SettingsApplicationsIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primary={!isOpen || 'Thông số kỹ thuật'}
+                                />
+                            </ListItemButton>
+                        </List>
+                    </Collapse>
+                </div>
 
                 <Divider />
 
@@ -96,7 +164,7 @@ export default function Sidebar() {
                             backgroundColor: '#f5f5f5',
                         },
                         py: 0.7,
-                        borderRadius: '800px',
+
                         backgroundColor: 'inherit', // Không highlight vì không phải internal route
                     }}
                     onClick={handleFeedbackClick}

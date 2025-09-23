@@ -50,7 +50,7 @@ function NotificationList({ onClose }) {
             <Box sx={{ width: '100%', bgcolor: 'background.paper', p: 2 }}>
                 <Typography>Đang tải thông báo...</Typography>
             </Box>
-        );
+        );     
     }
 
     return (

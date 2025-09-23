@@ -7,7 +7,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setIsOpen } from '../../redux/slice/sibarSlice';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+
 
 function DefaultLayout({ children }) {
     const dispatch = useDispatch();

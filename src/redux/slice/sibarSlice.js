@@ -3,8 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const sidebarSlice = createSlice({
     name: 'sidebar',
     initialState: {
-        activeSidebar: '/',
-        activeCollapse: ['Tổ chức', 'Kế Toán SX & DA'],
+        activeCollapse: [],
         isOpen: true,
     },
     reducers: {
@@ -28,6 +27,5 @@ const sidebarSlice = createSlice({
     },
 });
 
-export const { setActiveCollapse, setActiveSideBar, setRequestTypeActive, setIsOpen, clearActiveCollapse } =
-    sidebarSlice.actions;
+export const { setActiveCollapse, setActiveSideBar, setIsOpen, clearActiveCollapse } = sidebarSlice.actions;
 export default sidebarSlice.reducer;
