@@ -1,8 +1,9 @@
+import  { useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import Stack from '@mui/material/Stack';
 import StyledBadge from './StyleBadge';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import PopupState, { bindToggle, bindPopper } from 'material-ui-popup-state';
 import Fade from '@mui/material/Fade';
 import Popper from '@mui/material/Popper';
@@ -15,8 +16,14 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { Link } from 'react-router-dom';
 import { logoutService } from '../../../services/logoutService';
 import AppsIcon from '@mui/icons-material/Apps';
+import { fetchUser } from '../../../redux/slice/userSlice';
 
 function MyAvatar() {
+    const dispatch = useDispatch();
+    // Lấy thông tin user từ Redux store
+    useEffect(() => {
+        dispatch(fetchUser());
+    }, [dispatch]);
     const user = useSelector((state) => state.user.userInfo);
 
     // Hàm xử lý logout
