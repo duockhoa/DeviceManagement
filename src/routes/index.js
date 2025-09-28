@@ -4,7 +4,7 @@ import HeaderOnlyLayout from '../Layouts/HeaderOnlyLayout';
 import Error from '../pages/Error';
 import Home from '../pages/Home';
 import DashBoard from '../pages/DashBoard';
-import DeviceCategory from '../pages/DeviceCategory';
+import Devices from '../pages/Devices';
 const publicRoutes = [
     {
         path: '/',
@@ -12,8 +12,8 @@ const publicRoutes = [
     },
     { path: '/profile', component: Profile, layout: HeaderOnlyLayout },
     {
-        path: 'device-category',
-        component: DeviceCategory,
+        path: 'devices',
+        component: Devices,
     },
 
     {

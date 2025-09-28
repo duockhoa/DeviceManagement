@@ -4,7 +4,6 @@ import Cookies from 'js-cookie';
 async function getUserService(id) {
     try {
         const id = Cookies.get('id');
-        console.log('Fetching user data for ID:', id);
         const response = await axios.get(`/users/${id}`);
         return response;
     } catch (error) {

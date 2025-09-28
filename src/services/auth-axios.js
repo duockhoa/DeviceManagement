@@ -20,7 +20,6 @@ const instance = axios.create({
 instance.interceptors.request.use(
     async (config) => {
         const token = Cookies.get('accessToken');
-        console.log('Using access token:', token); // Debug log
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

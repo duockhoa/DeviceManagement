@@ -126,9 +126,9 @@ export default function Sidebar() {
                                     '&:hover': {
                                         backgroundColor: '#f5f5f5',
                                     },
-                                    backgroundColor: location.pathname === '/device-category' ? '#e3f2fd' : 'inherit',
+                                    backgroundColor: location.pathname === '/devices' ? '#e3f2fd' : 'inherit',
                                 }}
-                                onClick={() => switchActiveSidebar('/device-category')}
+                                onClick={() => switchActiveSidebar('/devices')}
                             >
                                 <ListItemIcon>
                                     <DevicesIcon sx={commonIconStyle} />
