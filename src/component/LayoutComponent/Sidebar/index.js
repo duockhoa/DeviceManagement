@@ -150,6 +150,118 @@ export default function Sidebar() {
                         </List>
                     </Collapse>
                 </div>
+                <div>
+                    <ListItemButton
+                        onClick={handleClick}
+                        id="maintenance"
+                        sx={{
+                            '&:hover': {
+                                backgroundColor: '#f5f5f5',
+                            },
+                            py: 0.7,
+                        }}
+                    >
+                        <ListItemIcon sx={{ minWidth: '40px' }}>
+                            <SettingsIcon sx={commonIconStyle} />
+                        </ListItemIcon>
+                        <ListItemText
+                            primaryTypographyProps={{ sx: commonTextStyle }}
+                            primary={!isOpen || 'Bảo trì /Sửa chữa'}
+                        />
+                        {activeCollapse.includes('maintenance') ? (
+                            <ExpandMoreIcon sx={{ ml: 'auto', fontSize: '2.2rem' }} />
+                        ) : (
+                            <ArrowForwardIosIcon sx={{ ml: 'auto' }} />
+                        )}
+                    </ListItemButton>
+                    <Collapse in={activeCollapse.includes('maintenance')} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    '&:hover': {
+                                        backgroundColor: '#f5f5f5',
+                                    },
+                                    backgroundColor: location.pathname === '/maintenance' ? '#e3f2fd' : 'inherit',
+                                }}
+                                onClick={() => switchActiveSidebar('/maintenance')}
+                            >
+                                <ListItemIcon>
+                                    <DevicesIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primary={!isOpen || 'Bảo trì thiết bị'}
+                                />
+                            </ListItemButton>
+                            <ListItemButton sx={{ pl: 4 }}>
+                                <ListItemIcon>
+                                    <SettingsApplicationsIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primary={!isOpen || 'Hồ sơ sửa chữa'}
+                                />
+                            </ListItemButton>
+                        </List>
+                    </Collapse>
+                </div>
+                                <div>
+                    <ListItemButton
+                        onClick={handleClick}
+                        id="calibration"
+                        sx={{
+                            '&:hover': {
+                                backgroundColor: '#f5f5f5',
+                            },
+                            py: 0.7,
+                        }}
+                    >
+                        <ListItemIcon sx={{ minWidth: '40px' }}>
+                            <SettingsIcon sx={commonIconStyle} />
+                        </ListItemIcon>
+                        <ListItemText
+                            primaryTypographyProps={{ sx: commonTextStyle }}
+                            primary={!isOpen || 'Kiểm định/Hiệu chuẩn'}
+                        />
+                        {activeCollapse.includes('calibration') ? (
+                            <ExpandMoreIcon sx={{ ml: 'auto', fontSize: '2.2rem' }} />
+                        ) : (
+                            <ArrowForwardIosIcon sx={{ ml: 'auto' }} />
+                        )}
+                    </ListItemButton>
+                    <Collapse in={activeCollapse.includes('calibration')} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    '&:hover': {
+                                        backgroundColor: '#f5f5f5',
+                                    },
+                                    backgroundColor: location.pathname === '/calibration' ? '#e3f2fd' : 'inherit',
+                                }}
+                                onClick={() => switchActiveSidebar('/calibration')}
+                            >
+                                <ListItemIcon>
+                                    <DevicesIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primary={!isOpen || 'Hiệu chuẩn thiết bị'}
+                                />
+                            </ListItemButton>
+                            <ListItemButton sx={{ pl: 4 }}>
+                                <ListItemIcon>
+                                    <SettingsApplicationsIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primary={!isOpen || 'Kiểm định thiết bị'}
+                                />
+                            </ListItemButton>
+                        </List>
+                    </Collapse>
+                </div>
 
                 <Divider />
 
