@@ -1,14 +1,14 @@
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 import Header from '../../component/LayoutComponent/Header';
-import LoadingPage from '../../component/SharedComponent/LoadingPage';
+import Loading from '../../component/Loading';
 import { useSelector } from 'react-redux';
 
 function HeaderOnlyLayout({ children }) {
     const userInfo = useSelector((state) => state.user.userInfo);
 
     if (userInfo.name === '') {
-        return <LoadingPage />;
+        return <Loading />;
     }
     return (
         <Stack sx={{ height: '100vh' }}>

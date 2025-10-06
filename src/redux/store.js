@@ -3,8 +3,10 @@ import userReducer from './slice/userSlice';
 import sidebarSlice from './slice/sibarSlice';
 import searchReducer from './slice/searchSlice';
 import usersReducer from './slice/usersSlice';
-import commentReducer from './slice/commentSlice';
 import assetsReducer from './slice/assetsSlice';
+import departmentsReducer from './slice/departmentSlice';
+import assetCategoriesReducer from './slice/assetCategoriesSlice';
+
 export default configureStore({
     reducer: {
         user: userReducer,
@@ -12,6 +14,7 @@ export default configureStore({
         search: searchReducer,
         assets: assetsReducer,
         users: usersReducer,
-        comment: commentReducer,
+        departments: departmentsReducer,
+        assetCategories: assetCategoriesReducer,
     },
 });
