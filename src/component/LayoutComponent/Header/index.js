@@ -4,7 +4,6 @@ import Avatar from '../Avatar';
 import Notification from '../Notification';
 import { logo } from '../../../assets/images';
 import { Link } from 'react-router-dom';
-import Search from '../Search';
 import { useSelector, useDispatch } from 'react-redux';
 import { setIsOpen } from '../../../redux/slice/sibarSlice';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -59,10 +58,6 @@ function Header() {
                 {/* Spacer */}
                 <Box flexGrow={1} />
 
-                {/* Search Input */}
-                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                    <Search />
-                </Box>
 
                 {/* Notification */}
                 <Box sx={{ display: 'block' }}>

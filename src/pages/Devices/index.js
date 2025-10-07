@@ -7,15 +7,19 @@ import {
 
 function Devices() { 
     return (
-        <Box sx={{ height: '100vh', display: 'flex' }}>
+        <Box sx={{ height: '100%', display: 'flex' }}>
             {/* SubSidebar - 25% width */}
             <Box sx={{ width: '300px', minWidth: '300px' }}>
                 <SubSidebar />
             </Box>
             
             {/* Main Content - 75% width */}
-            <Box sx={{ flex: 1, backgroundColor: '#fff' }}>
-                <AssetList />
+            <Box sx={{ flex: 1, backgroundColor: '#fff' , height: '100%' , border   : '1px solid red' ,display: 'flex', flexDirection: 'column'}}>
+                <Box> <AssetList /></Box>
+                <Box></Box>
+               
+                
+
             </Box>
         </Box>
     );

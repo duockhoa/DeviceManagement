@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSelector } from 'react-redux';
 import {
     Box,
@@ -35,7 +34,7 @@ function Department({ isOpen, onToggle }) {
                 <ListItemText 
                     primary="Phòng ban quản lý" 
                     primaryTypographyProps={{ 
-                        sx: { fontSize: '1.3rem', fontWeight: 'medium' } 
+                        sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
                 <ListItemIcon sx={{ minWidth: '30px' }}>
@@ -51,7 +50,7 @@ function Department({ isOpen, onToggle }) {
                 <Box sx={{ backgroundColor: '#f8f9fa', px: 2, py: 1 }}>
                     {departments.map((department, index) => (
                         <Box key={index} sx={{ mb: 0.5 }}>
-                            <Typography sx={{ fontSize: '1.1rem', color: '#666' }}>
+                            <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
                                 ✓ {department.name}
                             </Typography>
                         </Box>

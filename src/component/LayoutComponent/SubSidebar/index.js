@@ -16,10 +16,10 @@ import Location from './Location';
 
 function SubSidebar() {
     const [openSections, setOpenSections] = useState({
-        plant: true,
-        location: true,
-        category: true,
-        department: true
+        plant: false,
+        location: false,
+        category: false,
+        department: false
     });
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -44,8 +44,8 @@ function SubSidebar() {
         >
             {/* Header */}
             <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0', backgroundColor: '#fff' }}>
-                <Typography variant="h6" sx={{ fontSize: '1.4rem', fontWeight: 'bold', mb: 1 }}>
-                    Tài sản  Tài sản
+                <Typography variant="h6" sx={{ fontSize: '1.6rem', fontWeight: 'bold', mb: 1 }}>
+                    DANH MỤC TÀI SẢN
                 </Typography>
                 
                 {/* Search */}
@@ -64,7 +64,7 @@ function SubSidebar() {
                     }}
                     sx={{
                         '& .MuiOutlinedInput-root': {
-                            fontSize: '1.3rem',
+                            fontSize: '1.4rem',
                         }
                     }}
                 />

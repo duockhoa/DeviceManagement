@@ -62,12 +62,67 @@ export default function Sidebar() {
     };
 
     const commonIconStyle = {
-        width: '20px',
-        height: '20px',
+        width: '16px',
+        height: '16px',
     };
 
     const commonTextStyle = {
         fontSize: '1.4rem',
+    };
+
+    const activeTextStyle = {
+        fontSize: '1.4rem',
+        color: '#fff',
+        fontWeight: 'bold'
+    };
+
+    const activeIconStyle = {
+        width: '16px',
+        height: '16px',
+        color: '#fff'
+    };
+
+    // Hover styles
+    const hoverStyle = {
+        transition: 'all 0.3s ease',
+        '&:hover': {
+            backgroundColor: '#e3f2fd',
+            '& .MuiListItemIcon-root': {
+                color: '#1976d2'
+            },
+            '& .MuiListItemText-primary': {
+                color: '#1976d2',
+                fontWeight: 'medium'
+            }
+        }
+    };
+
+    const subItemHoverStyle = {
+        transition: 'all 0.3s ease',
+        '&:hover': {
+            backgroundColor: '#f0f8ff',
+            '& .MuiListItemIcon-root': {
+                color: '#1976d2'
+            },
+            '& .MuiListItemText-primary': {
+                color: '#1976d2',
+                fontWeight: 'medium'
+            }
+        }
+    };
+
+    const activeStyle = {
+        backgroundColor: '#1976d2',
+        '&:hover': {
+            backgroundColor: '#1976d2 !important',
+            '& .MuiListItemIcon-root': {
+                color: '#fff !important'
+            },
+            '& .MuiListItemText-primary': {
+                color: '#fff !important',
+                fontWeight: 'bold !important'
+            }
+        }
     };
 
     return (
@@ -87,18 +142,20 @@ export default function Sidebar() {
                 <ListItemButton
                     id="DashBoard"
                     sx={{
-                        '&:hover': {
-                            backgroundColor: '#f5f5f5',
-                        },
                         py: 0.7,
-                        backgroundColor: location.pathname === '/' ? '#e3f2fd' : 'inherit',
+                        ...(location.pathname === '/' ? activeStyle : hoverStyle)
                     }}
                     onClick={() => switchActiveSidebar('/')}
                 >
-                    <ListItemIcon sx={{ minWidth: '40px' }}>
-                        <HomeOutlinedIcon sx={commonIconStyle} />
+                    <ListItemIcon sx={{ minWidth: '30px' }}>
+                        <HomeOutlinedIcon sx={location.pathname === '/' ? activeIconStyle : commonIconStyle} />
                     </ListItemIcon>
-                    <ListItemText primary={!isOpen || 'DashBoard'} primaryTypographyProps={{ sx: commonTextStyle }} />
+                    <ListItemText 
+                        primary={!isOpen || 'DashBoard'} 
+                        primaryTypographyProps={{ 
+                            sx: location.pathname === '/' ? activeTextStyle : commonTextStyle 
+                        }} 
+                    />
                 </ListItemButton>
 
                 <div>
@@ -106,13 +163,11 @@ export default function Sidebar() {
                         onClick={handleClick}
                         id="deviceManagement"
                         sx={{
-                            '&:hover': {
-                                backgroundColor: '#f5f5f5',
-                            },
+                            ...hoverStyle,
                             py: 0.7,
                         }}
                     >
-                        <ListItemIcon sx={{ minWidth: '40px' }}>
+                        <ListItemIcon sx={{ minWidth: '30px' }}>
                             <InventoryIcon sx={commonIconStyle} />
                         </ListItemIcon>
                         <ListItemText
@@ -130,40 +185,24 @@ export default function Sidebar() {
                             <ListItemButton
                                 sx={{
                                     pl: 4,
-                                    '&:hover': {
-                                        backgroundColor: '#f5f5f5',
-                                    },
-                                    backgroundColor: location.pathname === '/devices' ? '#e3f2fd' : 'inherit',
+                                    ...(location.pathname === '/devices' ? activeStyle : subItemHoverStyle)
                                 }}
                                 onClick={() => switchActiveSidebar('/devices')}
                             >
                                 <ListItemIcon>
-                                    <DevicesIcon sx={commonIconStyle} />
+                                    <DevicesIcon sx={location.pathname === '/devices' ? activeIconStyle : commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
-                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/devices' ? activeTextStyle : commonTextStyle 
+                                    }}
                                     primary={!isOpen || 'Danh mục thiết bị'}
                                 />
                             </ListItemButton>
-                            <ListItemButton
-                                sx={{
-                                    pl: 4,
-                                    '&:hover': {
-                                        backgroundColor: '#f5f5f5',
-                                    },
-                                    backgroundColor: location.pathname === '/categories' ? '#e3f2fd' : 'inherit',
-                                }}
-                                onClick={() => switchActiveSidebar('/categories')}
-                            >
-                                <ListItemIcon>
-                                    <CategoryIcon sx={commonIconStyle} />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primaryTypographyProps={{ sx: commonTextStyle }}
-                                    primary={!isOpen || 'Loại thiết bị'}
-                                />
-                            </ListItemButton>
-                            <ListItemButton sx={{ pl: 4 }}>
+                            <ListItemButton sx={{ 
+                                pl: 4, 
+                                ...subItemHoverStyle 
+                            }}>
                                 <ListItemIcon>
                                     <SpecsIcon sx={commonIconStyle} />
                                 </ListItemIcon>
@@ -180,13 +219,11 @@ export default function Sidebar() {
                         onClick={handleClick}
                         id="maintenance"
                         sx={{
-                            '&:hover': {
-                                backgroundColor: '#f5f5f5',
-                            },
+                            ...hoverStyle,
                             py: 0.7,
                         }}
                     >
-                        <ListItemIcon sx={{ minWidth: '40px' }}>
+                        <ListItemIcon sx={{ minWidth: '30px' }}>
                             <BuildIcon sx={commonIconStyle} />
                         </ListItemIcon>
                         <ListItemText
@@ -204,22 +241,24 @@ export default function Sidebar() {
                             <ListItemButton
                                 sx={{
                                     pl: 4,
-                                    '&:hover': {
-                                        backgroundColor: '#f5f5f5',
-                                    },
-                                    backgroundColor: location.pathname === '/maintenance' ? '#e3f2fd' : 'inherit',
+                                    ...(location.pathname === '/maintenance' ? activeStyle : subItemHoverStyle)
                                 }}
                                 onClick={() => switchActiveSidebar('/maintenance')}
                             >
                                 <ListItemIcon>
-                                    <MaintenanceIcon sx={commonIconStyle} />
+                                    <MaintenanceIcon sx={location.pathname === '/maintenance' ? activeIconStyle : commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
-                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/maintenance' ? activeTextStyle : commonTextStyle 
+                                    }}
                                     primary={!isOpen || 'Bảo trì thiết bị'}
                                 />
                             </ListItemButton>
-                            <ListItemButton sx={{ pl: 4 }}>
+                            <ListItemButton sx={{ 
+                                pl: 4, 
+                                ...subItemHoverStyle 
+                            }}>
                                 <ListItemIcon>
                                     <RepairIcon sx={commonIconStyle} />
                                 </ListItemIcon>
@@ -236,13 +275,11 @@ export default function Sidebar() {
                         onClick={handleClick}
                         id="calibration"
                         sx={{
-                            '&:hover': {
-                                backgroundColor: '#f5f5f5',
-                            },
+                            ...hoverStyle,
                             py: 0.7,
                         }}
                     >
-                        <ListItemIcon sx={{ minWidth: '40px' }}>
+                        <ListItemIcon sx={{ minWidth: '30px' }}>
                             <CalibrateIcon sx={commonIconStyle} />
                         </ListItemIcon>
                         <ListItemText
@@ -260,22 +297,24 @@ export default function Sidebar() {
                             <ListItemButton
                                 sx={{
                                     pl: 4,
-                                    '&:hover': {
-                                        backgroundColor: '#f5f5f5',
-                                    },
-                                    backgroundColor: location.pathname === '/calibration' ? '#e3f2fd' : 'inherit',
+                                    ...(location.pathname === '/calibration' ? activeStyle : subItemHoverStyle)
                                 }}
                                 onClick={() => switchActiveSidebar('/calibration')}
                             >
                                 <ListItemIcon>
-                                    <CheckCircleIcon sx={commonIconStyle} />
+                                    <CheckCircleIcon sx={location.pathname === '/calibration' ? activeIconStyle : commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
-                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/calibration' ? activeTextStyle : commonTextStyle 
+                                    }}
                                     primary={!isOpen || 'Hiệu chuẩn thiết bị'}
                                 />
                             </ListItemButton>
-                            <ListItemButton sx={{ pl: 4 }}>
+                            <ListItemButton sx={{ 
+                                pl: 4, 
+                                ...subItemHoverStyle 
+                            }}>
                                 <ListItemIcon>
                                     <VerifiedIcon sx={commonIconStyle} />
                                 </ListItemIcon>
@@ -297,16 +336,13 @@ export default function Sidebar() {
                 <ListItemButton
                     id="Góp ý"
                     sx={{
-                        '&:hover': {
-                            backgroundColor: '#f5f5f5',
-                        },
+                        ...hoverStyle,
                         py: 0.7,
-
-                        backgroundColor: 'inherit', // Không highlight vì không phải internal route
+                        backgroundColor: 'inherit',
                     }}
                     onClick={handleFeedbackClick}
                 >
-                    <ListItemIcon sx={{ minWidth: '40px' }}>
+                    <ListItemIcon sx={{ minWidth: '30px' }}>
                         <FeedbackIcon sx={commonIconStyle} />
                     </ListItemIcon>
                     <ListItemText

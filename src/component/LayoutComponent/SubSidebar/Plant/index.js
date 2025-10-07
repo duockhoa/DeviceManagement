@@ -43,7 +43,7 @@ function Plant({ isOpen, onToggle }) {
                 <ListItemText 
                     primary="Plant" 
                     primaryTypographyProps={{ 
-                        sx: { fontSize: '1.3rem', fontWeight: 'medium' } 
+                        sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
                 <ListItemIcon sx={{ minWidth: '30px' }}>
@@ -62,7 +62,7 @@ function Plant({ isOpen, onToggle }) {
                             label="Loading..."
                             size="small"
                             sx={{ 
-                                fontSize: '1.1rem',
+                                fontSize: '1.2rem',
                                 backgroundColor: '#f0f0f0',
                                 color: '#666'
                             }}
@@ -72,7 +72,7 @@ function Plant({ isOpen, onToggle }) {
                             label={`Error: ${error}`}
                             size="small"
                             sx={{ 
-                                fontSize: '1.1rem',
+                                fontSize: '1.2rem',
                                 backgroundColor: '#ffebee',
                                 color: '#d32f2f'
                             }}
@@ -84,7 +84,7 @@ function Plant({ isOpen, onToggle }) {
                                 label={plant.name}
                                 size="small"
                                 sx={{ 
-                                    fontSize: '1.1rem',
+                                    fontSize: '1.2rem',
                                     backgroundColor: '#e3f2fd',
                                     color: '#1976d2',
                                     fontWeight: 'medium',
@@ -98,7 +98,7 @@ function Plant({ isOpen, onToggle }) {
                             label="Không có nhà máy"
                             size="small"
                             sx={{ 
-                                fontSize: '1.1rem',
+                                fontSize: '1.2rem',
                                 backgroundColor: '#f0f0f0',
                                 color: '#666'
                             }}

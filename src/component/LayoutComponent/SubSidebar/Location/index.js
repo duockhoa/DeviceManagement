@@ -43,7 +43,7 @@ function Location({ isOpen, onToggle }) {
                 <ListItemText 
                     primary="Location" 
                     primaryTypographyProps={{ 
-                        sx: { fontSize: '1.3rem', fontWeight: 'medium' } 
+                        sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
                 <ListItemIcon sx={{ minWidth: '30px' }}>
@@ -59,27 +59,27 @@ function Location({ isOpen, onToggle }) {
                 <Box sx={{ backgroundColor: '#f8f9fa', px: 2, py: 1 }}>
                     {loading ? (
                         <Box sx={{ mb: 0.5 }}>
-                            <Typography sx={{ fontSize: '1.1rem', color: '#666' }}>
+                            <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
                                 Loading...
                             </Typography>
                         </Box>
                     ) : error ? (
                         <Box sx={{ mb: 0.5 }}>
-                            <Typography sx={{ fontSize: '1.1rem', color: '#d32f2f' }}>
+                            <Typography sx={{ fontSize: '1.4rem', color: '#d32f2f' }}>
                                 Error: {error}
                             </Typography>
                         </Box>
                     ) : areas.length > 0 ? (
                         areas.map((area, index) => (
                             <Box key={area.id || index} sx={{ mb: 0.5 }}>
-                                <Typography sx={{ fontSize: '1.1rem', color: '#666' }}>
+                                <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
                                     ✓ {area.name}
                                 </Typography>
                             </Box>
                         ))
                     ) : (
                         <Box sx={{ mb: 0.5 }}>
-                            <Typography sx={{ fontSize: '1.1rem', color: '#666' }}>
+                            <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
                                 Không có khu vực
                             </Typography>
                         </Box>
