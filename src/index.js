@@ -9,6 +9,7 @@ import { CssBaseline } from '@mui/material';
 import theme from './theme';
 import { Provider } from 'react-redux';
 import store from './redux/store';
+import AppInitializer from './component/AppInittializer/AppInitializer';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -17,7 +18,9 @@ root.render(
             <ThemeProvider theme={theme}>
                 <CssBaseline />
                 <GlobalStyle>
-                    <App />
+                    <AppInitializer>
+                        <App />
+                    </AppInitializer>
                 </GlobalStyle>
             </ThemeProvider>
         </React.StrictMode>

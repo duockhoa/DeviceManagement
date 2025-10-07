@@ -4,7 +4,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import SettingsIcon from '@mui/icons-material/Settings';
 import Collapse from '@mui/material/Collapse';
 import { Box } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,14 +13,24 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { setIsOpen } from '../../../redux/slice/sibarSlice';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import { setActiveCollapse } from '../../../redux/slice/sibarSlice';
+
+// Import các icon mới phù hợp
 import DevicesIcon from '@mui/icons-material/Devices';
-import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
+import CategoryIcon from '@mui/icons-material/Category';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import SpecsIcon from '@mui/icons-material/Assignment';
+import BuildIcon from '@mui/icons-material/Build';
+import MaintenanceIcon from '@mui/icons-material/Engineering';
+import RepairIcon from '@mui/icons-material/Construction';
+import CalibrateIcon from '@mui/icons-material/Tune';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import VerifiedIcon from '@mui/icons-material/Verified';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
     const dispatch = useDispatch();
     const navigator = useNavigate();
-    const location = useLocation(); // Thêm hook để lấy path hiện tại
+    const location = useLocation();
     const activeCollapse = useSelector((state) => state.sidebar.activeCollapse);
     const isOpen = useSelector((state) => state.sidebar.isOpen);
 
@@ -31,7 +40,6 @@ export default function Sidebar() {
     };
 
     const switchActiveSidebar = (path) => {
-        // Xử lý external links (bắt đầu với http/https)
         if (path.startsWith('http')) {
             window.open(path, '_blank');
         } else {
@@ -43,7 +51,6 @@ export default function Sidebar() {
         }
     };
 
-    // Handler riêng cho feedback
     const handleFeedbackClick = () => {
         const feedbackUrl =
             'https://docs.google.com/spreadsheets/d/1lmycHuIN5G415SxacnqFWMortfMYv48iUTfWzHKIzJw/edit?gid=0#gid=0';
@@ -106,7 +113,7 @@ export default function Sidebar() {
                         }}
                     >
                         <ListItemIcon sx={{ minWidth: '40px' }}>
-                            <SettingsIcon sx={commonIconStyle} />
+                            <InventoryIcon sx={commonIconStyle} />
                         </ListItemIcon>
                         <ListItemText
                             primaryTypographyProps={{ sx: commonTextStyle }}
@@ -138,9 +145,27 @@ export default function Sidebar() {
                                     primary={!isOpen || 'Danh mục thiết bị'}
                                 />
                             </ListItemButton>
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    '&:hover': {
+                                        backgroundColor: '#f5f5f5',
+                                    },
+                                    backgroundColor: location.pathname === '/categories' ? '#e3f2fd' : 'inherit',
+                                }}
+                                onClick={() => switchActiveSidebar('/categories')}
+                            >
+                                <ListItemIcon>
+                                    <CategoryIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primary={!isOpen || 'Loại thiết bị'}
+                                />
+                            </ListItemButton>
                             <ListItemButton sx={{ pl: 4 }}>
                                 <ListItemIcon>
-                                    <SettingsApplicationsIcon sx={commonIconStyle} />
+                                    <SpecsIcon sx={commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ sx: commonTextStyle }}
@@ -162,7 +187,7 @@ export default function Sidebar() {
                         }}
                     >
                         <ListItemIcon sx={{ minWidth: '40px' }}>
-                            <SettingsIcon sx={commonIconStyle} />
+                            <BuildIcon sx={commonIconStyle} />
                         </ListItemIcon>
                         <ListItemText
                             primaryTypographyProps={{ sx: commonTextStyle }}
@@ -187,7 +212,7 @@ export default function Sidebar() {
                                 onClick={() => switchActiveSidebar('/maintenance')}
                             >
                                 <ListItemIcon>
-                                    <DevicesIcon sx={commonIconStyle} />
+                                    <MaintenanceIcon sx={commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ sx: commonTextStyle }}
@@ -196,7 +221,7 @@ export default function Sidebar() {
                             </ListItemButton>
                             <ListItemButton sx={{ pl: 4 }}>
                                 <ListItemIcon>
-                                    <SettingsApplicationsIcon sx={commonIconStyle} />
+                                    <RepairIcon sx={commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ sx: commonTextStyle }}
@@ -206,7 +231,7 @@ export default function Sidebar() {
                         </List>
                     </Collapse>
                 </div>
-                                <div>
+                <div>
                     <ListItemButton
                         onClick={handleClick}
                         id="calibration"
@@ -218,7 +243,7 @@ export default function Sidebar() {
                         }}
                     >
                         <ListItemIcon sx={{ minWidth: '40px' }}>
-                            <SettingsIcon sx={commonIconStyle} />
+                            <CalibrateIcon sx={commonIconStyle} />
                         </ListItemIcon>
                         <ListItemText
                             primaryTypographyProps={{ sx: commonTextStyle }}
@@ -243,7 +268,7 @@ export default function Sidebar() {
                                 onClick={() => switchActiveSidebar('/calibration')}
                             >
                                 <ListItemIcon>
-                                    <DevicesIcon sx={commonIconStyle} />
+                                    <CheckCircleIcon sx={commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ sx: commonTextStyle }}
@@ -252,7 +277,7 @@ export default function Sidebar() {
                             </ListItemButton>
                             <ListItemButton sx={{ pl: 4 }}>
                                 <ListItemIcon>
-                                    <SettingsApplicationsIcon sx={commonIconStyle} />
+                                    <VerifiedIcon sx={commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ sx: commonTextStyle }}
