@@ -20,6 +20,7 @@ function AssetList() {
     useEffect(() => {
         dispatch(fetchAssets());
     }, [dispatch]);
+    
     const columns = [
         {
             field: 'avatar',
@@ -43,7 +44,7 @@ function AssetList() {
             headerName: 'Tên thiết bị',
             width: 200,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                <Typography variant="body2" sx={{ fontWeight: 'medium', fontSize: '1.2rem' }}>
                     {params.value}
                 </Typography>
             )
@@ -53,7 +54,7 @@ function AssetList() {
             headerName: 'Mô tả',
             width: 250,
             renderCell: (params) => (
-                <Typography variant="body2" noWrap>
+                <Typography variant="body2" noWrap sx={{ fontSize: '1.2rem' }}>
                     {params.value || 'Không có mô tả'}
                 </Typography>
             )
@@ -68,6 +69,7 @@ function AssetList() {
                     color="primary" 
                     size="small"
                     variant="outlined"
+                    sx={{ fontSize: '1.2rem' }}
                 />
             )
         },
@@ -81,6 +83,7 @@ function AssetList() {
                     color="secondary" 
                     size="small"
                     variant="outlined"
+                    sx={{ fontSize: '1.2rem' }}
                 />
             )
         },
@@ -89,7 +92,7 @@ function AssetList() {
             headerName: 'Người tạo',
             width: 150,
             renderCell: (params) => (
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
                     {params.row.Creator?.name || 'Không xác định'}
                 </Typography>
             )
@@ -99,7 +102,7 @@ function AssetList() {
             headerName: 'Ngày tạo',
             width: 120,
             renderCell: (params) => (
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
                     {new Date(params.value).toLocaleDateString('vi-VN')}
                 </Typography>
             )
@@ -114,15 +117,24 @@ function AssetList() {
     }
 
     return (
-        <Box sx={{ height: 400, width: '100%' }}>
+        <Box sx={{ height: "100%", width: '100%' }}>
             <DataGrid
                 rows={assets}
                 columns={columns}
                 loading={loading}
                 error={error}
-                pageSize={5}
-                rowsPerPageOptions={[5]}
                 disableSelectionOnClick
+                hideFooterPagination
+                hideFooter
+                sx={{
+                    '& .MuiDataGrid-cell': {
+                        fontSize: '1.2rem'
+                    },
+                    '& .MuiDataGrid-columnHeaders': {
+                        fontSize: '1.2rem',
+                        fontWeight: 'bold'
+                    }
+                }}
             />
         </Box>
     );
