@@ -20,7 +20,8 @@ function Devices() {
                 backgroundColor: '#fff', 
                 height: '100%', 
                 display: 'flex', 
-                flexDirection: 'column' 
+                flexDirection: 'column',
+                p: 1
             }}>
                 <AssetList />
             </Box>
@@ -28,8 +29,8 @@ function Devices() {
             {/* Fixed Add Button */}
             <Box sx={{
                 position: 'fixed',
-                bottom: 20,
-                right: 20,
+                bottom: 40,
+                right: 40,
                 zIndex: 1000
             }}>
                 <AddDeviceButton />
