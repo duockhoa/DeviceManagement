@@ -199,6 +199,23 @@ export default function Sidebar() {
                                     primary={!isOpen || 'Danh mục thiết bị'}
                                 />
                             </ListItemButton>
+                                                        <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    ...(location.pathname === '/consumables' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/consumables')}
+                            >
+                                <ListItemIcon>
+                                    <DevicesIcon sx={location.pathname === '/consumables' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/consumables' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={!isOpen || 'Vật tư tiêu hao'}
+                                />
+                            </ListItemButton>
                             <ListItemButton sx={{ 
                                 pl: 4, 
                                 ...subItemHoverStyle 
@@ -365,7 +382,7 @@ export default function Sidebar() {
                     letterSpacing: 1,
                 }}
             >
-                version: 1.0.0
+                version: 1.1.18
             </Box>
         </Stack>
     );

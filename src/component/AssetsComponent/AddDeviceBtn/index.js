@@ -26,6 +26,9 @@ function AddDeviceButton() {
             onClose={handleClose}
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
+            maxWidth="xl"
+
+            fullWidth
         >
             <AddAssetForm handleClose={handleClose} />
         </Dialog>
