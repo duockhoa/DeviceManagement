@@ -51,3 +51,54 @@ export const deleteAsset = async (id) => {
   }
 };
 
+// Thêm các methods mới theo API đã cập nhật
+export const getAssetsByArea = async (areaId) => {
+  try {
+    const response = await axios.get(`/assets/by-area/${areaId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching assets by area:", error);
+    throw error;
+  }
+};
+
+export const getAssetsByCategory = async (categoryId) => {
+  try {
+    const response = await axios.get(`/assets/by-category/${categoryId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching assets by category:", error);
+    throw error;
+  }
+};
+
+export const getAssetsByDepartment = async (departmentName) => {
+  try {
+    const response = await axios.get(`/assets/by-department/${departmentName}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching assets by department:", error);
+    throw error;
+  }
+};
+
+export const searchAssets = async (params) => {
+  try {
+    const response = await axios.get('/assets/search', { params });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error searching assets:", error);
+    throw error;
+  }
+};
+
+export const getAssetByCode = async (assetCode) => {
+  try {
+    const response = await axios.get(`/assets/by-code/${assetCode}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching asset by code:", error);
+    throw error;
+  }
+};
+

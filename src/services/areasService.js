@@ -34,13 +34,13 @@ export const getAreasByPlant = async (plantId) => {
   }
 };
 
-// GET /api/areas/:id/positions - Lấy tất cả positions thuộc area
-export const getPositionsByArea = async (areaId) => {
+// GET /api/areas/:id/assets - Lấy tất cả assets thuộc area (thay đổi từ positions)
+export const getAssetsByArea = async (areaId) => {
   try {
-    const response = await axios.get(`/areas/${areaId}/positions`);
+    const response = await axios.get(`/areas/${areaId}/assets`);
     return response.data.data;
   } catch (error) {
-    console.error("Error fetching positions by area:", error);
+    console.error("Error fetching assets by area:", error);
     throw error;
   }
 };

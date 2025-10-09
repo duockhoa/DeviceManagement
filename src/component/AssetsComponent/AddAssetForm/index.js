@@ -40,10 +40,13 @@ function a11yProps(index) {
 function AddAssetForm({ handleClose }) {
     const assetCategories = useSelector((state) => state.assetCategories.categories);
     const plant = useSelector((state) => state.plants.plants);
+    const areas = useSelector((state) => state.areas.areas); // Thêm areas
     const [tabValue, setTabValue] = React.useState(0);
 
     console.log('Asset Categories:', assetCategories);
     console.log('Plants:', plant);
+    console.log('Areas:', areas); // Log areas
+
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);

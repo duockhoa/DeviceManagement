@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { 
+import {
     getAllAreas,
     getAreaById,
     getAreasByPlant,
-    getPositionsByArea,
+    getAssetsByArea,  // Thay đổi từ getPositionsByArea
     createArea,
     updateArea,
     deleteArea
@@ -11,7 +11,7 @@ import {
 
 // Fetch tất cả areas
 export const fetchAreas = createAsyncThunk(
-    'areas/fetchAreas', 
+    'areas/fetchAreas',
     async () => {
         const response = await getAllAreas();
         if (response) {
@@ -48,15 +48,15 @@ export const fetchAreasByPlant = createAsyncThunk(
     }
 );
 
-// Fetch positions thuộc area
-export const fetchPositionsByArea = createAsyncThunk(
-    'areas/fetchPositionsByArea',
+// Fetch assets thuộc area (thay thế positions)
+export const fetchAssetsByArea = createAsyncThunk(
+    'areas/fetchAssetsByArea',
     async (areaId) => {
-        const response = await getPositionsByArea(areaId);
+        const response = await getAssetsByArea(areaId);
         if (response) {
             return response;
         } else {
-            throw new Error('Không thể lấy danh sách vị trí');
+            throw new Error('Không thể lấy danh sách thiết bị');
         }
     }
 );
@@ -106,14 +106,14 @@ const areaSlice = createSlice({
         areas: [],
         currentArea: null,
         areasByPlant: [],
-        areaPositions: [],
+        areaAssets: [],  // Thay đổi từ areaPositions sang areaAssets
         loading: false,
         error: null,
     },
     reducers: {
         clearCurrentArea: (state) => {
             state.currentArea = null;
-            state.areaPositions = [];
+            state.areaAssets = [];  // Thay đổi từ areaPositions
         },
         clearError: (state) => {
             state.error = null;
@@ -123,6 +123,9 @@ const areaSlice = createSlice({
         },
         clearAreasByPlant: (state) => {
             state.areasByPlant = [];
+        },
+        clearAreaAssets: (state) => {  // Thêm action mới
+            state.areaAssets = [];
         }
     },
     extraReducers: (builder) => {
@@ -140,7 +143,7 @@ const areaSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
-            
+
             // Fetch area by ID
             .addCase(fetchAreaById.pending, (state) => {
                 state.loading = true;
@@ -154,7 +157,7 @@ const areaSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
-            
+
             // Fetch areas by plant
             .addCase(fetchAreasByPlant.pending, (state) => {
                 state.loading = true;
@@ -168,21 +171,21 @@ const areaSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
-            
-            // Fetch positions by area
-            .addCase(fetchPositionsByArea.pending, (state) => {
+
+            // Fetch assets by area (thay thế positions)
+            .addCase(fetchAssetsByArea.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchPositionsByArea.fulfilled, (state, action) => {
-                state.areaPositions = action.payload;
+            .addCase(fetchAssetsByArea.fulfilled, (state, action) => {
+                state.areaAssets = action.payload.assets || action.payload;  // Handle different response formats
                 state.loading = false;
             })
-            .addCase(fetchPositionsByArea.rejected, (state, action) => {
+            .addCase(fetchAssetsByArea.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;
             })
-            
+
             // Create new area
             .addCase(createNewArea.pending, (state) => {
                 state.loading = true;
@@ -196,7 +199,7 @@ const areaSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
-            
+
             // Update area
             .addCase(updateExistingArea.pending, (state) => {
                 state.loading = true;
@@ -216,7 +219,7 @@ const areaSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
-            
+
             // Delete area
             .addCase(deleteExistingArea.pending, (state) => {
                 state.loading = true;
@@ -227,7 +230,7 @@ const areaSlice = createSlice({
                 state.areasByPlant = state.areasByPlant.filter(area => area.id !== action.payload.id);
                 if (state.currentArea?.id === action.payload.id) {
                     state.currentArea = null;
-                    state.areaPositions = [];
+                    state.areaAssets = [];  // Thay đổi từ areaPositions
                 }
                 state.loading = false;
             })
@@ -238,5 +241,12 @@ const areaSlice = createSlice({
     },
 });
 
-export const { clearCurrentArea, clearError, setCurrentArea, clearAreasByPlant } = areaSlice.actions;
+export const {
+    clearCurrentArea,
+    clearError,
+    setCurrentArea,
+    clearAreasByPlant,
+    clearAreaAssets  // Thêm action mới
+} = areaSlice.actions;
+
 export default areaSlice.reducer;
