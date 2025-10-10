@@ -128,7 +128,7 @@ const assetsSlice = createSlice({
                 state.error = null;
             })
             .addCase(createAsset.fulfilled, (state, action) => {
-                state.assets.push(action.payload);
+                state.assets.unshift(action.payload);
                 state.loading = false;
             })
             .addCase(createAsset.rejected, (state, action) => {

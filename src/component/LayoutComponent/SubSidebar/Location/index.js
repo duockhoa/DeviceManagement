@@ -1,12 +1,18 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import AreaForm from '../../../AreaComponent/AreaForm';
 import {
     Box,
     ListItemButton,
     ListItemIcon,
     ListItemText,
     Collapse,
-    Typography
+    Typography,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button
 } from '@mui/material';
 import {
     ExpandMore,
@@ -18,6 +24,7 @@ import { fetchAreas } from '../../../../redux/slice/areaSlice';
 
 function Location({ isOpen, onToggle }) {
     const dispatch = useDispatch();
+    const [open , setOpen] = React.useState(false);
     
     // Lấy dữ liệu từ Redux store
     const { areas, loading, error } = useSelector(state => state.areas);
@@ -26,6 +33,12 @@ function Location({ isOpen, onToggle }) {
     useEffect(() => {
         dispatch(fetchAreas());
     }, [dispatch]);
+
+    // Handle click nút Add
+    const handleAddClick = (event) => {
+        event.stopPropagation(); // Ngăn không cho trigger onToggle
+        setOpen(true);
+    };
 
     return (
         <Box>
@@ -46,8 +59,19 @@ function Location({ isOpen, onToggle }) {
                         sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
-                <ListItemIcon sx={{ minWidth: '30px' }}>
-                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2' }} />
+                <ListItemIcon 
+                    sx={{ 
+                        minWidth: '30px',
+                        minHeight: '30px',
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        '&:hover': {
+                            backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                        }
+                    }}
+                    onClick={handleAddClick}
+                >
+                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2', margin: 'auto' }} />
                 </ListItemIcon>
                 {isOpen ? 
                     <ExpandLess sx={{ fontSize: '2rem' }} /> : 
@@ -86,6 +110,12 @@ function Location({ isOpen, onToggle }) {
                     )}
                 </Box>
             </Collapse>
+            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Thêm khu vực</DialogTitle>
+                <DialogContent>
+                    <AreaForm />
+                </DialogContent>
+            </Dialog>
         </Box>
     );
 }

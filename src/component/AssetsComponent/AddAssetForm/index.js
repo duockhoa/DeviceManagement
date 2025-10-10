@@ -1,16 +1,15 @@
 import Box from '@mui/material/Box';
-import { Typography, IconButton, Divider, Button, Tabs, Tab, Grid } from '@mui/material';
+import { Typography, IconButton, Divider, Button, Tabs, Tab } from '@mui/material';
+import Grid2 from '@mui/material/Unstable_Grid2';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
 import { Stack } from '@mui/system';
 import { useSelector, useDispatch } from 'react-redux';
 import { useState } from 'react';
 import PropTypes from 'prop-types';
-import Grid2 from '@mui/material/Unstable_Grid2';
 import InputField from '../InputField';
 import SelectField from '../SelectField';
-import { createAsset} from "../../../redux/slice/assetsSlice"
+import { createAsset } from "../../../redux/slice/assetsSlice"
 
 function CustomTabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -47,8 +46,6 @@ function AddAssetForm({ handleClose }) {
     const plants = useSelector((state) => state.plants.plants);
     const areas = useSelector((state) => state.areas.areas);
     const departments = useSelector((state) => state.departments.departments);
-    const user = useSelector((state) => state.user.userInfo);
-    console.log(assetCategories)
 
     const [tabValue, setTabValue] = useState(0);
 
@@ -59,10 +56,20 @@ function AddAssetForm({ handleClose }) {
         category_id: '',
         team_id: '',
         area_id: '',
-        description: '',
         image: '',
-        created_by: user.id,
+        status: 'active',
     });
+    const statusOptions = [
+        {
+            id: "active",
+            name: "Hoạt động"
+        },
+        {
+            id: "inactive",
+            name: "Ngưng hoạt động"
+        }
+    ]
+
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
@@ -81,20 +88,6 @@ function AddAssetForm({ handleClose }) {
         console.log('Saving form data:', formData);
         dispatch(createAsset(formData));
         handleClose();
-    };
-
-    const handleReset = () => {
-        // Logic reset form
-        setFormData({
-            asset_code: '',
-            name: '',
-            category_id: '',
-            team_id: '',
-            area_id: '',
-            description: '',
-            image: '',
-        });
-        console.log('Form reset');
     };
 
     return (
@@ -125,30 +118,21 @@ function AddAssetForm({ handleClose }) {
             {/* Form Content */}
             <Stack p={2} sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                 {/* Nhập thông tin chung */}
-                <Box sx={{ border: '1px solid #ddd', p: 3, borderRadius: 1 }}>
-                    <Grid2 container spacing={3}>
-                        <Grid2 xs={12} md={4}>
+                <Box sx={{ p: 3, borderRadius: 1 }}>
+                    <Grid2 container spacing={1} sx={{ mb: 2, alignItems: 'center' }}>
+                        <Grid2 container spacing={1}>
+                         <Grid2 xs={2} >
                             <InputField
                                 label="Mã TB"
                                 name="asset_code"
                                 value={formData.asset_code}
                                 onChange={handleInputChange}
-                                placeholder="0003"
+                                placeholder="TBSX005"
                                 required
                                 width='120px'
                             />
                         </Grid2>
-                        <Grid2 xs={12} md={4}>
-                            <InputField
-                                label="Tên TB"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                placeholder="Máy phát thủy lực"
-                                required
-                            />
-                        </Grid2>
-                        <Grid2 xs={12} md={4}>
+                        <Grid2 xs={2}>
                             <SelectField
                                 label="Loại TB"
                                 name="category_id"
@@ -156,36 +140,78 @@ function AddAssetForm({ handleClose }) {
                                 onChange={handleInputChange}
                                 options={assetCategories}
                                 required
-                                placeholder="Chọn loại thiết bị"
+                                placeholder="Chọn nhóm TB"
                                 valueKey="id"
                                 labelKey="name"
+                                width='150px'
                             />
+                        </Grid2>
+
+                        <Grid2 xs={8}>
+                            <InputField
+                                label="Tên thiết bị"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleInputChange}
+                                placeholder="Máy ép vỉ"
+                                required
+                            />
+                        </Grid2>
+
+                        <Grid2 xs={2}>
+                      
+                        </Grid2>
+
+                        <Grid2 xs={2}>
                             <SelectField
-                                label="Bộ phận quản lý"
+                                label="BP QL"
                                 name="team_id"
                                 value={formData.team_id}
                                 onChange={handleInputChange}
                                 options={departments}
                                 required
-                                placeholder="Chọn Bộ phận quản lý"
+                                placeholder="Chọn bộ phận"
                                 valueKey="name"
                                 labelKey="name"
+                                width='150px'
                             />
-                             <SelectField
-                                label="Khu vực"
+                        </Grid2>
+
+                        <Grid2 xs={2}>
+                            <SelectField
+                                label="Vị trí"
                                 name="area_id"
                                 value={formData.area_id}
                                 onChange={handleInputChange}
                                 options={areas}
                                 required
-                                placeholder="Chọn khu vực"
+                                placeholder="Chọn vị trí"
                                 valueKey="id"
                                 labelKey="name"
+                                width='150px'
+                            
+                            />
+                        </Grid2>
+                        <Grid2 xs={3}>
+                            <SelectField
+                                label="Trạng thái"
+                                name="status"
+                                value={formData.status}
+                                onChange={handleInputChange}
+                                options={statusOptions}
+                                required
+                                placeholder="Chọn trạng thái"
+                                valueKey="id"
+                                labelKey="name"
+                                width='150px'
                             />
                         </Grid2>
                     </Grid2>
-                </Box>
+                    </Grid2>
 
+
+                </Box>
+                <Divider sx={{ my: 2, borderColor: '#811919ff' }} />
                 {/* Thông tin chi tiết */}
                 <Box sx={{ mt: 2, border: '1px solid #ddd', flex: 1, display: 'flex', flexDirection: 'column', borderRadius: 1 }}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -197,19 +223,19 @@ function AddAssetForm({ handleClose }) {
                         </Tabs>
                     </Box>
                     <CustomTabPanel value={tabValue} index={0}>
-                        <Grid container spacing={2}>
+                        <Grid2 container spacing={2}>
                             Thông tin về số seri, model, nhà sản xuất, năm sản xuất, v.v.
-                        </Grid>
+                        </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={1}>
-                        <Grid container spacing={2}>
+                        <Grid2 container spacing={2}>
                             Các loại thông tin về cấu hình, cấu tạo, v.v.
-                        </Grid>
+                        </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={2}>
-                        <Grid container spacing={2}>
+                        <Grid2 container spacing={2}>
                             Các loại thông tin về cấu hình, cấu tạo, v.v.
-                        </Grid>
+                        </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={3}>
                         <Box sx={{
@@ -234,19 +260,6 @@ function AddAssetForm({ handleClose }) {
                 borderTop: '1px solid #e0e0e0',
                 backgroundColor: '#fafafa'
             }}>
-                <Button
-                    variant="outlined"
-                    onClick={handleReset}
-                    startIcon={<CancelIcon />}
-                    sx={{
-                        fontSize: '1.3rem',
-                        minWidth: 120,
-                        color: '#666',
-                        borderColor: '#666'
-                    }}
-                >
-                    Làm mới
-                </Button>
                 <Button
                     variant="outlined"
                     onClick={handleClose}

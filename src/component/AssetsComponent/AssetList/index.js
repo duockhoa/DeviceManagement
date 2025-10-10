@@ -16,23 +16,12 @@ function AssetList() {
     const assets = useSelector((state) => state.assets.assets);
     const loading = useSelector((state) => state.assets.loading);
     const error = useSelector((state) => state.assets.error);
-    
+
     useEffect(() => {
         dispatch(fetchAssets());
     }, [dispatch]);
-    
+
     const columns = [
-        {
-            field: 'avatar',
-            headerName: '',
-            width: 60,
-            sortable: false,
-            renderCell: () => (
-                <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
-                    <DevicesIcon fontSize="small" />
-                </Avatar>
-            ),
-        },
         {
             field: 'asset_code',
             headerName: 'Mã thiết bị',
@@ -50,23 +39,13 @@ function AssetList() {
             )
         },
         {
-            field: 'description',
-            headerName: 'Mô tả',
-            width: 250,
-            renderCell: (params) => (
-                <Typography variant="body2" noWrap sx={{ fontSize: '1.2rem' }}>
-                    {params.value || 'Không có mô tả'}
-                </Typography>
-            )
-        },
-        {
             field: 'category',
             headerName: 'Loại thiết bị',
             width: 150,
             renderCell: (params) => (
-                <Chip 
-                    label={params.row.Category?.name || 'Chưa phân loại'} 
-                    color="primary" 
+                <Chip
+                    label={params.row.Category?.name || 'Chưa phân loại'}
+                    color="primary"
                     size="small"
                     variant="outlined"
                     sx={{ fontSize: '1.2rem' }}
@@ -78,14 +57,76 @@ function AssetList() {
             headerName: 'Phòng ban',
             width: 120,
             renderCell: (params) => (
-                <Chip 
-                    label={params.row.Department?.name || 'Chưa có'} 
-                    color="secondary" 
+                <Chip
+                    label={params.row.Department?.name || 'Chưa có'}
+                    color="secondary"
                     size="small"
                     variant="outlined"
                     sx={{ fontSize: '1.2rem' }}
                 />
             )
+        },
+        {
+            field: 'area',
+            headerName: 'Vị trí',
+            width: 150,
+            renderCell: (params) => (
+                <Box>
+                    <Typography variant="body2" sx={{ fontSize: '1.1rem', fontWeight: 'medium' }}>
+                        {params.row.Area?.name || 'Chưa có'}
+                    </Typography>
+                    {params.row.Area?.Plant?.name && (
+                        <Typography variant="caption" sx={{ fontSize: '1rem', color: '#666' }}>
+                            {params.row.Area.Plant.name}
+                        </Typography>
+                    )}
+                </Box>
+            )
+        },
+        {
+            field: 'status',
+            headerName: 'Trạng thái',
+            width: 120,
+            renderCell: (params) => {
+                const status = params.value;
+                const getStatusProps = (status) => {
+                    switch (status) {
+                        case 'active':
+                            return {
+                                label: 'Hoạt động',
+                                color: 'success',
+                                variant: 'filled'
+                            };
+                        case 'inactive':
+                            return {
+                                label: 'Ngừng hoạt động',
+                                color: 'error',
+                                variant: 'filled'
+                            };
+                        default:
+                            return {
+                                label: 'Không xác định',
+                                color: 'default',
+                                variant: 'outlined'
+                            };
+                    }
+                };
+
+                const statusProps = getStatusProps(status);
+                return (
+                    <Chip
+                        label={statusProps.label}
+                        color={statusProps.color}
+                        size="small"
+                        variant={statusProps.variant}
+                        sx={{ 
+                            fontSize: '1.1rem',
+                            fontWeight: 'medium',
+                            minWidth: '100px'
+                        }}
+                    />
+                );
+            }
         },
         {
             field: 'creator',
@@ -108,7 +149,7 @@ function AssetList() {
             )
         }
     ];
-    
+
     if (loading) {
         return <Loading />;
     }
@@ -128,11 +169,16 @@ function AssetList() {
                 hideFooter
                 sx={{
                     '& .MuiDataGrid-cell': {
-                        fontSize: '1.2rem'
+                        fontSize: '1.2rem',
+                        display: 'flex',
+                        alignItems: 'center'
                     },
                     '& .MuiDataGrid-columnHeaders': {
                         fontSize: '1.2rem',
                         fontWeight: 'bold'
+                    },
+                    '& .MuiDataGrid-row': {
+                        minHeight: '60px !important'
                     }
                 }}
             />

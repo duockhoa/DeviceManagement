@@ -37,9 +37,6 @@ function Department({ isOpen, onToggle }) {
                         sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
-                <ListItemIcon sx={{ minWidth: '30px' }}>
-                    <Add sx={{ fontSize: '1.8rem', color: '#8e24aa' }} />
-                </ListItemIcon>
                 {isOpen ? 
                     <ExpandLess sx={{ fontSize: '2rem' }} /> : 
                     <ExpandMore sx={{ fontSize: '2rem' }} />

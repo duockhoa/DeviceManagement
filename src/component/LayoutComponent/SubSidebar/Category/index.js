@@ -27,6 +27,12 @@ function Categories({ isOpen, onToggle }) {
         dispatch(fetchAssetCategories());
     }, [dispatch]);
 
+    // Handle click nút Add
+    const handleAddClick = (event) => {
+        event.stopPropagation(); // Ngăn không cho trigger onToggle
+        console.log('Add button clicked!');
+    };
+
     return (
         <Box>
             <ListItemButton 
@@ -46,8 +52,20 @@ function Categories({ isOpen, onToggle }) {
                         sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
-                <ListItemIcon sx={{ minWidth: '30px' }}>
-                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2' }} />
+                <ListItemIcon 
+                    sx={{ 
+
+                        minWidth: '30px',
+                        minHeight: '30px',
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        '&:hover': {
+                            backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                        }
+                    }}
+                    onClick={handleAddClick}
+                >
+                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2' , margin: 'auto' }} />
                 </ListItemIcon>
                 {isOpen ? 
                     <ExpandLess sx={{ fontSize: '2rem' }} /> : 

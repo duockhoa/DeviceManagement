@@ -1,12 +1,12 @@
 import React from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 
-function InputField({ 
-    label, 
-    name, 
-    value, 
-    onChange, 
-    placeholder = '', 
+function InputField({
+    label,
+    name,
+    value,
+    onChange,
+    placeholder = '',
     required = false,
     type = 'text',
     multiline = false,
@@ -15,7 +15,7 @@ function InputField({
     error = false,
     helperText = '',
     width = 'full', // 'full', 'auto', hoặc số cụ thể như '200px', '50%'
-    ...otherProps 
+    ...otherProps
 }) {
     const getTextFieldWidth = () => {
         switch (width) {
@@ -24,12 +24,12 @@ function InputField({
             case 'auto':
                 return { fullWidth: false };
             default:
-                return { 
-                    fullWidth: false, 
-                    sx: { 
+                return {
+                    fullWidth: false,
+                    sx: {
                         width: width,
-                        ...otherProps.sx 
-                    } 
+                        ...otherProps.sx
+                    }
                 };
         }
     };
@@ -38,14 +38,14 @@ function InputField({
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" sx={{ 
-                fontSize: '1.4rem', 
+            <Typography variant="body2" sx={{
+                fontSize: '1.2rem',
                 fontWeight: 'medium',
                 color: '#333',
-                minWidth: '80px',
+                minWidth: '40px',
                 whiteSpace: 'nowrap'
             }}>
-                {label}{required && ' *'}:
+                {label}{required && <span style={{ color: '#f44336' }}> *</span>}:
             </Typography>
             <TextField
                 name={name}
@@ -63,7 +63,7 @@ function InputField({
                 {...textFieldProps}
                 sx={{
                     '& .MuiOutlinedInput-root': {
-                        fontSize: '1.4rem',
+                        fontSize: '1.2rem',
                         backgroundColor: disabled ? '#f5f5f5' : '#fff',
                         '& fieldset': {
                             borderColor: error ? '#f44336' : '#ddd',

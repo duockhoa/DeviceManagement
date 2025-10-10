@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Typography, FormControl, Select, MenuItem, FormHelperText } from '@mui/material';
 
-function SelectField({ 
-    label, 
-    name, 
-    value, 
-    onChange, 
+function SelectField({
+    label,
+    name,
+    value,
+    onChange,
     options = [],
     required = false,
     disabled = false,
@@ -15,7 +15,7 @@ function SelectField({
     placeholder = 'Chọn...',
     valueKey = 'id',
     labelKey = 'name',
-    ...otherProps 
+    ...otherProps
 }) {
     const getSelectWidth = () => {
         switch (width) {
@@ -24,12 +24,12 @@ function SelectField({
             case 'auto':
                 return { fullWidth: false };
             default:
-                return { 
-                    fullWidth: false, 
-                    sx: { 
+                return {
+                    fullWidth: false,
+                    sx: {
                         width: width,
-                        ...otherProps.sx 
-                    } 
+                        ...otherProps.sx
+                    }
                 };
         }
     };
@@ -38,14 +38,14 @@ function SelectField({
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" sx={{ 
-                fontSize: '1.4rem', 
+            <Typography variant="body2" sx={{
+                fontSize: '1.2rem',
                 fontWeight: 'medium',
                 color: '#333',
-                minWidth: '80px',
+                minWidth: '60px',
                 whiteSpace: 'nowrap'
             }}>
-                {label}{required && ' *'}:
+                {label}{required && <span style={{ color: '#f44336' }}> *</span>}:
             </Typography>
             <FormControl error={error} {...selectProps}>
                 <Select
@@ -55,7 +55,7 @@ function SelectField({
                     disabled={disabled}
                     displayEmpty
                     sx={{
-                        fontSize: '1.4rem',
+                        fontSize: '1.2rem',
                         backgroundColor: disabled ? '#f5f5f5' : '#fff',
                         '& .MuiOutlinedInput-notchedOutline': {
                             borderColor: error ? '#f44336' : '#ddd',
@@ -73,14 +73,14 @@ function SelectField({
                     }}
                     {...otherProps}
                 >
-                    <MenuItem key="empty" value="" sx={{ fontSize: '1.4rem', color: '#999' }}>
-                        <em>{placeholder}</em>
+                    <MenuItem key="empty" value="" sx={{ fontSize: '1.2rem', color: '#999' }}>
+                        {placeholder}
                     </MenuItem>
                     {Array.isArray(options) && options.map((option, index) => (
-                        <MenuItem 
+                        <MenuItem
                             key={option[valueKey] || `option-${index}`}
                             value={option[valueKey]}
-                            sx={{ fontSize: '1.4rem' }}
+                            sx={{ fontSize: '1.2rem' }}
                         >
                             {option[labelKey]}
                         </MenuItem>
