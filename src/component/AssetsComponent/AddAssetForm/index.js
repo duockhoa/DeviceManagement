@@ -252,8 +252,10 @@ function AddAssetForm({ handleClose }) {
                         <Tabs value={tabValue} onChange={handleTabChange} aria-label="detail tabs">
                             <Tab label="Thông tin chung" {...a11yProps(0)} />
                             <Tab label="Thông số kỹ thuật" {...a11yProps(1)} />
-                            <Tab label="Bảo trì & Bảo dưỡng" {...a11yProps(2)} />
-                            <Tab label="Tài liệu đính kèm" {...a11yProps(3)} />
+                            <Tab label="Thành phần cấu tạo" {...a11yProps(2)} />
+                            <Tab label="Vật tư tiêu hao" {...a11yProps(3)} />
+                            <Tab label="Bảo trì & Bảo dưỡng" {...a11yProps(4)} />
+                            <Tab label="Tài liệu đính kèm" {...a11yProps(5)} />
                         </Tabs>
                     </Box>
                     <CustomTabPanel value={tabValue} index={0}>
@@ -263,15 +265,25 @@ function AddAssetForm({ handleClose }) {
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={1}>
                         <Grid2 container spacing={2}>
-                            Các loại thông tin về cấu hình, cấu tạo, v.v.
+                            Các loại thông tin về kỹ thuật như công suất, điện áp, tần số, v.v.
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={2}>
                         <Grid2 container spacing={2}>
-                            Các loại thông tin về cấu hình, cấu tạo, v.v.
+                            Các thành bộ phận của thiết bị
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={3}>
+                        <Grid2 container spacing={2}>
+                            Các vật tư tiêu hao , doăng cao su, dầu nhớt, đơn vị tính đơn giá....
+                        </Grid2>
+                    </CustomTabPanel>
+                    <CustomTabPanel value={tabValue} index={4}>
+                        <Grid2 container spacing={2}>
+                            Các loại thông tin về bảo trì, bảo dưỡng, v.v.
+                        </Grid2>
+                    </CustomTabPanel>
+                    <CustomTabPanel value={tabValue} index={5}>
                         <Box sx={{
                             border: '2px dashed #ccc',
                             borderRadius: 1,
