@@ -54,7 +54,7 @@ instance.interceptors.response.use(
                     Cookies.remove('accessToken', { domain: domain, path: '/' });
                     Cookies.remove('refreshToken', { domain: domain, path: '/' });
                     Cookies.remove('id', { domain: domain, path: '/' });
-                 window.location.href = process.env.REACT_APP_FRONTEND_ROOT_URL+'/login'; // Chuyển hướng đến trang đăng nhập
+                    window.location.href = process.env.REACT_APP_FRONTEND_ROOT_URL + '/login'; // Chuyển hướng đến trang đăng nhập
                     return Promise.reject(refreshError);
                 }
             } else {
@@ -62,7 +62,7 @@ instance.interceptors.response.use(
                 Cookies.remove('accessToken', { domain: domain, path: '/' });
                 Cookies.remove('refreshToken', { domain: domain, path: '/' });
                 Cookies.remove('id', { domain: domain, path: '/' });
-            window.location.href = process.env.REACT_APP_FRONTEND_ROOT_URL + '/login';
+                window.location.href = process.env.REACT_APP_FRONTEND_ROOT_URL + '/login';
             }
         }
         return Promise.reject(error);

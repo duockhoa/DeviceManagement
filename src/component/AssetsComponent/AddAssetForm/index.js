@@ -5,11 +5,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
 import { Stack } from '@mui/system';
 import { useSelector, useDispatch } from 'react-redux';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import InputField from '../InputField';
 import SelectField from '../SelectField';
 import { createAsset } from "../../../redux/slice/assetsSlice"
+import theme from '../../../theme';
+import { use } from 'react';
 
 function CustomTabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -46,6 +48,7 @@ function AddAssetForm({ handleClose }) {
     const plants = useSelector((state) => state.plants.plants);
     const areas = useSelector((state) => state.areas.areas);
     const departments = useSelector((state) => state.departments.departments);
+    const assets = useSelector((state) => state.assets.assets);
 
     const [tabValue, setTabValue] = useState(0);
 
@@ -90,6 +93,36 @@ function AddAssetForm({ handleClose }) {
         handleClose();
     };
 
+    useEffect(() => {
+        // Tự động tạo mã thiết bị khi chọn nhóm thiết bị
+        if (formData.category_id) {
+            const selectedCategory = assetCategories.find(cat => cat.id === formData.category_id);
+            const prefix = selectedCategory ? selectedCategory.code : 'TB';
+            // Tìm mã lớn nhất hiện có với prefix này
+            const existingCodes = assets
+                .filter(asset => asset.asset_code.startsWith(prefix))
+                .map(asset => asset.asset_code);
+            let maxNumber = 0;
+            if (existingCodes.length > 0) {
+                const numbers = existingCodes.map(code => {
+                    const parts = code.split('-');
+                    return parts.length > 1 ? parseInt(parts[1], 10) : 0;
+                });
+                maxNumber = Math.max(...numbers);
+            }
+            setFormData(prev => ({
+                ...prev,
+                asset_code: `${prefix}-${(maxNumber + 1).toString().padStart(4, '0')}`
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                asset_code: ''
+            }));
+        }
+
+    }, [formData.category_id]);
+
     return (
         <Box sx={{ width: "100%", height: "90vh", display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
@@ -97,18 +130,19 @@ function AddAssetForm({ handleClose }) {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                p: 2,
-                backgroundColor: '#f5f5f5'
+                px: 2,
+                py: 1,
+                backgroundColor: theme.palette.grey[800]
             }}>
                 <Typography variant="h5" sx={{
                     fontWeight: 'bold',
                     fontSize: '1.8rem',
-                    color: '#333'
+                    color: '#fff'
                 }}>
                     Nhập thông tin thiết bị
                 </Typography>
 
-                <IconButton onClick={handleClose} sx={{ color: '#666' }}>
+                <IconButton onClick={handleClose} sx={{ color: '#fff' }}>
                     <CloseIcon />
                 </IconButton>
             </Box>
@@ -118,100 +152,100 @@ function AddAssetForm({ handleClose }) {
             {/* Form Content */}
             <Stack p={2} sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                 {/* Nhập thông tin chung */}
-                <Box sx={{ p: 3, borderRadius: 1 }}>
+                <Box sx={{ p: 3, borderRadius: 1, backgroundColor: '#fafafaff', border: '1px solid #ddd' }}>
                     <Grid2 container spacing={1} sx={{ mb: 2, alignItems: 'center' }}>
                         <Grid2 container spacing={1}>
-                         <Grid2 xs={2} >
-                            <InputField
-                                label="Mã TB"
-                                name="asset_code"
-                                value={formData.asset_code}
-                                onChange={handleInputChange}
-                                placeholder="TBSX005"
-                                required
-                                width='120px'
-                            />
-                        </Grid2>
-                        <Grid2 xs={2}>
-                            <SelectField
-                                label="Loại TB"
-                                name="category_id"
-                                value={formData.category_id}
-                                onChange={handleInputChange}
-                                options={assetCategories}
-                                required
-                                placeholder="Chọn nhóm TB"
-                                valueKey="id"
-                                labelKey="name"
-                                width='150px'
-                            />
-                        </Grid2>
+                            <Grid2 lg={2} >
+                                <InputField
+                                    label="Mã TB"
+                                    name="asset_code"
+                                    value={formData.asset_code}
+                                    onChange={handleInputChange}
+                                    required
+                                    disabled
+                                    width='120px'
+                                />
+                            </Grid2>
+                            <Grid2 lg={2}>
+                                <SelectField
+                                    label="Loại TB"
+                                    name="category_id"
+                                    value={formData.category_id}
+                                    onChange={handleInputChange}
+                                    options={assetCategories}
+                                    required
+                                    placeholder="Chọn nhóm TB"
+                                    valueKey="id"
+                                    labelKey="name"
+                                    width='150px'
+                                />
+                            </Grid2>
 
-                        <Grid2 xs={8}>
-                            <InputField
-                                label="Tên thiết bị"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                placeholder="Máy ép vỉ"
-                                required
-                            />
-                        </Grid2>
+                            <Grid2 lg={8}>
+                                <InputField
+                                    label="Tên thiết bị"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    placeholder="Máy ép vỉ"
+                                    required
+                                />
+                            </Grid2>
 
-                        <Grid2 xs={2}>
-                      
-                        </Grid2>
+                            <Grid2 lg={2}>
 
-                        <Grid2 xs={2}>
-                            <SelectField
-                                label="BP QL"
-                                name="team_id"
-                                value={formData.team_id}
-                                onChange={handleInputChange}
-                                options={departments}
-                                required
-                                placeholder="Chọn bộ phận"
-                                valueKey="name"
-                                labelKey="name"
-                                width='150px'
-                            />
-                        </Grid2>
+                            </Grid2>
 
-                        <Grid2 xs={2}>
-                            <SelectField
-                                label="Vị trí"
-                                name="area_id"
-                                value={formData.area_id}
-                                onChange={handleInputChange}
-                                options={areas}
-                                required
-                                placeholder="Chọn vị trí"
-                                valueKey="id"
-                                labelKey="name"
-                                width='150px'
-                            
-                            />
+                            <Grid2 lg={2}>
+                                <SelectField
+                                    label="BP QL"
+                                    name="team_id"
+                                    value={formData.team_id}
+                                    onChange={handleInputChange}
+                                    options={departments}
+                                    required
+                                    placeholder="Chọn bộ phận"
+                                    valueKey="name"
+                                    labelKey="name"
+                                    width='150px'
+                                />
+                            </Grid2>
+
+                            <Grid2 lg={2}>
+                                <SelectField
+                                    label="Vị trí"
+                                    name="area_id"
+                                    value={formData.area_id}
+                                    onChange={handleInputChange}
+                                    options={areas}
+                                    required
+                                    placeholder="Chọn vị trí"
+                                    valueKey="id"
+                                    labelKey="name"
+                                    width='150px'
+
+                                />
+                            </Grid2>
+                            <Grid2 lg={3}>
+                                <SelectField
+                                    label="Trạng thái"
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleInputChange}
+                                    options={statusOptions}
+                                    required
+                                    placeholder="Chọn trạng thái"
+                                    valueKey="id"
+                                    labelKey="name"
+                                    width='150px'
+                                />
+                            </Grid2>
                         </Grid2>
-                        <Grid2 xs={3}>
-                            <SelectField
-                                label="Trạng thái"
-                                name="status"
-                                value={formData.status}
-                                onChange={handleInputChange}
-                                options={statusOptions}
-                                required
-                                placeholder="Chọn trạng thái"
-                                valueKey="id"
-                                labelKey="name"
-                                width='150px'
-                            />
-                        </Grid2>
-                    </Grid2>
                     </Grid2>
 
 
                 </Box>
-                <Divider sx={{ my: 2, borderColor: '#811919ff' }} />
+                <Divider sx={{ borderColor: '#811919ff' }} />
                 {/* Thông tin chi tiết */}
                 <Box sx={{ mt: 2, border: '1px solid #ddd', flex: 1, display: 'flex', flexDirection: 'column', borderRadius: 1 }}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
