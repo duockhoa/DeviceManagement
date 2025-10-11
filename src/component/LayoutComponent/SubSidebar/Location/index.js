@@ -24,8 +24,8 @@ import { fetchAreas } from '../../../../redux/slice/areaSlice';
 
 function Location({ isOpen, onToggle }) {
     const dispatch = useDispatch();
-    const [open , setOpen] = React.useState(false);
-    
+    const [open, setOpen] = React.useState(false);
+
     // Lấy dữ liệu từ Redux store
     const { areas, loading, error } = useSelector(state => state.areas);
 
@@ -39,12 +39,15 @@ function Location({ isOpen, onToggle }) {
         event.stopPropagation(); // Ngăn không cho trigger onToggle
         setOpen(true);
     };
+    const handleClose = () => {
+        setOpen(false);
+    };
 
     return (
         <Box>
-            <ListItemButton 
+            <ListItemButton
                 onClick={onToggle}
-                sx={{ 
+                sx={{
                     backgroundColor: '#fff',
                     borderBottom: '1px solid #e0e0e0',
                     py: 1.5
@@ -53,14 +56,14 @@ function Location({ isOpen, onToggle }) {
                 <ListItemIcon sx={{ minWidth: '35px' }}>
                     <LocationOn sx={{ fontSize: '1.8rem', color: '#1976d2' }} />
                 </ListItemIcon>
-                <ListItemText 
-                    primary="Location" 
-                    primaryTypographyProps={{ 
-                        sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
+                <ListItemText
+                    primary="Location"
+                    primaryTypographyProps={{
+                        sx: { fontSize: '1.4rem', fontWeight: 'medium' }
                     }}
                 />
-                <ListItemIcon 
-                    sx={{ 
+                <ListItemIcon
+                    sx={{
                         minWidth: '30px',
                         minHeight: '30px',
                         borderRadius: '50%',
@@ -73,12 +76,12 @@ function Location({ isOpen, onToggle }) {
                 >
                     <Add sx={{ fontSize: '1.8rem', color: '#1976d2', margin: 'auto' }} />
                 </ListItemIcon>
-                {isOpen ? 
-                    <ExpandLess sx={{ fontSize: '2rem' }} /> : 
+                {isOpen ?
+                    <ExpandLess sx={{ fontSize: '2rem' }} /> :
                     <ExpandMore sx={{ fontSize: '2rem' }} />
                 }
             </ListItemButton>
-            
+
             <Collapse in={isOpen} timeout="auto" unmountOnExit>
                 <Box sx={{ backgroundColor: '#f8f9fa', px: 2, py: 1 }}>
                     {loading ? (
@@ -110,10 +113,10 @@ function Location({ isOpen, onToggle }) {
                     )}
                 </Box>
             </Collapse>
-            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
                 <DialogTitle>Thêm khu vực</DialogTitle>
                 <DialogContent>
-                    <AreaForm />
+                    <AreaForm handleClose={handleClose} />
                 </DialogContent>
             </Dialog>
         </Box>

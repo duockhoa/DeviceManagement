@@ -11,7 +11,6 @@ import InputField from '../InputField';
 import SelectField from '../SelectField';
 import { createAsset } from "../../../redux/slice/assetsSlice"
 import theme from '../../../theme';
-import { use } from 'react';
 
 function CustomTabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -210,6 +209,21 @@ function AddAssetForm({ handleClose }) {
                                     width='150px'
                                 />
                             </Grid2>
+                            <Grid2 lg={2}>
+                                <SelectField
+                                    label="Địa chỉ"
+                                    name="Areas"
+                                    value={formData.Areas}
+                                    onChange={handleInputChange}
+                                    options={plants}
+                                    required
+                                    placeholder="Chọn địa chỉ"
+                                    valueKey="Areas"
+                                    labelKey="name"
+                                    width='150px'
+
+                                />
+                            </Grid2>
 
                             <Grid2 lg={2}>
                                 <SelectField
@@ -217,7 +231,7 @@ function AddAssetForm({ handleClose }) {
                                     name="area_id"
                                     value={formData.area_id}
                                     onChange={handleInputChange}
-                                    options={areas}
+                                    options={formData.Areas}
                                     required
                                     placeholder="Chọn vị trí"
                                     valueKey="id"
