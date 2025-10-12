@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { fetchAssets } from '../../redux/slice/assetsSlice';
 import { fetchDepartments } from '../../redux/slice/departmentSlice';
 import { fetchAssetCategories } from '../../redux/slice/assetCategoriesSlice';
+import { fetchAssetSubCategories } from '../../redux/slice/assetSubCategoriesSlice';
 
 const AppInitializer = ({ children }) => {
     const dispatch = useDispatch();
@@ -16,6 +17,7 @@ const AppInitializer = ({ children }) => {
                     dispatch(fetchAssets()),
                     dispatch(fetchDepartments()),
                     dispatch(fetchAssetCategories()),
+                    dispatch(fetchAssetSubCategories()),
                 ]);
                 console.log('App initialized successfully');
             } catch (error) {

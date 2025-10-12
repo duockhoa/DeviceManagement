@@ -13,6 +13,7 @@ function InputField({
     rows = 1,
     disabled = false,
     error = false,
+    minLabelWidth = '40px',
     helperText = '',
     width = 'full', // 'full', 'auto', hoặc số cụ thể như '200px', '50%'
     ...otherProps
@@ -42,7 +43,7 @@ function InputField({
                 fontSize: '1.2rem',
                 fontWeight: 'medium',
                 color: '#333',
-                minWidth: '40px',
+                minWidth: minLabelWidth,
                 whiteSpace: 'nowrap'
             }}>
                 {label}{required && <span style={{ color: '#f44336' }}> *</span>}:
@@ -53,7 +54,7 @@ function InputField({
                 onChange={onChange}
                 placeholder={placeholder}
                 variant="outlined"
-                size="medium"
+                size="small"
                 type={type}
                 multiline={multiline}
                 rows={multiline ? rows : undefined}
@@ -76,7 +77,7 @@ function InputField({
                         }
                     },
                     '& .MuiOutlinedInput-input': {
-                        padding: '12px 14px',
+                        padding: '10px 14px',
                     },
                     ...textFieldProps.sx
                 }}

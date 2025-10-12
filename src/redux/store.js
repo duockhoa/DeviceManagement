@@ -8,6 +8,7 @@ import departmentsReducer from './slice/departmentSlice';
 import assetCategoriesReducer from './slice/assetCategoriesSlice';
 import plantsReducer from './slice/plantSlice';
 import areasReducer from './slice/areaSlice';
+import assetSubCategories from './slice/assetSubCategoriesSlice';
 
 export default configureStore({
     reducer: {
@@ -20,5 +21,6 @@ export default configureStore({
         assetCategories: assetCategoriesReducer,
         plants: plantsReducer,
         areas: areasReducer,
+        assetSubCategories: assetSubCategories,
     },
 });

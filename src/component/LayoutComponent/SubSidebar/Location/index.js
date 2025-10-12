@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import AreaForm from '../../../AreaComponent/AreaForm';
+import theme from '../../../../theme';
 import {
     Box,
     ListItemButton,
@@ -114,10 +115,7 @@ function Location({ isOpen, onToggle }) {
                 </Box>
             </Collapse>
             <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>Thêm khu vực</DialogTitle>
-                <DialogContent>
                     <AreaForm handleClose={handleClose} />
-                </DialogContent>
             </Dialog>
         </Box>
     );

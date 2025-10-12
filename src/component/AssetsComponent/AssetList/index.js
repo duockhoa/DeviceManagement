@@ -39,12 +39,12 @@ function AssetList() {
             )
         },
         {
-            field: 'category',
-            headerName: 'Loại thiết bị',
+            field: 'subCategory',
+            headerName: 'Nhóm thiết bị',
             width: 150,
             renderCell: (params) => (
                 <Chip
-                    label={params.row.Category?.name || 'Chưa phân loại'}
+                    label={params.row.SubCategory?.Category?.name || 'Chưa phân loại'}
                     color="primary"
                     size="small"
                     variant="outlined"

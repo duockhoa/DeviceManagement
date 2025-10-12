@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
-import { Typography, IconButton, Divider, Button, Tabs, Tab } from '@mui/material';
+import { Typography, IconButton, Divider, Button, Tabs, Tab, Dialog , Paper } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
@@ -11,7 +12,8 @@ import InputField from '../InputField';
 import SelectField from '../SelectField';
 import { createAsset } from "../../../redux/slice/assetsSlice"
 import theme from '../../../theme';
-
+import AreaForm from '../../AreaComponent/AreaForm';
+import AddSubCategoriesForm from '../../SubCategories/SubCategoriesForm';
 function CustomTabPanel(props) {
     const { children, value, index, ...other } = props;
 
@@ -44,12 +46,17 @@ function a11yProps(index) {
 function AddAssetForm({ handleClose }) {
     const dispatch = useDispatch();
     const assetCategories = useSelector((state) => state.assetCategories.categories);
-    const plants = useSelector((state) => state.plants.plants);
     const areas = useSelector((state) => state.areas.areas);
+    const plants = useSelector((state) => state.plants.plants);
     const departments = useSelector((state) => state.departments.departments);
     const assets = useSelector((state) => state.assets.assets);
+    const assetsSubCategories = useSelector((state) => state.assetSubCategories.subCategories);
 
     const [tabValue, setTabValue] = useState(0);
+    const [FormComponent, setFormComponent] = useState(null);
+    const [formOpen, setFormOpen] = useState(false);
+    const [areaOptions, setAreaOptions] = useState(areas);
+    const [subCategoryOptions, setSubCategoryOptions] = useState(assetsSubCategories);
 
     // Form state cho thông tin chung
     const [formData, setFormData] = useState({
@@ -58,7 +65,8 @@ function AddAssetForm({ handleClose }) {
         category_id: '',
         team_id: '',
         area_id: '',
-        image: '',
+        plant_id: '',
+        sub_category_id: '',
         status: 'active',
     });
     const statusOptions = [
@@ -121,9 +129,50 @@ function AddAssetForm({ handleClose }) {
         }
 
     }, [formData.category_id]);
+    // Cập nhật danh sách khu vực khi có sự thay đổi
+    useEffect(() => {
+        if (formData.plant_id) {
+            const filteredAreas = areas.filter(area => area.plant_id === formData.plant_id);
+            setAreaOptions(filteredAreas);
+        } else {
+            setAreaOptions(areas);
+        }
+    }, [formData.plant_id, areas]);
 
+    useEffect(() => {
+        if (formData.category_id) {
+            const filteredSubCategories = assetsSubCategories.filter(subcategory => subcategory.category_id === formData.category_id);
+            setSubCategoryOptions(filteredSubCategories);
+        } else {
+            setSubCategoryOptions(assetsSubCategories);
+        }
+    }, [formData.category_id, assetsSubCategories]);
+
+    // validate form
+    const isFormValid = () => {
+        return formData.asset_code && formData.name && formData.category_id && formData.team_id && formData.area_id ;
+    };
+   // Thêm khu vực mới
+   const handleAddNewArea = () => {
+       // Logic thêm khu vực mới
+        setFormComponent(() => AreaForm);
+        setFormOpen(true);
+       console.log('Thêm khu vực mới');
+   };
+
+    // Thêm loại thiết bị mới
+    const handleAddNewSubCategory = () => {
+        // Logic thêm loại thiết bị mới
+        import('../../SubCategories/SubCategoriesForm').then((module) => {
+            setFormComponent(() => module.default);
+            setFormOpen(true);
+        });
+   }
+   const handleCloseForm = () => {
+       setFormOpen(false);
+   };
     return (
-        <Box sx={{ width: "100%", height: "90vh", display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ width: "100%", height: "90vh", display: 'flex', flexDirection: 'column'  , backgroundColor: '#f8f8f8' }}>
             {/* Header */}
             <Box sx={{
                 display: 'flex',
@@ -131,32 +180,30 @@ function AddAssetForm({ handleClose }) {
                 alignItems: 'center',
                 px: 2,
                 py: 1,
-                backgroundColor: theme.palette.grey[800]
+                backgroundColor: theme.palette.primary.main
             }}>
                 <Typography variant="h5" sx={{
                     fontWeight: 'bold',
                     fontSize: '1.8rem',
                     color: '#fff'
                 }}>
-                    Nhập thông tin thiết bị
+                    THÔNG TIN THIẾT BỊ
                 </Typography>
 
-                <IconButton onClick={handleClose} sx={{ color: '#fff' }}>
-                    <CloseIcon />
+                <IconButton onClick={handleClose} sx={{ color: '#fff' , p: 0.5  }}>
+                    <CloseIcon   sx={{fontSize: "1.8rem"}}/>
                 </IconButton>
             </Box>
 
-            <Divider />
-
             {/* Form Content */}
-            <Stack p={2} sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+            <Stack  sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                 {/* Nhập thông tin chung */}
-                <Box sx={{ p: 3, borderRadius: 1, backgroundColor: '#fafafaff', border: '1px solid #ddd' }}>
-                    <Grid2 container spacing={1} sx={{ mb: 2, alignItems: 'center' }}>
-                        <Grid2 container spacing={1}>
-                            <Grid2 lg={2} >
+                <Box sx={{ p: 3, borderRadius: 1  ,backgroundColor: '#fff' , display: "flex" }}>
+                    <Grid2 container  sx={{ mb: 2, alignItems: 'center'  }}>
+                        <Grid2 container spacing={2}>
+                            <Grid2 lg={1.5} >
                                 <InputField
-                                    label="Mã TB"
+                                    label="Mã"
                                     name="asset_code"
                                     value={formData.asset_code}
                                     onChange={handleInputChange}
@@ -167,7 +214,7 @@ function AddAssetForm({ handleClose }) {
                             </Grid2>
                             <Grid2 lg={2}>
                                 <SelectField
-                                    label="Loại TB"
+                                    label="Nhóm"
                                     name="category_id"
                                     value={formData.category_id}
                                     onChange={handleInputChange}
@@ -191,8 +238,26 @@ function AddAssetForm({ handleClose }) {
                                 />
                             </Grid2>
 
-                            <Grid2 lg={2}>
+                            <Grid2 lg={1.5}>
 
+                            </Grid2>
+                            <Grid2 lg={2}>
+                                <SelectField
+                                    label="Loại TB"
+                                    name="sub_category_id"
+                                    value={formData.sub_category_id}
+                                    onChange={handleInputChange}
+                                    options={subCategoryOptions}
+                                    required
+                                    placeholder="Chọn loại TB"
+                                    valueKey="id"
+                                    labelKey="name"
+                                    width='150px'
+                                    showAddNew
+                                    addNewText='Thêm mới'
+                                    onAddNew={handleAddNewSubCategory}
+
+                                />
                             </Grid2>
 
                             <Grid2 lg={2}>
@@ -209,16 +274,17 @@ function AddAssetForm({ handleClose }) {
                                     width='150px'
                                 />
                             </Grid2>
-                            <Grid2 lg={2}>
+                            <Grid2 lg={2} sx={{ display: 'flex', alignItems: 'center' }}>
+
                                 <SelectField
                                     label="Địa chỉ"
-                                    name="Areas"
-                                    value={formData.Areas}
+                                    name="plant_id"
+                                    value={formData.plant_id}
                                     onChange={handleInputChange}
                                     options={plants}
                                     required
                                     placeholder="Chọn địa chỉ"
-                                    valueKey="Areas"
+                                    valueKey="id"
                                     labelKey="name"
                                     width='150px'
 
@@ -231,16 +297,19 @@ function AddAssetForm({ handleClose }) {
                                     name="area_id"
                                     value={formData.area_id}
                                     onChange={handleInputChange}
-                                    options={formData.Areas}
+                                    options={areaOptions}
                                     required
                                     placeholder="Chọn vị trí"
                                     valueKey="id"
                                     labelKey="name"
                                     width='150px'
+                                    showAddNew
+                                    addNewText='Thêm mới'
+                                    onAddNew={handleAddNewArea}
 
                                 />
                             </Grid2>
-                            <Grid2 lg={3}>
+                            <Grid2 lg={2}>
                                 <SelectField
                                     label="Trạng thái"
                                     name="status"
@@ -251,25 +320,27 @@ function AddAssetForm({ handleClose }) {
                                     placeholder="Chọn trạng thái"
                                     valueKey="id"
                                     labelKey="name"
-                                    width='150px'
+                                    width='140px'
                                 />
                             </Grid2>
                         </Grid2>
                     </Grid2>
+                    <Box sx={{p:1 , border: "1px dashed #aaa" , minWidth: "100px" , height: "100%" }}></Box>
 
 
                 </Box>
-                <Divider sx={{ borderColor: '#811919ff' }} />
+                <Divider sx={{ borderColor: theme.palette.grey[900]  }} />
                 {/* Thông tin chi tiết */}
-                <Box sx={{ mt: 2, border: '1px solid #ddd', flex: 1, display: 'flex', flexDirection: 'column', borderRadius: 1 }}>
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Box  sx={{flex: 1 , display: 'flex' , backgroundColor: '#f5f5f5' }}>
+                    <Box  sx={{ m: 2, border: '1px solid #aaa', display: 'flex', flexDirection: 'column', borderRadius: 1 , flex: 1  , backgroundColor: '#fff' }}>
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' , backgroundColor: '#e4eefdff' }}>
                         <Tabs value={tabValue} onChange={handleTabChange} aria-label="detail tabs">
-                            <Tab label="Thông tin chung" {...a11yProps(0)} />
-                            <Tab label="Thông số kỹ thuật" {...a11yProps(1)} />
-                            <Tab label="Thành phần cấu tạo" {...a11yProps(2)} />
-                            <Tab label="Vật tư tiêu hao" {...a11yProps(3)} />
-                            <Tab label="Bảo trì & Bảo dưỡng" {...a11yProps(4)} />
-                            <Tab label="Tài liệu đính kèm" {...a11yProps(5)} />
+                            <Tab label="Thông tin chung" {...a11yProps(0)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Thông số kỹ thuật" {...a11yProps(1)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Thành phần cấu tạo" {...a11yProps(2)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Vật tư tiêu hao" {...a11yProps(3)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Bảo trì & Bảo dưỡng" {...a11yProps(4)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Tài liệu đính kèm" {...a11yProps(5)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
                         </Tabs>
                     </Box>
                     <CustomTabPanel value={tabValue} index={0}>
@@ -308,6 +379,7 @@ function AddAssetForm({ handleClose }) {
                             Gồm tên tài liệu và file đính kèm
                         </Box>
                     </CustomTabPanel>
+                    </Box>
                 </Box>
             </Stack>
 
@@ -317,14 +389,13 @@ function AddAssetForm({ handleClose }) {
                 display: 'flex',
                 justifyContent: 'flex-end',
                 gap: 2,
-                borderTop: '1px solid #e0e0e0',
                 backgroundColor: '#fafafa'
             }}>
                 <Button
                     variant="outlined"
                     onClick={handleClose}
                     sx={{
-                        fontSize: '1.3rem',
+                        fontSize: '1.2rem',
                         minWidth: 120,
                         color: '#f44336',
                         borderColor: '#f44336',
@@ -341,19 +412,22 @@ function AddAssetForm({ handleClose }) {
                     onClick={handleSave}
                     startIcon={<SaveIcon />}
                     sx={{
-                        fontSize: '1.3rem',
+                        fontSize: '1.2rem',
                         minWidth: 120,
                         backgroundColor: '#1976d2',
                         '&:hover': {
                             backgroundColor: '#1565c0'
                         }
                     }}
-                    disabled={!formData.asset_code || !formData.name || !formData.category_id}
+                    disabled={!isFormValid()}
                 >
                     Lưu
                 </Button>
             </Box>
-        </Box>
+            <Dialog open={formOpen} onClose={handleCloseForm} maxWidth="md" fullWidth>
+               <FormComponent handleClose={handleCloseForm} />
+            </Dialog>
+        </Box >
     );
 }
 

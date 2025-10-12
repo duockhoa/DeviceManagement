@@ -5,7 +5,7 @@ import {
     createAssetCategory,
     updateAssetCategory,
     deleteAssetCategory,
-    getAssetsByCategory
+    getSubCategoriesByCategory  // Thay đổi từ getAssetsByCategory
 } from '../../services/assetCategoriesService';
 
 // Fetch tất cả asset categories
@@ -73,15 +73,15 @@ export const deleteExistingAssetCategory = createAsyncThunk(
     }
 );
 
-// Fetch assets thuộc category
-export const fetchAssetsByCategory = createAsyncThunk(
-    'assetCategories/fetchAssetsByCategory',
+// Fetch sub categories thuộc category (THAY ĐỔI)
+export const fetchSubCategoriesByCategory = createAsyncThunk(
+    'assetCategories/fetchSubCategoriesByCategory',
     async (categoryId) => {
-        const response = await getAssetsByCategory(categoryId);
+        const response = await getSubCategoriesByCategory(categoryId);
         if (response) {
             return response;
         } else {
-            throw new Error('Không thể lấy danh sách thiết bị theo loại');
+            throw new Error('Không thể lấy danh sách loại thiết bị phụ');
         }
     }
 );
@@ -91,14 +91,14 @@ const assetCategoriesSlice = createSlice({
     initialState: {
         categories: [],
         currentCategory: null,
-        categoryAssets: [],
+        categorySubCategories: [],  // Thay đổi từ categoryAssets
         loading: false,
         error: null,
     },
     reducers: {
         clearCurrentCategory: (state) => {
             state.currentCategory = null;
-            state.categoryAssets = [];
+            state.categorySubCategories = [];  // Thay đổi
         },
         clearError: (state) => {
             state.error = null;
@@ -106,7 +106,7 @@ const assetCategoriesSlice = createSlice({
         resetCategories: (state) => {
             state.categories = [];
             state.currentCategory = null;
-            state.categoryAssets = [];
+            state.categorySubCategories = [];  // Thay đổi
         }
     },
     extraReducers: (builder) => {
@@ -190,16 +190,16 @@ const assetCategoriesSlice = createSlice({
                 state.error = action.error.message;
             })
             
-            // Fetch assets by category
-            .addCase(fetchAssetsByCategory.pending, (state) => {
+            // Fetch sub categories by category (THAY ĐỔI)
+            .addCase(fetchSubCategoriesByCategory.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchAssetsByCategory.fulfilled, (state, action) => {
-                state.categoryAssets = action.payload.assets || [];
+            .addCase(fetchSubCategoriesByCategory.fulfilled, (state, action) => {
+                state.categorySubCategories = action.payload.subCategories || [];
                 state.loading = false;
             })
-            .addCase(fetchAssetsByCategory.rejected, (state, action) => {
+            .addCase(fetchSubCategoriesByCategory.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;
             });

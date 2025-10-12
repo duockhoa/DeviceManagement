@@ -2,9 +2,15 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { 
     getAllAssets,
     getAssetById,
-    createNewAsset,
+    createAsset as createAssetService,
     updateAsset,
-    deleteAsset
+    deleteAsset,
+    getAssetsBySubCategory,     // Thêm mới
+    getAssetsByCategory,        // Logic mới
+    getAssetsByArea,
+    getAssetsByDepartment,
+    searchAssets,
+    getAssetByCode
 } from '../../services/assetsService';
 
 // Fetch tất cả assets
@@ -33,11 +39,89 @@ export const fetchAssetById = createAsyncThunk(
     }
 );
 
+// Fetch asset theo code
+export const fetchAssetByCode = createAsyncThunk(
+    'assets/fetchAssetByCode',
+    async (assetCode) => {
+        const response = await getAssetByCode(assetCode);
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Không thể lấy thông tin thiết bị theo mã');
+        }
+    }
+);
+
+// Fetch assets theo sub category (MỚI)
+export const fetchAssetsBySubCategory = createAsyncThunk(
+    'assets/fetchAssetsBySubCategory',
+    async (subCategoryId) => {
+        const response = await getAssetsBySubCategory(subCategoryId);
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Không thể lấy danh sách thiết bị theo loại phụ');
+        }
+    }
+);
+
+// Fetch assets theo category (LOGIC MỚI - qua sub categories)
+export const fetchAssetsByCategory = createAsyncThunk(
+    'assets/fetchAssetsByCategory',
+    async (categoryId) => {
+        const response = await getAssetsByCategory(categoryId);
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Không thể lấy danh sách thiết bị theo loại');
+        }
+    }
+);
+
+// Fetch assets theo area
+export const fetchAssetsByArea = createAsyncThunk(
+    'assets/fetchAssetsByArea',
+    async (areaId) => {
+        const response = await getAssetsByArea(areaId);
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Không thể lấy danh sách thiết bị theo khu vực');
+        }
+    }
+);
+
+// Fetch assets theo department
+export const fetchAssetsByDepartment = createAsyncThunk(
+    'assets/fetchAssetsByDepartment',
+    async (departmentName) => {
+        const response = await getAssetsByDepartment(departmentName);
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Không thể lấy danh sách thiết bị theo phòng ban');
+        }
+    }
+);
+
+// Search assets
+export const searchAssetsThunk = createAsyncThunk(
+    'assets/searchAssets',
+    async (searchParams) => {
+        const response = await searchAssets(searchParams);
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Không thể tìm kiếm thiết bị');
+        }
+    }
+);
+
 // Tạo asset mới
 export const createAsset = createAsyncThunk(
     'assets/createAsset',
     async (assetData) => {
-        const response = await createNewAsset(assetData);
+        const response = await createAssetService(assetData);
         if (response) {
             return response;
         } else {
@@ -77,8 +161,16 @@ const assetsSlice = createSlice({
     initialState: {
         assets: [],
         currentAsset: null,
+        filteredAssets: [],        // Thêm để lưu kết quả filter/search
+        searchResults: [],         // Thêm để lưu kết quả search
         loading: false,
         error: null,
+        filters: {                 // Thêm để lưu trạng thái filter
+            category_id: null,
+            sub_category_id: null,
+            area_id: null,
+            department: null
+        }
     },
     reducers: {
         clearCurrentAsset: (state) => {
@@ -90,6 +182,24 @@ const assetsSlice = createSlice({
         resetAssets: (state) => {
             state.assets = [];
             state.currentAsset = null;
+            state.filteredAssets = [];
+            state.searchResults = [];
+        },
+        clearFilteredAssets: (state) => {
+            state.filteredAssets = [];
+            state.searchResults = [];
+        },
+        setFilters: (state, action) => {
+            state.filters = { ...state.filters, ...action.payload };
+        },
+        clearFilters: (state) => {
+            state.filters = {
+                category_id: null,
+                sub_category_id: null,
+                area_id: null,
+                department: null
+            };
+            state.filteredAssets = [];
         }
     },
     extraReducers: (builder) => {
@@ -118,6 +228,90 @@ const assetsSlice = createSlice({
                 state.loading = false;
             })
             .addCase(fetchAssetById.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
+
+            // Fetch asset by code
+            .addCase(fetchAssetByCode.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAssetByCode.fulfilled, (state, action) => {
+                state.currentAsset = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchAssetByCode.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
+
+            // Fetch assets by sub category (MỚI)
+            .addCase(fetchAssetsBySubCategory.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAssetsBySubCategory.fulfilled, (state, action) => {
+                state.filteredAssets = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchAssetsBySubCategory.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
+
+            // Fetch assets by category (LOGIC MỚI)
+            .addCase(fetchAssetsByCategory.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAssetsByCategory.fulfilled, (state, action) => {
+                state.filteredAssets = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchAssetsByCategory.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
+
+            // Fetch assets by area
+            .addCase(fetchAssetsByArea.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAssetsByArea.fulfilled, (state, action) => {
+                state.filteredAssets = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchAssetsByArea.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
+
+            // Fetch assets by department
+            .addCase(fetchAssetsByDepartment.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAssetsByDepartment.fulfilled, (state, action) => {
+                state.filteredAssets = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchAssetsByDepartment.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
+
+            // Search assets
+            .addCase(searchAssetsThunk.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(searchAssetsThunk.fulfilled, (state, action) => {
+                state.searchResults = action.payload;
+                state.loading = false;
+            })
+            .addCase(searchAssetsThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;
             })
@@ -175,5 +369,12 @@ const assetsSlice = createSlice({
     },
 });
 
-export const { clearCurrentAsset, clearError, resetAssets } = assetsSlice.actions;
+export const { 
+    clearCurrentAsset, 
+    clearError, 
+    resetAssets, 
+    clearFilteredAssets, 
+    setFilters, 
+    clearFilters 
+} = assetsSlice.actions;
 export default assetsSlice.reducer;

@@ -5,22 +5,22 @@ import Button from "@mui/material/Button";
 import { useEffect, useState } from "react";
 import InputField from "../../AssetsComponent/InputField";
 import SelectField from "../../AssetsComponent/SelectField";
-import { createNewArea } from "../../../redux/slice/areaSlice";
+import { createNewAssetSubCategory } from "../../../redux/slice/assetSubCategoriesSlice";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import theme from "../../../theme";
 import CloseIcon from '@mui/icons-material/Close';
 
-function AreaForm({ handleClose }) {
+function AddSubCategoriesForm({ handleClose }) {
     const dispatch = useDispatch();
-    const plants = useSelector((state) => state.plants.plants);
-    const error = useSelector((state) => state.areas.error);
-    const loading = useSelector((state) => state.areas.loading);
+    const assetCategories = useSelector((state) => state.assetCategories.categories);
+    const error = useSelector((state) => state.assetCategories.error);
+    const loading = useSelector((state) => state.assetCategories.loading);
     const [formData, setFormData] = useState({
-        code: '',
+        category_id: '',
         name: '',
-        plant_id: '',
         description: ''
     });
+    console.log(assetCategories);
     
     const onChange = (e) => {
         setFormData({
@@ -31,7 +31,7 @@ function AreaForm({ handleClose }) {
     const onSubmit = async(e) => {
         e.preventDefault();
         // Dispatch action to create area
-        await dispatch(createNewArea(formData));
+        await dispatch(createNewAssetSubCategory(formData));
         // Close the form dialog
         if (!loading && !error) {
             handleClose();
@@ -39,18 +39,18 @@ function AreaForm({ handleClose }) {
     }
     return (
         <Box sx={{ p: 2 , pt:0 }}>
-            <Typography variant="h6" sx={{ textAlign: 'center', fontWeight: 'bold' , p: 2 , fontSize: "1.8rem"  , color: theme.palette.primary.main }}>THÊM KHU VỰC</Typography>
+            <Typography variant="h6" sx={{ textAlign: 'center', fontWeight: 'bold' , p: 2 , fontSize: "1.8rem"  , color: theme.palette.primary.main }}>THÊM LOẠI THIẾT BỊ</Typography>
             {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
             <Grid2  sx={{ p: 2  }} container spacing={2}>
                 <Grid2 xs={12}>
                     <SelectField
-                        label="Địa chỉ"
-                        name="plant_id"
-                        value={formData.plant_id}
+                        label="Nhóm thiết bị"
+                        name="category_id"
+                        value={formData.category_id}
                         onChange={onChange}
-                        options={plants}
+                        options={assetCategories}
                         required
-                        placeholder="Chọn địa chỉ"
+                        placeholder="Chọn nhóm thiết bị"
                         valueKey="id"
                         labelKey="name"
                         minLabelWidth="80px"
@@ -58,23 +58,22 @@ function AreaForm({ handleClose }) {
                 </Grid2>
                 <Grid2 xs={12}>
                     <InputField
-                        label="Tên vị trí"
+                        label="Tên loại thiết bị"
                         name="name"
                         value={formData.name}
                         onChange={onChange}
                         required
-                        placeholder="Nhập tên khu vực"
+                        placeholder="Nhập tên loại thiết bị ,  vđ: HVAC, Máy chiếu..."
                         minLabelWidth="80px"
                     />
                 </Grid2>
                 <Grid2 xs={12}>
                     <InputField
-                        label="Mô tả vị trí"
+                        label="Mô tả loại thiết bị"
                         name="description"
                         value={formData.description}
                         onChange={onChange}
-                        required
-                        placeholder="Nhập mô tả vị trí"
+                        placeholder="Nhập mô tả loại thiết bị"
                          minLabelWidth="80px"
                     />
                 </Grid2>
@@ -114,6 +113,6 @@ function AreaForm({ handleClose }) {
     );
 }
 
-export default AreaForm;
+export default AddSubCategoriesForm;
 
      

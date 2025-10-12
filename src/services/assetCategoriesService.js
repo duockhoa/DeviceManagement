@@ -11,7 +11,7 @@ export const getAllAssetCategories = async () => {
   }
 };
 
-// Lấy asset category theo ID (bao gồm assets thuộc category đó)
+// Lấy asset category theo ID (bao gồm sub categories)
 export const getAssetCategoryById = async (id) => {
   try {
     const response = await axios.get(`/asset-categories/${id}`);
@@ -55,13 +55,13 @@ export const deleteAssetCategory = async (id) => {
   }
 };
 
-// Lấy tất cả assets thuộc một category
-export const getAssetsByCategory = async (categoryId) => {
+// Lấy tất cả sub categories thuộc một category (THAY ĐỔI TỪ getAssetsByCategory)
+export const getSubCategoriesByCategory = async (categoryId) => {
   try {
-    const response = await axios.get(`/asset-categories/${categoryId}/assets`);
+    const response = await axios.get(`/asset-categories/${categoryId}/sub-categories`);
     return response.data.data;
   } catch (error) {
-    console.error("Error fetching assets by category:", error);
+    console.error("Error fetching sub categories by category:", error);
     throw error;
   }
 };

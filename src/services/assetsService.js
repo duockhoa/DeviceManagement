@@ -1,9 +1,9 @@
 import axios from "./customize-axios";
 
+// GET /api/assets - Lấy tất cả assets
 export const getAllAssets = async () => {
   try {
     const response = await axios.get(`/assets`);
-    console.log(response.data.data);
     return response.data.data;
   } catch (error) {
     console.error("Error fetching all assets:", error);
@@ -11,6 +11,7 @@ export const getAllAssets = async () => {
   }
 };
 
+// GET /api/assets/:id - Lấy asset theo ID
 export const getAssetById = async (id) => {
   try {
     const response = await axios.get(`/assets/${id}`);
@@ -21,37 +22,18 @@ export const getAssetById = async (id) => {
   }
 };
 
-export const createNewAsset = async (data) => {
+// GET /api/assets/by-code/:assetCode - Lấy asset theo asset code
+export const getAssetByCode = async (assetCode) => {
   try {
-    const response = await axios.post('/assets', data);
+    const response = await axios.get(`/assets/by-code/${assetCode}`);
     return response.data.data;
   } catch (error) {
-    console.error("Error creating new asset:", error);
+    console.error("Error fetching asset by code:", error);
     throw error;
   }
 };
 
-export const updateAsset = async (id, data) => {
-  try {
-    const response = await axios.put(`/assets/${id}`, data);
-    return response.data.data;
-  } catch (error) {
-    console.error("Error updating asset:", error);
-    throw error;
-  }
-};
-
-export const deleteAsset = async (id) => {
-  try {
-    const response = await axios.delete(`/assets/${id}`);
-    return response.data.data;
-  } catch (error) {
-    console.error("Error deleting asset:", error);
-    throw error;
-  }
-};
-
-// Thêm các methods mới theo API đã cập nhật
+// GET /api/assets/by-area/:areaId - Lấy assets theo area
 export const getAssetsByArea = async (areaId) => {
   try {
     const response = await axios.get(`/assets/by-area/${areaId}`);
@@ -62,6 +44,18 @@ export const getAssetsByArea = async (areaId) => {
   }
 };
 
+// GET /api/assets/by-sub-category/:subCategoryId - Lấy assets theo sub category (MỚI)
+export const getAssetsBySubCategory = async (subCategoryId) => {
+  try {
+    const response = await axios.get(`/assets/by-sub-category/${subCategoryId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching assets by sub category:", error);
+    throw error;
+  }
+};
+
+// GET /api/assets/by-category/:categoryId - Lấy assets theo category (LOGIC MỚI)
 export const getAssetsByCategory = async (categoryId) => {
   try {
     const response = await axios.get(`/assets/by-category/${categoryId}`);
@@ -72,6 +66,7 @@ export const getAssetsByCategory = async (categoryId) => {
   }
 };
 
+// GET /api/assets/by-department/:departmentName - Lấy assets theo department
 export const getAssetsByDepartment = async (departmentName) => {
   try {
     const response = await axios.get(`/assets/by-department/${departmentName}`);
@@ -82,9 +77,11 @@ export const getAssetsByDepartment = async (departmentName) => {
   }
 };
 
-export const searchAssets = async (params) => {
+// GET /api/assets/search - Tìm kiếm assets
+export const searchAssets = async (params = {}) => {
   try {
-    const response = await axios.get('/assets/search', { params });
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axios.get(`/assets/search?${queryString}`);
     return response.data.data;
   } catch (error) {
     console.error("Error searching assets:", error);
@@ -92,12 +89,35 @@ export const searchAssets = async (params) => {
   }
 };
 
-export const getAssetByCode = async (assetCode) => {
+// POST /api/assets - Tạo asset mới
+export const createAsset = async (data) => {
   try {
-    const response = await axios.get(`/assets/by-code/${assetCode}`);
+    const response = await axios.post('/assets', data);
     return response.data.data;
   } catch (error) {
-    console.error("Error fetching asset by code:", error);
+    console.error("Error creating new asset:", error);
+    throw error;
+  }
+};
+
+// PUT /api/assets/:id - Cập nhật asset
+export const updateAsset = async (id, data) => {
+  try {
+    const response = await axios.put(`/assets/${id}`, data);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error updating asset:", error);
+    throw error;
+  }
+};
+
+// DELETE /api/assets/:id - Xóa asset
+export const deleteAsset = async (id) => {
+  try {
+    const response = await axios.delete(`/assets/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting asset:", error);
     throw error;
   }
 };
