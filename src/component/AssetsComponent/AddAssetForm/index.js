@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import { Typography, IconButton, Divider, Button, Tabs, Tab, Dialog , Paper } from '@mui/material';
+import { Typography, IconButton, Divider, Button, Tabs, Tab, Dialog , Paper, Grid } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import CloseIcon from '@mui/icons-material/Close';
@@ -8,12 +8,14 @@ import { Stack } from '@mui/system';
 import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import InputField from '../InputField';
-import SelectField from '../SelectField';
+import InputField from '../../InputComponent/InputField';
+import SelectField from '../../InputComponent/SelectField';
 import { createAsset } from "../../../redux/slice/assetsSlice"
 import theme from '../../../theme';
 import AreaForm from '../../AreaComponent/AreaForm';
 import AddSubCategoriesForm from '../../SubCategories/SubCategoriesForm';
+import InputDate from '../../InputComponent/InputDate';
+import InputNumber from '../../InputComponent/InputNumber';
 function CustomTabPanel(props) {
     const { children, value, index, ...other } = props;
 
@@ -68,6 +70,7 @@ function AddAssetForm({ handleClose }) {
         plant_id: '',
         sub_category_id: '',
         status: 'active',
+        generalInfo: null,
     });
     const statusOptions = [
         {
@@ -163,14 +166,31 @@ function AddAssetForm({ handleClose }) {
     // Thêm loại thiết bị mới
     const handleAddNewSubCategory = () => {
         // Logic thêm loại thiết bị mới
-        import('../../SubCategories/SubCategoriesForm').then((module) => {
-            setFormComponent(() => module.default);
-            setFormOpen(true);
-        });
+        setFormComponent(() => AddSubCategoriesForm);
+        setFormOpen(true);
    }
    const handleCloseForm = () => {
        setFormOpen(false);
    };
+   // Thêm thông tin chung
+    const handleChangeGeneralInfo = (event) => {
+         // Logic thêm thông tin chung
+        const value = event.target.value;
+        const name = event.target.name;
+        if (!formData.generalInfo) {
+            setFormData(prev => ({
+                ...prev,
+                generalInfo: {}
+            }));
+        }
+        setFormData(prev => ({
+            ...prev,
+            generalInfo: {
+                ...prev.generalInfo,
+                [name]: value
+            }
+        }));
+    };
     return (
         <Box sx={{ width: "100%", height: "90vh", display: 'flex', flexDirection: 'column'  , backgroundColor: '#f8f8f8' }}>
             {/* Header */}
@@ -336,16 +356,118 @@ function AddAssetForm({ handleClose }) {
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' , backgroundColor: '#e4eefdff' }}>
                         <Tabs value={tabValue} onChange={handleTabChange} aria-label="detail tabs">
                             <Tab label="Thông tin chung" {...a11yProps(0)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
-                            <Tab label="Thông số kỹ thuật" {...a11yProps(1)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
-                            <Tab label="Thành phần cấu tạo" {...a11yProps(2)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Thành phần cấu tạo" {...a11yProps(1)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Thông số kỹ thuật" {...a11yProps(2)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
                             <Tab label="Vật tư tiêu hao" {...a11yProps(3)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
-                            <Tab label="Bảo trì & Bảo dưỡng" {...a11yProps(4)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
-                            <Tab label="Tài liệu đính kèm" {...a11yProps(5)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Tài liệu đính kèm" {...a11yProps(4)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
                         </Tabs>
                     </Box>
                     <CustomTabPanel value={tabValue} index={0}>
                         <Grid2 container spacing={2}>
-                            Thông tin về số seri, model, nhà sản xuất, năm sản xuất, v.v.
+                            <Grid2 xs={12} md={6}>
+                                <InputNumber
+                                    label="Năm sản xuất"
+                                    minLabelWidth='80px'
+                                    width='400px'
+                                    name="manufacture_year"
+                                    value={formData.generalInfo ? formData.generalInfo.manufacture_year : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập năm sản xuất"
+                                />
+                            </Grid2>
+                            <Grid2 xs={12} md={6}>
+                                <InputField
+                                    label="Nhà sản xuất"
+                                    minLabelWidth='80px'
+                                    width='400px'
+                                    name="manufacturer"
+                                    value={formData.generalInfo ? formData.generalInfo.manufacturer : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập nhà sản xuất"
+                                />
+                            </Grid2>
+                            <Grid2 xs={12} md={6}>
+                                <InputField
+                                    label="Nước sản xuất"
+                                    minLabelWidth='80px'
+                                    width='400px'
+                                    name="country_of_origin"
+                                    value={formData.generalInfo ? formData.generalInfo.country_of_origin : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập nước sản xuất"
+                                />
+                            </Grid2>
+                            <Grid2 xs={12} md={6}>
+                                <InputField
+                                    label="Nhà cung cấp"
+                                    minLabelWidth='80px'
+                                    width='400px'
+                                    name="supplier"
+                                    value={formData.generalInfo ? formData.generalInfo.supplier : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập nhà cung cấp"
+                                />
+                            </Grid2>
+                            <Grid2 xs={12} md={6}>
+                                <InputField
+                                    label="Model"
+                                    minLabelWidth='80px'
+                                    width='400px'
+                                    name="model"
+                                    value={formData.generalInfo ? formData.generalInfo.model : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập model"
+                                />
+                            </Grid2>
+                            <Grid2 xs={12} md={6}>
+                                <InputField
+                                    label="Số serial"
+                                    minLabelWidth='80px'
+                                    width='400px'
+                                    name="serial_number"
+                                    value={formData.generalInfo ? formData.generalInfo.serial_number : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập số serial"
+                                />
+                            </Grid2>
+                            <Grid2 xs={12} md={6}>
+                                <InputNumber
+                                    label="Số tháng BH"
+                                    minLabelWidth='80px'
+                                    width='400px'
+                                    name="warranty_period_months"
+                                    value={formData.generalInfo ? formData.generalInfo.warranty_period_months : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập thời gian bảo hành (tháng)"
+                                />
+                            </Grid2>
+
+                            <Grid2 xs={12} md={6}>
+                                <InputDate
+                                    label="Ngày hết BH"
+                                    minLabelWidth='80px'
+                                    width='400px'
+                                    name="warranty_expiration_date"
+                                    value={formData.generalInfo ? formData.generalInfo.warranty_expiration_date : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập ngày hết bảo hành"
+                                />
+                            </Grid2>
+
+                            <Grid2 xs={12} >
+                                <InputField
+                                    label="Mô tả"
+                                    minLabelWidth='80px'
+                                    fullWidth
+                                    multiline
+                                    rows={5}
+                                    name="description"
+                                    value={formData.generalInfo ? formData.generalInfo.description : ''}
+                                    onChange={handleChangeGeneralInfo}
+                                    placeholder="Nhập mô tả"
+                                />
+                            </Grid2>
+                            
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={1}>
@@ -364,11 +486,6 @@ function AddAssetForm({ handleClose }) {
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={4}>
-                        <Grid2 container spacing={2}>
-                            Các loại thông tin về bảo trì, bảo dưỡng, v.v.
-                        </Grid2>
-                    </CustomTabPanel>
-                    <CustomTabPanel value={tabValue} index={5}>
                         <Box sx={{
                             border: '2px dashed #ccc',
                             borderRadius: 1,
