@@ -6,6 +6,9 @@ import Home from '../pages/Home';
 import DashBoard from '../pages/DashBoard';
 import Devices from '../pages/Devices';
 import Categories from '../pages/Categories';
+import Consumables from '../pages/Consumables';
+import Maintenance from '../pages/Maintenance';
+import Calibration from '../pages/Calibration';
 const publicRoutes = [
     {
         path: '/',
@@ -19,6 +22,18 @@ const publicRoutes = [
     {
         path: '/categories',
         component: Categories,
+    },
+    {
+        path: '/consumables',
+        component: Consumables,
+    },
+    {
+        path: '/maintenance',
+        component: Maintenance,
+    },
+    {
+        path: '/calibration',
+        component: Calibration,
     },
     {
         path: '*',

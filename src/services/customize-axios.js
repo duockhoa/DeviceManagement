@@ -47,7 +47,6 @@ instance.interceptors.response.use(
                     const response = await refreshInstance.post('/auth/refreshtoken', { refreshToken });
                     const newAccessToken = response.data.accessToken;
                     Cookies.set('accessToken', newAccessToken, cookieOptions);
-
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                     return instance(originalRequest);
                 } catch (refreshError) {
