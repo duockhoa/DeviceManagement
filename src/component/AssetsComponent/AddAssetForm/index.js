@@ -4,7 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
-import { Stack } from '@mui/system';
+import { Stack, width } from '@mui/system';
 import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
@@ -16,6 +16,7 @@ import AreaForm from '../../AreaComponent/AreaForm';
 import AddSubCategoriesForm from '../../SubCategories/SubCategoriesForm';
 import InputDate from '../../InputComponent/InputDate';
 import InputNumber from '../../InputComponent/InputNumber';
+import InputTable from '../../InputComponent/InputTable/Index';
 function CustomTabPanel(props) {
     const { children, value, index, ...other } = props;
 
@@ -191,6 +192,46 @@ function AddAssetForm({ handleClose }) {
             }
         }));
     };
+
+    // Chuẩn bị dữ liệu cho bảng thành phần cấu tạo
+    const columns = [
+  { field: 'name', headerName: 'Tên thành phần', width: 300, editable: true },
+  { field: 'specifications', headerName: 'Thông số' , width: 300, type: 'text', editable: true },
+  {
+    field: 'quantity',
+    headerName: 'Số lượng',
+    type: 'number',
+    width: 180,
+    editable: true,
+  },
+  {
+    field: 'unit',
+    headerName: 'Đơn vị',
+    type: 'singleSelect',
+    valueOptions: ['Cái', 'Bộ', 'Chiếc', 'Con', 'Ống', 'Khác'],
+    width: 120,
+    editable: true,
+  },
+    {
+    field: 'remarks',
+    headerName: 'Ghi chú',
+    type: 'text',
+    width: 300,
+    editable: true,
+  },
+];
+
+const rows = [
+  {
+    id: 1,
+    name: "",
+    specifications: "",
+    quantity: "",
+    unit: "",
+    remarks: "",
+  },
+
+];
     return (
         <Box sx={{ width: "100%", height: "90vh", display: 'flex', flexDirection: 'column'  , backgroundColor: '#f8f8f8' }}>
             {/* Header */}
@@ -351,7 +392,7 @@ function AddAssetForm({ handleClose }) {
                 </Box>
                 <Divider sx={{ borderColor: theme.palette.grey[900]  }} />
                 {/* Thông tin chi tiết */}
-                <Box  sx={{flex: 1 , display: 'flex' , backgroundColor: '#f5f5f5' }}>
+                <Box  sx={{flex: 1 , display: 'flex' , backgroundColor: '#f5f5f5'  }}>
                     <Box  sx={{ m: 2, border: '1px solid #aaa', display: 'flex', flexDirection: 'column', borderRadius: 1 , flex: 1  , backgroundColor: '#fff' }}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' , backgroundColor: '#e4eefdff' }}>
                         <Tabs value={tabValue} onChange={handleTabChange} aria-label="detail tabs">
@@ -471,17 +512,17 @@ function AddAssetForm({ handleClose }) {
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={1}>
-                        <Grid2 container spacing={2}>
-                            Các loại thông tin về kỹ thuật như công suất, điện áp, tần số, v.v.
+                        <Grid2 container spacing={2} >
+                            <InputTable rows={rows} columns={columns} />
                         </Grid2>
                     </CustomTabPanel>
-                    <CustomTabPanel value={tabValue} index={2}>
-                        <Grid2 container spacing={2}>
+                    <CustomTabPanel value={tabValue} index={2} >
+                        <Grid2 container spacing={2} >
                             Các thành bộ phận của thiết bị
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={3}>
-                        <Grid2 container spacing={2}>
+                        <Grid2 container spacing={2} >
                             Các vật tư tiêu hao , doăng cao su, dầu nhớt, đơn vị tính đơn giá....
                         </Grid2>
                     </CustomTabPanel>
