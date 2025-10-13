@@ -9,6 +9,7 @@ import Categories from '../pages/Categories';
 import Consumables from '../pages/Consumables';
 import Maintenance from '../pages/Maintenance';
 import Calibration from '../pages/Calibration';
+import Specifications from '../pages/Specifications';
 const publicRoutes = [
     {
         path: '/',
@@ -19,9 +20,10 @@ const publicRoutes = [
         path: 'devices',
         component: Devices,
     },
+
     {
-        path: '/categories',
-        component: Categories,
+        path: '/specifications',
+        component: Specifications,
     },
     {
         path: '/consumables',

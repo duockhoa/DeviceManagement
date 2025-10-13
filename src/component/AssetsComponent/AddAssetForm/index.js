@@ -97,10 +97,30 @@ function AddAssetForm({ handleClose }) {
         }));
     };
 
+    // Thêm state để quản lý data của table
+const [componentsData, setComponentsData] = useState([
+  {
+    id: 1,
+    component_name: "",
+    specification: "",
+    quantity: "",
+    unit: "",
+    remarks: "",
+  }
+]);
+
+// Handle thay đổi data từ InputTable
+const handleComponentsChange = (updatedData) => {
+  console.log('Components data changed:', updatedData);
+  setComponentsData(updatedData);
+};
+
     const handleSave = () => {
-        // Logic lưu form
-        console.log('Saving form data:', formData);
-        dispatch(createAsset(formData));
+        const submitData = {
+            ...formData,
+            components: componentsData // Thêm data từ table
+          };
+        dispatch(createAsset(submitData));
         handleClose();
     };
 
@@ -195,8 +215,8 @@ function AddAssetForm({ handleClose }) {
 
     // Chuẩn bị dữ liệu cho bảng thành phần cấu tạo
     const columns = [
-  { field: 'name', headerName: 'Tên thành phần', width: 300, editable: true },
-  { field: 'specifications', headerName: 'Thông số' , width: 300, type: 'text', editable: true },
+  { field: 'component_name', headerName: 'Tên thành phần', width: 300, editable: true },
+  { field: 'specification', headerName: 'Thông số' , width: 300, type: 'text', editable: true },
   {
     field: 'quantity',
     headerName: 'Số lượng',
@@ -512,8 +532,16 @@ const rows = [
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={1}>
-                        <Grid2 container spacing={2} >
-                            <InputTable rows={rows} columns={columns} />
+                        <Grid2 container spacing={2}>
+                          <Grid2 xs={12}>
+                            <InputTable 
+                              initialRows={componentsData}
+                              columns={columns} 
+                              showRowNumber={true}
+                              showAddButton={true}
+                              onDataChange={handleComponentsChange}
+                            />
+                          </Grid2>
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={2} >

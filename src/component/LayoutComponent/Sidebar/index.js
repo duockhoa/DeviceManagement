@@ -199,7 +199,21 @@ export default function Sidebar() {
                                     primary={!isOpen || 'Danh mục thiết bị'}
                                 />
                             </ListItemButton>
-                                                        <ListItemButton
+                            <ListItemButton sx={{ 
+                                pl: 4, 
+                                ...(location.pathname === '/specifications' ? activeStyle : subItemHoverStyle)
+                            }}
+                            onClick={() => switchActiveSidebar('/specifications')}
+                            >
+                                <ListItemIcon>
+                                    <SpecsIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primary={!isOpen || 'Thông số kỹ thuật'}
+                                />
+                            </ListItemButton>
+                            <ListItemButton
                                 sx={{
                                     pl: 4,
                                     ...(location.pathname === '/consumables' ? activeStyle : subItemHoverStyle)
@@ -216,18 +230,7 @@ export default function Sidebar() {
                                     primary={!isOpen || 'Vật tư tiêu hao'}
                                 />
                             </ListItemButton>
-                            <ListItemButton sx={{ 
-                                pl: 4, 
-                                ...subItemHoverStyle 
-                            }}>
-                                <ListItemIcon>
-                                    <SpecsIcon sx={commonIconStyle} />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primaryTypographyProps={{ sx: commonTextStyle }}
-                                    primary={!isOpen || 'Thông số kỹ thuật'}
-                                />
-                            </ListItemButton>
+
                         </List>
                     </Collapse>
                 </div>

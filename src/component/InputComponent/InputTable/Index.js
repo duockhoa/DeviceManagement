@@ -1,12 +1,187 @@
 import * as React from 'react';
-import { DataGrid, GridCellModes } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
+import { 
+  DataGrid, 
+  GridCellModes, 
+  GridToolbarContainer,
+  GridActionsCellItem 
+} from '@mui/x-data-grid';
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { 
+  Add as AddIcon,
+  Delete as DeleteIcon 
+} from '@mui/icons-material';
 
-export default function InputTable({ rows, columns, showRowNumber = true  }) {
+// Custom Toolbar với nút Thêm dòng mới
+const CustomToolbar = React.memo(({ onAddRow }) => {
+  return (
+    <GridToolbarContainer sx={{ 
+      p: 1, 
+      borderBottom: '1px solid #c4c4c4',
+      backgroundColor: '#f8f9fa' 
+    }}>
+      <Button
+        color="primary"
+        startIcon={<AddIcon />}
+        onClick={onAddRow}
+        size="small"
+        variant="contained"
+        sx={{
+          fontSize: '1rem',
+          textTransform: 'none',
+          backgroundColor: '#1976d2',
+          '&:hover': {
+            backgroundColor: '#1565c0',
+          }
+        }}
+      >
+        Thêm dòng mới
+      </Button>
+    </GridToolbarContainer>
+  );
+});
+
+CustomToolbar.displayName = 'CustomToolbar';
+
+export default function InputTable({ 
+  initialRows = [], 
+  columns = [], 
+  showRowNumber = true, 
+  onDataChange,
+  showAddButton = true,
+  showDeleteButton = true,
+  confirmDelete = false,
+  minRows = 0
+}) {
+  const [rows, setRows] = React.useState(initialRows);
   const [cellModesModel, setCellModesModel] = React.useState({});
+  const [deleteDialog, setDeleteDialog] = React.useState({ open: false, rowId: null });
 
-  // Tạo cột số thứ tự
-  const rowNumberColumn = {
+  // FIX 1: Tránh dependency loop
+  React.useEffect(() => {
+    setRows(initialRows);
+  }, [JSON.stringify(initialRows)]); // Deep comparison
+
+  // FIX 2: Tạo empty row - loại bỏ dependency rows
+  const createEmptyRow = React.useCallback(() => {
+    const timestamp = Date.now();
+    const emptyRow = { id: timestamp };
+    
+    columns.forEach(col => {
+      if (col.field !== 'id' && col.field !== '__rowNumber' && col.field !== 'actions') {
+        switch (col.type) {
+          case 'number':
+            emptyRow[col.field] = null;
+            break;
+          case 'boolean':
+            emptyRow[col.field] = false;
+            break;
+          case 'singleSelect':
+            emptyRow[col.field] = col.valueOptions?.[0] || '';
+            break;
+          case 'date':
+          case 'dateTime':
+            emptyRow[col.field] = null;
+            break;
+          default:
+            emptyRow[col.field] = '';
+        }
+      }
+    });
+    
+    return emptyRow;
+  }, [columns]);
+
+  // FIX 3: Debounce onChange callback
+  const debouncedOnDataChange = React.useCallback(
+    React.useMemo(
+      () => {
+        if (!onDataChange) return null;
+        
+        let timeoutId;
+        return (data) => {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            onDataChange(data);
+          }, 100);
+        };
+      },
+      [onDataChange]
+    ),
+    [onDataChange]
+  );
+
+  // Handle thêm dòng mới
+  const handleAddRow = React.useCallback(() => {
+    const newRow = createEmptyRow();
+    setRows((prevRows) => {
+      const updatedRows = [...prevRows, newRow];
+      
+      // Notify parent component with debounce
+      if (debouncedOnDataChange) {
+        debouncedOnDataChange(updatedRows);
+      }
+      
+      return updatedRows;
+    });
+
+    // FIX 4: Sử dụng setTimeout để tránh update state trong render
+    const firstEditableColumn = columns.find(col => 
+      col.editable && col.field !== 'id' && col.field !== '__rowNumber' && col.field !== 'actions'
+    );
+    
+    if (firstEditableColumn) {
+      setTimeout(() => {
+        setCellModesModel((prevModel) => ({
+          ...prevModel,
+          [newRow.id]: { [firstEditableColumn.field]: { mode: GridCellModes.Edit } }
+        }));
+      }, 50);
+    }
+  }, [createEmptyRow, columns, debouncedOnDataChange]);
+
+  // FIX 5: Confirm delete dialog
+  const handleDeleteClick = React.useCallback((id) => () => {
+    if (confirmDelete) {
+      setDeleteDialog({ open: true, rowId: id });
+    } else {
+      handleDeleteRow(id);
+    }
+  }, [confirmDelete]);
+
+  const handleDeleteRow = React.useCallback((id) => {
+    setRows((prevRows) => {
+      // FIX 6: Kiểm tra minRows
+      if (prevRows.length <= minRows) {
+        console.warn(`Cannot delete row. Minimum ${minRows} rows required.`);
+        return prevRows;
+      }
+
+      const updatedRows = prevRows.filter((row) => row.id !== id);
+      
+      // Notify parent component
+      if (debouncedOnDataChange) {
+        debouncedOnDataChange(updatedRows);
+      }
+      
+      return updatedRows;
+    });
+
+    // Clear cell modes for deleted row
+    setCellModesModel((prevModel) => {
+      const newModel = { ...prevModel };
+      delete newModel[id];
+      return newModel;
+    });
+
+    setDeleteDialog({ open: false, rowId: null });
+  }, [debouncedOnDataChange, minRows]);
+
+  const handleDeleteCancel = React.useCallback(() => {
+    setDeleteDialog({ open: false, rowId: null });
+  }, []);
+
+  // FIX 7: Memoize columns để tránh re-render
+  const rowNumberColumn = React.useMemo(() => ({
     field: '__rowNumber',
     headerName: 'STT',
     width: 60,
@@ -30,57 +205,115 @@ export default function InputTable({ rows, columns, showRowNumber = true  }) {
         {params.api.getRowIndexRelativeToVisibleRows(params.id) + 1}
       </Box>
     ),
-  };
+  }), []);
 
-  // Kết hợp cột STT với các cột khác
+  const actionsColumn = React.useMemo(() => ({
+    field: 'actions',
+    type: 'actions',
+    headerName: 'Thao tác',
+    width: 100,
+    cellClassName: 'actions',
+    headerAlign: 'center',
+    renderHeader: () => (
+      <Box sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
+        Thao tác
+      </Box>
+    ),
+    getActions: ({ id }) => {
+      const canDelete = rows.length > minRows;
+      return [
+        <GridActionsCellItem
+          key={`delete-${id}`}
+          icon={<DeleteIcon sx={{ fontSize: 20 }} />}
+          label="Xóa"
+          onClick={handleDeleteClick(id)}
+          color="error"
+          disabled={!canDelete}
+          sx={{
+            opacity: canDelete ? 1 : 0.5,
+            '&:hover': canDelete ? {
+              backgroundColor: '#ffebee',
+            } : {}
+          }}
+        />,
+      ];
+    },
+  }), [handleDeleteClick, rows.length, minRows]);
+
   const finalColumns = React.useMemo(() => {
+    let allColumns = [...columns];
+    
     if (showRowNumber) {
-      return [rowNumberColumn, ...columns];
+      allColumns = [rowNumberColumn, ...allColumns];
     }
-    return columns;
-  }, [columns, showRowNumber]);
+    
+    if (showDeleteButton) {
+      allColumns = [...allColumns, actionsColumn];
+    }
+    
+    return allColumns;
+  }, [columns, showRowNumber, showDeleteButton, rowNumberColumn, actionsColumn]);
 
+  // FIX 8: Optimize cell click handler
   const handleCellClick = React.useCallback((params, event) => {
-    // Không cho phép edit cột STT
-    if (params.field === '__rowNumber' || !params.isEditable) {
+    if (params.field === '__rowNumber' || params.field === 'actions' || !params.isEditable) {
       return;
     }
 
-    // Ignore portal
     if (event.target.nodeType === 1 && !event.currentTarget.contains(event.target)) {
       return;
     }
 
-    setCellModesModel((prevModel) => {
-      return {
-        // Revert the mode of the other cells from other rows
-        ...Object.keys(prevModel).reduce(
-          (acc, id) => ({
-            ...acc,
-            [id]: Object.keys(prevModel[id]).reduce(
-              (acc2, field) => ({
-                ...acc2,
-                [field]: { mode: GridCellModes.View },
-              }),
-              {},
-            ),
-          }),
-          {},
-        ),
-        [params.id]: {
-          // Revert the mode of other cells in the same row
-          ...Object.keys(prevModel[params.id] || {}).reduce(
-            (acc, field) => ({ ...acc, [field]: { mode: GridCellModes.View } }),
+    setCellModesModel((prevModel) => ({
+      ...Object.keys(prevModel).reduce(
+        (acc, id) => ({
+          ...acc,
+          [id]: Object.keys(prevModel[id] || {}).reduce(
+            (acc2, field) => ({
+              ...acc2,
+              [field]: { mode: GridCellModes.View },
+            }),
             {},
           ),
-          [params.field]: { mode: GridCellModes.Edit },
-        },
-      };
-    });
+        }),
+        {},
+      ),
+      [params.id]: {
+        ...Object.keys(prevModel[params.id] || {}).reduce(
+          (acc, field) => ({ ...acc, [field]: { mode: GridCellModes.View } }),
+          {},
+        ),
+        [params.field]: { mode: GridCellModes.Edit },
+      },
+    }));
   }, []);
 
   const handleCellModesModelChange = React.useCallback((newModel) => {
     setCellModesModel(newModel);
+  }, []);
+
+  // FIX 9: Optimize row update với error handling
+  const handleProcessRowUpdate = React.useCallback((newRow, oldRow) => {
+    try {
+      setRows((prevRows) => {
+        const updatedRows = prevRows.map((row) => (row.id === newRow.id ? newRow : row));
+        
+        if (debouncedOnDataChange) {
+          debouncedOnDataChange(updatedRows);
+        }
+        
+        return updatedRows;
+      });
+      return newRow;
+    } catch (error) {
+      console.error('Error updating row:', error);
+      return oldRow;
+    }
+  }, [debouncedOnDataChange]);
+
+  // FIX 10: Error boundary cho row update
+  const handleProcessRowUpdateError = React.useCallback((error) => {
+    console.error('Row update error:', error);
   }, []);
 
   return (
@@ -91,8 +324,16 @@ export default function InputTable({ rows, columns, showRowNumber = true  }) {
         cellModesModel={cellModesModel}
         onCellModesModelChange={handleCellModesModelChange}
         onCellClick={handleCellClick}
-        getRowHeight={()=> "auto"}
+        processRowUpdate={handleProcessRowUpdate}
+        onProcessRowUpdateError={handleProcessRowUpdateError}
         hideFooter
+        disableRowSelectionOnClick
+        slots={showAddButton ? {
+          toolbar: CustomToolbar
+        } : {}}
+        slotProps={showAddButton ? {
+          toolbar: { onAddRow: handleAddRow }
+        } : {}}
         sx={{
           border: '1px solid #c4c4c4',
           
@@ -119,7 +360,6 @@ export default function InputTable({ rows, columns, showRowNumber = true  }) {
             },
           },
 
-          // Style riêng cho cột STT
           '& .MuiDataGrid-cell[data-field="__rowNumber"]': {
             backgroundColor: '#f8f9fa',
             fontWeight: 'bold',
@@ -127,17 +367,23 @@ export default function InputTable({ rows, columns, showRowNumber = true  }) {
             cursor: 'default',
           },
 
-          // Style cho header cột STT
           '& .MuiDataGrid-columnHeader[data-field="__rowNumber"]': {
             backgroundColor: '#e9ecef',
           },
 
-          // Style cho cell đang edit
+          '& .MuiDataGrid-cell[data-field="actions"]': {
+            backgroundColor: '#f8f9fa',
+            justifyContent: 'center',
+          },
+
+          '& .MuiDataGrid-columnHeader[data-field="actions"]': {
+            backgroundColor: '#e9ecef',
+          },
+
           '& .MuiDataGrid-cell--editing': {
             backgroundColor: '#fff3cd',
           },
 
-          // Style cho input trong cell edit
           '& .MuiDataGrid-cell--editing .MuiInputBase-root': {
             fontSize: '1.2rem',
             height: '100%',
@@ -149,7 +395,6 @@ export default function InputTable({ rows, columns, showRowNumber = true  }) {
             height: 'auto',
           },
 
-          // Style cho TextField trong edit mode
           '& .MuiDataGrid-cell--editing .MuiTextField-root': {
             '& .MuiInputBase-input': {
               fontSize: '1.2rem !important',
@@ -157,23 +402,57 @@ export default function InputTable({ rows, columns, showRowNumber = true  }) {
             },
           },
 
-          // Style cho Select trong edit mode
           '& .MuiDataGrid-cell--editing .MuiSelect-select': {
             fontSize: '1.2rem !important',
             padding: '8px',
           },
+
+          '& .MuiDataGrid-actionsCell': {
+            '& .MuiIconButton-root': {
+              color: '#d32f2f',
+              '&:hover': {
+                backgroundColor: '#ffebee',
+                color: '#c62828',
+              },
+              '&:disabled': {
+                color: '#ccc',
+              }
+            }
+          },
           
-          // Grid lines rõ ràng
           '& .MuiDataGrid-virtualScroller': {
             backgroundColor: '#fff',
           },
           
-          // Selected cell
           '& .Mui-selected': {
             backgroundColor: '#cce7ff !important',
           }
         }}
       />
+
+      {/* FIX 11: Confirm Delete Dialog */}
+      {confirmDelete && (
+        <Dialog
+          open={deleteDialog.open}
+          onClose={handleDeleteCancel}
+          maxWidth="xs"
+        >
+          <DialogTitle>Xác nhận xóa</DialogTitle>
+          <DialogContent>
+            Bạn có chắc chắn muốn xóa dòng này không?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Hủy</Button>
+            <Button 
+              onClick={() => handleDeleteRow(deleteDialog.rowId)} 
+              color="error"
+              variant="contained"
+            >
+              Xóa
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 }
