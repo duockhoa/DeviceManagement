@@ -209,7 +209,7 @@ export default function Sidebar() {
                                     <SpecsIcon sx={commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
-                                    primaryTypographyProps={{ sx: commonTextStyle }}
+                                    primaryTypographyProps={{    sx: location.pathname === '/specifications' ? activeTextStyle : commonTextStyle }}
                                     primary={!isOpen || 'Thông số kỹ thuật'}
                                 />
                             </ListItemButton>
