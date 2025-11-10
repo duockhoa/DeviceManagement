@@ -1,7 +1,11 @@
-import { Box, Typography, Grid, Card, CardContent } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { useSelector } from 'react-redux';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { exportToExcel } from '../../../utils/exportUtils';
 
 function MaintenanceReport() {
+    const maintenanceList = useSelector(state => state.maintenance.items);
     // Dữ liệu mẫu cho biểu đồ
     const maintenanceData = [
         { month: 'T1', completed: 4, pending: 2, inProgress: 1 },
@@ -20,9 +24,29 @@ function MaintenanceReport() {
 
     return (
         <Box sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-                Báo cáo bảo trì thiết bị
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                    Báo cáo bảo trì thiết bị
+                </Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<FileDownloadIcon />}
+                    onClick={() => {
+                        const data = maintenanceList.map(item => ({
+                            'ID': item.id,
+                            'Thiết bị': item.deviceName,
+                            'Loại bảo trì': item.maintenanceType,
+                            'Ngày bảo trì': new Date(item.maintenanceDate).toLocaleDateString('vi-VN'),
+                            'Trạng thái': item.status,
+                            'Người phụ trách': item.technician,
+                            'Mô tả': item.description
+                        }));
+                        exportToExcel(data, 'BaoCaoBaoTri');
+                    }}
+                >
+                    Xuất Excel
+                </Button>
+            </Box>
 
             {/* Thống kê tổng quan */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
