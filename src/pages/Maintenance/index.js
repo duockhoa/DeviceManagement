@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import { TabContext, TabPanel } from '@mui/lab';
 import MaintenanceList from '../../component/MaintenanceComponent/MaintenanceList';
 import MaintenanceForm from '../../component/MaintenanceComponent/MaintenanceForm';
 
 // Component quản lý bảo trì thiết bị
 function Maintenance() {
     // State quản lý tab đang được chọn
-    const [activeTab, setActiveTab] = useState('list');
+    const [activeTab, setActiveTab] = useState(0);
 
     // Xử lý khi thay đổi tab
     const handleChangeTab = (event, newValue) => {
@@ -30,32 +29,32 @@ function Maintenance() {
                 </Typography>
 
                 {/* Tab navigation */}
-                <TabContext value={activeTab}>
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                        <Tabs 
-                            value={activeTab} 
-                            onChange={handleChangeTab}
-                            aria-label="Tabs quản lý bảo trì"
-                        >
-                            <Tab 
-                                label="Danh sách bảo trì" 
-                                value="list"
-                            />
-                            <Tab 
-                                label="Thêm mới bảo trì" 
-                                value="add"
-                            />
-                        </Tabs>
-                    </Box>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    <Tabs 
+                        value={activeTab} 
+                        onChange={handleChangeTab}
+                        aria-label="Tabs quản lý bảo trì"
+                    >
+                        <Tab 
+                            label="Danh sách bảo trì"
+                        />
+                        <Tab 
+                            label="Thêm mới bảo trì"
+                        />
+                    </Tabs>
+                </Box>
 
-                    {/* Tab content */}
-                    <TabPanel value="list" sx={{ p: { xs: 1, md: 2 }, flex: 1 }}>
+                {/* Tab content */}
+                {activeTab === 0 && (
+                    <Box sx={{ p: { xs: 1, md: 2 }, flex: 1 }}>
                         <MaintenanceList />
-                    </TabPanel>
-                    <TabPanel value="add" sx={{ p: { xs: 1, md: 2 }, flex: 1 }}>
+                    </Box>
+                )}
+                {activeTab === 1 && (
+                    <Box sx={{ p: { xs: 1, md: 2 }, flex: 1 }}>
                         <MaintenanceForm />
-                    </TabPanel>
-                </TabContext>
+                    </Box>
+                )}
             </Box>
         </Box>
     );

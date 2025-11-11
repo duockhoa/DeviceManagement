@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -9,7 +9,7 @@ import 'dayjs/locale/vi';
 // Set Vietnamese locale
 dayjs.locale('vi');
 
-function InputDate({
+const InputDate = forwardRef(({
     label,
     name,
     value,
@@ -28,7 +28,7 @@ function InputDate({
     format = 'DD/MM/YYYY',
     views = ['year', 'month', 'day'],
     ...otherProps
-}) {
+}, ref) => {
     const getFieldWidth = () => {
         switch (width) {
             case 'full':
@@ -128,6 +128,8 @@ function InputDate({
             </Box>
         </Box>
     );
-}
+});
+
+InputDate.displayName = 'InputDate';
 
 export default InputDate;

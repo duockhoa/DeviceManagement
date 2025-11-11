@@ -239,14 +239,15 @@ function MaintenanceList() {
                         startIcon={<AddIcon />}
                         onClick={handleOpenAddForm}
                         sx={{ 
-                        backgroundColor: theme.palette.primary.main,
-                        '&:hover': {
-                            backgroundColor: theme.palette.primary.dark
-                        }
-                    }}
-                >
-                    Thêm lịch bảo trì
-                </Button>
+                            backgroundColor: theme.palette.primary.main,
+                            '&:hover': {
+                                backgroundColor: theme.palette.primary.dark
+                            }
+                        }}
+                    >
+                        Thêm lịch bảo trì
+                    </Button>
+                </Box>
             </Box>
 
             {/* DataGrid */}
@@ -289,4 +290,4 @@ function MaintenanceList() {
     );
 }
 
-export default MaintenanceList;
+ export default MaintenanceList;

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { 
-    Table, 
     Button, 
     Space, 
     Modal, 
@@ -12,7 +11,8 @@ import {
 } from 'antd';
 import { 
     updateMaintenanceStatus,
-    deleteExistingMaintenance 
+    deleteExistingMaintenance,
+    updateExistingMaintenance
 } from '../../../redux/slice/maintenanceSlice';
 
 const BatchOperations = () => {
@@ -147,7 +147,7 @@ const BatchOperations = () => {
 
             <Modal
                 title="Thao tác hàng loạt"
-                visible={isModalVisible}
+                open={isModalVisible}
                 onCancel={() => {
                     setIsModalVisible(false);
                     form.resetFields();

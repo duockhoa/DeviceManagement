@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, TextField, Button, Grid, MenuItem, Typography, Autocomplete } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
+import { Box, TextField, Button, Grid, MenuItem, Typography } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { InputDate } from '../../InputComponent/InputDate';
-import { createMaintenance, updateMaintenance } from '../../../redux/slice/maintenanceSlice';
+import InputDate from '../../InputComponent/InputDate';
+import { createNewMaintenance, updateExistingMaintenance } from '../../../redux/slice/maintenanceSlice';
 
 // Schema validation sử dụng yup
 const schema = yup.object().shape({
@@ -69,13 +67,13 @@ function MaintenanceForm() {
         try {
             if (selectedItem) {
                 // Nếu có selectedItem thì gọi action cập nhật
-                await dispatch(updateMaintenance({ 
+                await dispatch(updateExistingMaintenance({ 
                     id: selectedItem.id, 
                     data 
                 })).unwrap();
             } else {
                 // Nếu không có selectedItem thì gọi action tạo mới
-                await dispatch(createMaintenance(data)).unwrap();
+                await dispatch(createNewMaintenance(data)).unwrap();
                 reset(); // Reset form sau khi tạo mới thành công
             }
         } catch (error) {
@@ -223,16 +221,14 @@ function MaintenanceForm() {
                 >
                     Làm mới
                 </Button>
-                <LoadingButton
+                <Button
                     type="submit"
                     variant="contained"
-                    loading={loading}
+                    disabled={loading}
                 >
-                    {selectedItem ? 'Cập nhật' : 'Thêm mới'}
-                </LoadingButton>
+                    {loading ? 'Đang lưu...' : (selectedItem ? 'Cập nhật' : 'Thêm mới')}
+                </Button>
             </Box>
         </Box>
     );
-}
-
-export default MaintenanceForm;
+}export default MaintenanceForm;
