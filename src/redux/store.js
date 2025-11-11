@@ -10,6 +10,7 @@ import plantsReducer from './slice/plantSlice';
 import areasReducer from './slice/areaSlice';
 import assetSubCategories from './slice/assetSubCategoriesSlice';
 import consumablesReducer from './slice/consumableCategoriesSlice';
+import maintenanceReducer from './slice/maintenanceSlice';
 
 export default configureStore({
     reducer: {
@@ -23,6 +24,7 @@ export default configureStore({
         plants: plantsReducer,
         areas: areasReducer,
         assetSubCategories: assetSubCategories,
-        consumableCategories: consumablesReducer
+        consumableCategories: consumablesReducer,
+        maintenance: maintenanceReducer
     },
 });
