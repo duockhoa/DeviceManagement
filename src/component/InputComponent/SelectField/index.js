@@ -64,23 +64,9 @@ function SelectField({
         }
 
         if (newValue) {
-            // Tạo event giả để tương thích với onChange hiện tại
-            const syntheticEvent = {
-                target: {
-                    name: name,
-                    value: newValue[valueKey]
-                }
-            };
-            onChange(syntheticEvent);
+            onChange(name, newValue[valueKey]);
         } else {
-            // Khi clear selection
-            const syntheticEvent = {
-                target: {
-                    name: name,
-                    value: ''
-                }
-            };
-            onChange(syntheticEvent);
+            onChange(name, '');
         }
     };
 
@@ -147,14 +133,12 @@ function SelectField({
         options;
 
     return (
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="body2" sx={{
                 fontSize: '1.2rem',
                 fontWeight: 'medium',
                 color: '#333',
-                minWidth: minLabelWidth,
-                whiteSpace: 'nowrap',
-                pt: 1.5 // Align với input field
+                whiteSpace: 'nowrap'
             }}>
                 {label}{required && <span style={{ color: '#f44336' }}> *</span>}:
             </Typography>

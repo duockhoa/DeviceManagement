@@ -1,0 +1,1040 @@
+import { useState, useEffect } from 'react';
+import {
+    Button,
+    TextField,
+    MenuItem,
+    Typography,
+    Box,
+    Alert,
+    Snackbar,
+    IconButton,
+    Divider,
+    Tabs,
+    Tab,
+    Checkbox,
+    FormControlLabel,
+    Card,
+    CardContent
+} from '@mui/material';
+import { Unstable_Grid2 as Grid2 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import SaveIcon from '@mui/icons-material/Save';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { Stack } from '@mui/system';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateMaintenanceRecord, clearError } from '../../../redux/slice/maintenanceSlice';
+import { fetchAssets } from '../../../redux/slice/assetsSlice';
+import { fetchUsers } from '../../../redux/slice/usersSlice';
+import { getActiveConsumableCategories } from '../../../services/consumableCategoriesService';
+import InputField from '../../InputComponent/InputField';
+import SelectField from '../../InputComponent/SelectField';
+import InputDate from '../../InputComponent/InputDate';
+import InputNumber from '../../InputComponent/InputNumber';
+import { useTheme } from '@mui/material/styles';
+import PropTypes from 'prop-types';
+
+function CustomTabPanel(props) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+        </div>
+    );
+}
+
+CustomTabPanel.propTypes = {
+    children: PropTypes.node,
+    index: PropTypes.number.isRequired,
+    value: PropTypes.number.isRequired,
+};
+
+function a11yProps(index) {
+    return {
+        id: `simple-tab-${index}`,
+        'aria-controls': `simple-tabpanel-${index}`,
+    };
+}
+
+function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
+    const theme = useTheme();
+    const dispatch = useDispatch();
+    const assets = useSelector((state) => state.assets.assets);
+    const users = useSelector((state) => state.users.users);
+    const loading = useSelector((state) => state.maintenance.loading);
+    const error = useSelector((state) => state.maintenance.error);
+
+    const [formData, setFormData] = useState({
+        maintenance_code: '',
+        asset_id: '',
+        maintenance_type: 'preventive',
+        priority: 'medium',
+        title: '',
+        description: '',
+        scheduled_date: '',
+        estimated_duration: '',
+        technician_id: '',
+        cost: '',
+        location: '',
+        safety_requirements: '',
+        tools_required: '',
+        measuring_tools: '',
+        safety_tools: '',
+        spare_parts: '',
+        consumables: [], // Changed from string to array
+        estimated_cost: '',
+        notes: ''
+    });
+
+    // State cho danh mục vật tư tiêu hao
+    const [consumableCategories, setConsumableCategories] = useState([]);
+
+    const [formErrors, setFormErrors] = useState({});
+    const [successMessage, setSuccessMessage] = useState('');
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [tabValue, setTabValue] = useState(0);
+
+    // State cho checklist bảo trì
+    const [maintenanceChecklist, setMaintenanceChecklist] = useState([
+        { id: 1, task: 'Kiểm tra nguồn điện', completed: false, required: true },
+        { id: 2, task: 'Vệ sinh thiết bị', completed: false, required: true },
+        { id: 3, task: 'Kiểm tra các bộ phận chuyển động', completed: false, required: true },
+        { id: 4, task: 'Bôi trơn các khớp nối', completed: false, required: false },
+        { id: 5, task: 'Kiểm tra hệ thống an toàn', completed: false, required: true },
+        { id: 6, task: 'Cập nhật nhật ký bảo trì', completed: false, required: true }
+    ]);
+
+    // State cho danh sách công việc
+    const [workTasks, setWorkTasks] = useState([]);
+
+    useEffect(() => {
+        // Fetch assets if not already loaded
+        if (!assets || assets.length === 0) {
+            dispatch(fetchAssets());
+        }
+
+        // Fetch users if not already loaded
+        if (!users || users.length === 0) {
+            dispatch(fetchUsers());
+        }
+
+        // Load maintenance data for editing
+        if (maintenanceData) {
+            // Load consumable categories
+            const loadConsumableCategories = async () => {
+                try {
+                    const categories = await getActiveConsumableCategories();
+                    setConsumableCategories(categories);
+                } catch (error) {
+                    console.error('Error loading consumable categories:', error);
+                }
+            };
+            loadConsumableCategories();
+
+            setFormData({
+                maintenance_code: maintenanceData.maintenance_code || '',
+                asset_id: maintenanceData.asset_id || '',
+                maintenance_type: maintenanceData.maintenance_type || 'preventive',
+                priority: maintenanceData.priority || 'medium',
+                title: maintenanceData.title || '',
+                description: maintenanceData.description || '',
+                scheduled_date: maintenanceData.scheduled_date ? 
+                    new Date(maintenanceData.scheduled_date).toISOString().slice(0, 16) : '',
+                estimated_duration: maintenanceData.estimated_duration || '',
+                technician_id: maintenanceData.technician_id || '',
+                cost: maintenanceData.cost || '',
+                location: maintenanceData.location || '',
+                safety_requirements: maintenanceData.safety_requirements || '',
+                tools_required: maintenanceData.tools_required || '',
+                measuring_tools: maintenanceData.measuring_tools || '',
+                safety_tools: maintenanceData.safety_tools || '',
+                spare_parts: maintenanceData.spare_parts || '',
+                consumables: maintenanceData.maintenanceConsumables ? 
+                    maintenanceData.maintenanceConsumables.map(item => ({
+                        consumable_category_id: item.consumable_category_id,
+                        quantity_required: item.quantity_required,
+                        quantity_used: item.quantity_used || null,
+                        unit_cost: item.unit_cost || '',
+                        total_cost: item.total_cost || '',
+                        notes: item.notes || '',
+                        status: item.status || 'planned'
+                    })) : [],
+                estimated_cost: maintenanceData.estimated_cost || '',
+                notes: maintenanceData.notes || ''
+            });
+        }
+    }, [dispatch, assets, users, maintenanceData]);
+
+    const validateForm = () => {
+        const errors = {};
+
+        if (!formData.asset_id) {
+            errors.asset_id = 'Vui lòng chọn thiết bị';
+        }
+
+        if (!formData.title.trim()) {
+            errors.title = 'Vui lòng nhập tiêu đề bảo trì';
+        }
+
+        if (!formData.scheduled_date) {
+            errors.scheduled_date = 'Vui lòng chọn ngày dự kiến';
+        }
+
+        if (!formData.estimated_duration || formData.estimated_duration <= 0) {
+            errors.estimated_duration = 'Vui lòng nhập thời gian ước tính hợp lệ';
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    // Handle consumables array
+    const addConsumable = () => {
+        setFormData(prev => ({
+            ...prev,
+            consumables: [
+                ...prev.consumables,
+                {
+                    consumable_category_id: '',
+                    quantity_required: 1,
+                    unit_cost: '',
+                    total_cost: '',
+                    notes: '',
+                    status: 'planned'
+                }
+            ]
+        }));
+    };
+
+    const updateConsumable = (index, field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            consumables: prev.consumables.map((item, i) =>
+                i === index
+                    ? {
+                        ...item,
+                        [field]: value,
+                        // Auto calculate total_cost if quantity_required or unit_cost changes
+                        total_cost: field === 'quantity_required' || field === 'unit_cost'
+                            ? (field === 'quantity_required' ? value : item.quantity_required || 0) *
+                              (field === 'unit_cost' ? value : item.unit_cost || 0)
+                            : item.total_cost
+                    }
+                    : item
+            )
+        }));
+    };
+
+    const removeConsumable = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            consumables: prev.consumables.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        try {
+            const { maintenance_code, ...updateData } = formData;
+            const submitData = {
+                ...updateData,
+                scheduled_date: new Date(formData.scheduled_date).toISOString(),
+                estimated_duration: parseInt(formData.estimated_duration),
+                estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : null
+            };
+
+            console.log('Edit submit data:', submitData); // Debug log
+            console.log('Edit form data before submit:', formData); // Debug log
+
+            await dispatch(updateMaintenanceRecord({ 
+                id: maintenanceData.id, 
+                data: submitData 
+            })).unwrap();
+            
+            // Show success message
+            setSuccessMessage('Cập nhật lịch bảo trì thành công!');
+            setShowSuccess(true);
+            
+            // Call onSuccess callback to reload data in parent
+            if (onSuccess) {
+                onSuccess();
+            }
+            
+            // Close dialog after a short delay
+            setTimeout(() => {
+                handleClose();
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Error updating maintenance:', error);
+            // Error is already handled by Redux state
+        }
+    };
+
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+    };
+
+    const handleInputChange2 = (field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+        
+        // Clear error for this field
+        if (formErrors[field]) {
+            setFormErrors(prev => ({
+                ...prev,
+                [field]: ''
+            }));
+        }
+    };
+
+    // Helper functions cho checklist
+    const handleChecklistChange = (id, checked) => {
+        setMaintenanceChecklist(prev => 
+            prev.map(item => 
+                item.id === id ? { ...item, completed: checked } : item
+            )
+        );
+    };
+
+    const addChecklistItem = () => {
+        const newId = Math.max(...maintenanceChecklist.map(item => item.id)) + 1;
+        setMaintenanceChecklist(prev => [...prev, {
+            id: newId,
+            task: '',
+            completed: false,
+            required: false
+        }]);
+    };
+
+    const updateChecklistItem = (id, task) => {
+        setMaintenanceChecklist(prev =>
+            prev.map(item =>
+                item.id === id ? { ...item, task } : item
+            )
+        );
+    };
+
+    const removeChecklistItem = (id) => {
+        setMaintenanceChecklist(prev => prev.filter(item => item.id !== id));
+    };
+
+    // Helper functions cho work tasks  
+    const addWorkTask = () => {
+        const newId = Date.now();
+        setWorkTasks(prev => [...prev, {
+            id: newId,
+            task_name: '',
+            description: '',
+            assigned_to: '',
+            estimated_hours: '',
+            priority: 'medium',
+            status: 'pending'
+        }]);
+    };
+
+    const updateWorkTask = (id, field, value) => {
+        setWorkTasks(prev =>
+            prev.map(task =>
+                task.id === id ? { ...task, [field]: value } : task
+            )
+        );
+    };
+
+    const removeWorkTask = (id) => {
+        setWorkTasks(prev => prev.filter(task => task.id !== id));
+    };
+
+    const maintenanceTypes = [
+        { value: 'preventive', label: 'Bảo trì phòng ngừa' },
+        { value: 'corrective', label: 'Bảo trì sửa chữa' }
+    ];
+
+    const priorities = [
+        { value: 'low', label: 'Thấp' },
+        { value: 'medium', label: 'Trung bình' },
+        { value: 'high', label: 'Cao' },
+        { value: 'critical', label: 'Khẩn cấp' }
+    ];
+
+    return (
+        <Box sx={{ width: "100%", height: "95vh", display: 'flex', flexDirection: 'column', backgroundColor: '#f0f7ff' }}>
+            {/* Header */}
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                px: 2,
+                py: 1,
+                backgroundColor: theme.palette.primary.main
+            }}>
+                <Typography variant="h5" sx={{
+                    fontWeight: 'bold',
+                    fontSize: '1.8rem',
+                    color: '#fff'
+                }}>
+                    CHỈNH SỬA BẢO TRÌ
+                </Typography>
+
+                <IconButton onClick={handleClose} sx={{ color: '#fff', p: 0.5 }}>
+                    <CloseIcon sx={{ fontSize: "1.8rem" }} />
+                </IconButton>
+            </Box>
+
+            {/* Form Content */}
+            <Stack sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                {/* Nhập thông tin cơ bản */}
+                <Box sx={{ p: 3, borderRadius: 1, backgroundColor: '#fff', border: '2px solid #e0e0e0' }}>
+                    <Grid2 container spacing={2}>
+                        {/* Hàng 1: Mã bảo trì và Tiêu đề */}
+                        <Grid2 xs={12} md={2}>
+                            <InputField
+                                label="Mã bảo trì"
+                                name="maintenance_code"
+                                value={formData.maintenance_code}
+                                onChange={handleInputChange2}
+                                required
+                                disabled
+                            />
+                        </Grid2>
+
+                        <Grid2 xs={12} md={10}>
+                            <InputField
+                                label="Tiêu đề bảo trì"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleInputChange2}
+                                placeholder="Nhập tiêu đề chi tiết (VD: Bảo trì định kỳ máy X-ray phòng A12)"
+                                required
+                                error={!!formErrors.title}
+                                helperText={formErrors.title}
+                            />
+                        </Grid2>
+
+                        {/* Hàng 2: Thiết bị và phân loại */}
+                        <Grid2 xs={12} md={5}>
+                            <SelectField
+                                label="Thiết bị cần bảo trì"
+                                name="asset_id"
+                                value={formData.asset_id}
+                                onChange={handleInputChange2}
+                                options={assets}
+                                required
+                                placeholder="Chọn thiết bị từ danh sách"
+                                valueKey="id"
+                                labelKey="name"
+                                error={!!formErrors.asset_id}
+                                helperText={formErrors.asset_id}
+                            />
+                        </Grid2>
+
+                        <Grid2 xs={12} md={3}>
+                            <SelectField
+                                label="Loại bảo trì"
+                                name="maintenance_type"
+                                value={formData.maintenance_type}
+                                onChange={handleInputChange2}
+                                options={maintenanceTypes}
+                                required
+                                placeholder="Chọn loại"
+                                valueKey="value"
+                                labelKey="label"
+                            />
+                        </Grid2>
+
+                        <Grid2 xs={12} md={2}>
+                            <SelectField
+                                label="Mức ưu tiên"
+                                name="priority"
+                                value={formData.priority}
+                                onChange={handleInputChange2}
+                                options={priorities}
+                                required
+                                placeholder="Chọn ưu tiên"
+                                valueKey="value"
+                                labelKey="label"
+                            />
+                        </Grid2>
+
+                        <Grid2 xs={12} md={2}>
+                            <SelectField
+                                label="Kỹ thuật viên phụ trách"
+                                name="technician_id"
+                                value={formData.technician_id}
+                                onChange={handleInputChange2}
+                                options={users}
+                                placeholder="Chọn kỹ thuật viên"
+                                valueKey="id"
+                                labelKey="name"
+                            />
+                        </Grid2>
+
+                        {/* Hàng 3: Thời gian và chi phí */}
+                        <Grid2 xs={12} md={3}>
+                            <InputDate
+                                label="Ngày thực hiện"
+                                name="scheduled_date"
+                                value={formData.scheduled_date}
+                                onChange={handleInputChange2}
+                                required
+                                error={!!formErrors.scheduled_date}
+                                helperText={formErrors.scheduled_date}
+                            />
+                        </Grid2>
+
+                        <Grid2 xs={12} md={3}>
+                            <InputNumber
+                                label="Thời gian dự tính (giờ)"
+                                name="estimated_duration"
+                                value={formData.estimated_duration}
+                                onChange={handleInputChange2}
+                                required
+                                error={!!formErrors.estimated_duration}
+                                helperText={formErrors.estimated_duration}
+                            />
+                        </Grid2>
+
+                        <Grid2 xs={12} md={4}>
+                            <InputNumber
+                                label="Chi phí ước tính (VNĐ)"
+                                name="cost"
+                                value={formData.cost}
+                                onChange={handleInputChange2}
+                                placeholder="Nhập chi phí dự tính"
+                            />
+                        </Grid2>
+
+                        {/* Hàng 4: Vị trí */}
+                        <Grid2 xs={12}>
+                            <InputField
+                                label="Vị trí thực hiện bảo trì"
+                                name="location"
+                                value={formData.location}
+                                onChange={handleInputChange2}
+                                placeholder="Nhập chi tiết vị trí (VD: Phòng X-quang tầng 2, Khoa Chẩn đoán hình ảnh)"
+                            />
+                        </Grid2>
+                    </Grid2>
+                </Box>
+
+                <Divider sx={{ borderColor: theme.palette.grey[900] }} />
+
+                {/* Thông tin chi tiết */}
+                <Box sx={{ flex: 1, display: 'flex', backgroundColor: '#f5f5f5' }}>
+                    <Box sx={{ m: 2, border: '1px solid #aaa', display: 'flex', flexDirection: 'column', borderRadius: 1, flex: 1, backgroundColor: '#fff' }}>
+                        <Box sx={{ borderBottom: 1, borderColor: 'divider', backgroundColor: '#e4eefdff' }}>
+                            <Tabs value={tabValue} onChange={handleTabChange} aria-label="detail tabs">
+                                <Tab label="Công cụ dụng cụ" {...a11yProps(0)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
+                                <Tab label="Vật tư thay thế" {...a11yProps(1)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
+                                <Tab label="Checklist bảo trì" {...a11yProps(2)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
+                                <Tab label="Danh sách công việc" {...a11yProps(3)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
+                                <Tab label="Ghi chú & Tài liệu" {...a11yProps(4)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
+                            </Tabs>
+                        </Box>
+
+                        <CustomTabPanel value={tabValue} index={0}>
+                            {/* Tab Công cụ dụng cụ */}
+                            <Box sx={{ p: 2 }}>
+                                <Typography variant="h6" sx={{ 
+                                    mb: 3, 
+                                    color: theme.palette.primary.main,
+                                    fontWeight: 'bold',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    pb: 1
+                                }}>
+                                    🔧 Công cụ và Dụng cụ cần thiết
+                                </Typography>
+
+                                <Grid2 container spacing={3}>
+                                    {/* Danh sách công cụ chính */}
+                                    <Grid2 xs={12}>
+                                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: '#555' }}>
+                                            📋 Danh sách công cụ chính
+                                        </Typography>
+                                        <InputField
+                                            label="Công cụ chính"
+                                            name="tools_required"
+                                            value={formData.tools_required}
+                                            onChange={handleInputChange2}
+                                            multiline
+                                            rows={3}
+                                            placeholder="📌 Danh sách công cụ chính cần thiết:&#10;- Tuốc nơ vít đa năng&#10;- Kìm điện&#10;- Máy đo điện đa năng&#10;- Bộ khóa lục giác..."
+                                            fullWidth
+                                        />
+                                    </Grid2>
+
+                                    {/* Dụng cụ đo lường */}
+                                    <Grid2 xs={12} md={6}>
+                                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: '#555' }}>
+                                            📏 Dụng cụ đo lường
+                                        </Typography>
+                                        <InputField
+                                            label="Thiết bị đo"
+                                            name="measuring_tools"
+                                            value={formData.measuring_tools || ''}
+                                            onChange={handleInputChange2}
+                                            multiline
+                                            rows={3}
+                                            placeholder="🔍 Thiết bị đo lường cần thiết:&#10;- Đồng hồ đo điện áp&#10;- Thiết bị đo nhiệt độ&#10;- Máy đo độ rung..."
+                                            fullWidth
+                                        />
+                                    </Grid2>
+
+                                    {/* Thiết bị an toàn */}
+                                    <Grid2 xs={12} md={6}>
+                                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: '#555' }}>
+                                            🦺 Thiết bị an toàn
+                                        </Typography>
+                                        <InputField
+                                            label="Đồ bảo hộ"
+                                            name="safety_tools"
+                                            value={formData.safety_tools || ''}
+                                            onChange={handleInputChange2}
+                                            multiline
+                                            rows={3}
+                                            placeholder="⚠️ Thiết bị bảo hộ an toàn:&#10;- Găng tay cách điện&#10;- Kính bảo hộ&#10;- Giày an toàn..."
+                                            fullWidth
+                                        />
+                                    </Grid2>
+                                </Grid2>
+                            </Box>
+                        </CustomTabPanel>
+
+                        <CustomTabPanel value={tabValue} index={1}>
+                            {/* Tab Vật tư thay thế */}
+                            <Box sx={{ p: 2 }}>
+                                <Typography variant="h6" sx={{ 
+                                    mb: 3, 
+                                    color: theme.palette.primary.main,
+                                    fontWeight: 'bold',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    pb: 1
+                                }}>
+                                    🛠️ Vật tư và Phụ tùng thay thế
+                                </Typography>
+
+                                <Grid2 container spacing={3}>
+                                    {/* Danh sách phụ tùng thay thế */}
+                                    <Grid2 xs={12} md={6}>
+                                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: '#555' }}>
+                                            🔩 Phụ tùng chính
+                                        </Typography>
+                                        <InputField
+                                            label="Phụ tùng thay thế"
+                                            name="spare_parts"
+                                            value={formData.spare_parts || ''}
+                                            onChange={handleInputChange2}
+                                            multiline
+                                            rows={4}
+                                            placeholder="🔧 Danh sách phụ tùng cần thay:&#10;- Bộ lọc dầu&#10;- Dây đai truyền động&#10;- Ổ bi bánh xe..."
+                                            fullWidth
+                                        />
+                                    </Grid2>
+
+                                    {/* Vật tư tiêu hao */}
+                                    <Grid2 xs={12} md={6}>
+                                        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                                                🧪 Vật tư tiêu hao cần thiết
+                                            </Typography>
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                startIcon={<AddIcon />}
+                                                onClick={addConsumable}
+                                                sx={{ minWidth: 120 }}
+                                            >
+                                                Thêm vật tư
+                                            </Button>
+                                        </Box>
+
+                                        <Box sx={{ maxHeight: 400, overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                                            {formData.consumables.length === 0 ? (
+                                                <Box sx={{ p: 3, textAlign: 'center', color: '#666' }}>
+                                                    <Typography variant="body2">
+                                                        Chưa có vật tư tiêu hao nào được thêm
+                                                    </Typography>
+                                                </Box>
+                                            ) : (
+                                                formData.consumables.map((consumable, index) => (
+                                                    <Card key={index} sx={{ mb: 1, mx: 1, mt: 1 }}>
+                                                        <CardContent sx={{ p: 2 }}>
+                                                            <Grid2 container spacing={2} alignItems="center">
+                                                                <Grid2 xs={12} md={4}>
+                                                                    <SelectField
+                                                                        label="Tên vật tư"
+                                                                        value={consumable.consumable_category_id}
+                                                                        onChange={(value) => updateConsumable(index, 'consumable_category_id', value)}
+                                                                        options={consumableCategories.map(cat => ({
+                                                                            id: cat.id,
+                                                                            name: cat.name
+                                                                        }))}
+                                                                        fullWidth
+                                                                        size="small"
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={2}>
+                                                                    <InputNumber
+                                                                        label="Số lượng"
+                                                                        value={consumable.quantity_required}
+                                                                        onChange={(value) => updateConsumable(index, 'quantity_required', value)}
+                                                                        min={0.1}
+                                                                        step={0.1}
+                                                                        fullWidth
+                                                                        size="small"
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={2}>
+                                                                    <InputNumber
+                                                                        label="Đơn giá"
+                                                                        value={consumable.unit_cost}
+                                                                        onChange={(value) => updateConsumable(index, 'unit_cost', value)}
+                                                                        min={0}
+                                                                        fullWidth
+                                                                        size="small"
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={2}>
+                                                                    <InputNumber
+                                                                        label="Thành tiền"
+                                                                        value={consumable.total_cost}
+                                                                        onChange={(value) => updateConsumable(index, 'total_cost', value)}
+                                                                        min={0}
+                                                                        fullWidth
+                                                                        size="small"
+                                                                        disabled
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={1}>
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        onClick={() => removeConsumable(index)}
+                                                                        sx={{ color: '#f44336', mt: 1 }}
+                                                                    >
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Grid2>
+                                                                <Grid2 xs={12}>
+                                                                    <TextField
+                                                                        label="Ghi chú"
+                                                                        value={consumable.notes}
+                                                                        onChange={(e) => updateConsumable(index, 'notes', e.target.value)}
+                                                                        size="small"
+                                                                        fullWidth
+                                                                        placeholder="Ghi chú về vật tư này..."
+                                                                    />
+                                                                </Grid2>
+                                                            </Grid2>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))
+                                            )}
+                                        </Box>
+                                    </Grid2>
+
+                                    {/* Ước tính chi phí */}
+                                    <Grid2 xs={12}>
+                                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: '#555' }}>
+                                            💰 Ước tính chi phí
+                                        </Typography>
+                                        <InputField
+                                            label="Chi phí dự kiến"
+                                            name="estimated_cost"
+                                            value={formData.estimated_cost || ''}
+                                            onChange={handleInputChange2}
+                                            multiline
+                                            rows={4}
+                                            placeholder="Ước tính chi phí vật tư:&#10;- Vật tư chính: 2,000,000 VNĐ&#10;- Vật tư tiêu hao: 300,000 VNĐ&#10;- Tổng cộng: 2,300,000 VNĐ"
+                                            fullWidth
+                                        />
+                                    </Grid2>
+                                </Grid2>
+                            </Box>
+                        </CustomTabPanel>
+
+                        <CustomTabPanel value={tabValue} index={2}>
+                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                                    Danh sách kiểm tra bảo trì
+                                </Typography>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    startIcon={<AddIcon />}
+                                    onClick={addChecklistItem}
+                                    sx={{ minWidth: 150 }}
+                                >
+                                    Thêm mục kiểm tra
+                                </Button>
+                            </Box>
+
+                            <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                                {maintenanceChecklist.map((item, index) => (
+                                    <Card key={item.id} sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
+                                        <CardContent sx={{ p: 2 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Checkbox
+                                                            checked={item.completed}
+                                                            onChange={(e) => handleChecklistChange(item.id, e.target.checked)}
+                                                            icon={<CheckCircleIcon sx={{ color: '#ccc' }} />}
+                                                            checkedIcon={<CheckCircleIcon sx={{ color: '#4caf50' }} />}
+                                                        />
+                                                    }
+                                                    label=""
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    size="small"
+                                                    value={item.task}
+                                                    onChange={(e) => updateChecklistItem(item.id, e.target.value)}
+                                                    placeholder="Nhập nội dung kiểm tra..."
+                                                    variant="outlined"
+                                                    sx={{ mr: 1 }}
+                                                />
+                                                {item.required && (
+                                                    <Typography variant="caption" sx={{ color: '#f44336', minWidth: 60 }}>
+                                                        *Bắt buộc
+                                                    </Typography>
+                                                )}
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => removeChecklistItem(item.id)}
+                                                    sx={{ color: '#f44336' }}
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </Box>
+                        </CustomTabPanel>
+
+                        <CustomTabPanel value={tabValue} index={3}>
+                            {/* Danh sách công việc */}
+                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                                    Danh sách công việc chi tiết
+                                </Typography>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    startIcon={<AddIcon />}
+                                    onClick={addWorkTask}
+                                    sx={{ minWidth: 150 }}
+                                >
+                                    Thêm công việc
+                                </Button>
+                            </Box>
+
+                            <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                                {workTasks.map((task, index) => (
+                                    <Card key={task.id} sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
+                                        <CardContent sx={{ p: 2 }}>
+                                            <Grid2 container spacing={2} alignItems="center">
+                                                <Grid2 xs={12} md={5}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        label="Tên công việc"
+                                                        value={task.task_name}
+                                                        onChange={(e) => updateWorkTask(task.id, 'task_name', e.target.value)}
+                                                        placeholder="Nhập tên công việc cần thực hiện..."
+                                                    />
+                                                </Grid2>
+                                                <Grid2 xs={12} md={3}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        select
+                                                        label="Người thực hiện"
+                                                        value={task.assigned_to || ''}
+                                                        onChange={(e) => updateWorkTask(task.id, 'assigned_to', e.target.value)}
+                                                    >
+                                                        <MenuItem value="">
+                                                            <em>Chọn nhân viên</em>
+                                                        </MenuItem>
+                                                        {users.map((user) => (
+                                                            <MenuItem key={user.id} value={user.id}>
+                                                                {user.name}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </TextField>
+                                                </Grid2>
+                                                <Grid2 xs={12} md={2}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        type="number"
+                                                        label="Giờ ước tính"
+                                                        value={task.estimated_hours}
+                                                        onChange={(e) => updateWorkTask(task.id, 'estimated_hours', e.target.value)}
+                                                        placeholder="2"
+                                                    />
+                                                </Grid2>
+                                                <Grid2 xs={12} md={1}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        select
+                                                        label="Trạng thái"
+                                                        value={task.status || 'pending'}
+                                                        onChange={(e) => updateWorkTask(task.id, 'status', e.target.value)}
+                                                    >
+                                                        <MenuItem value="pending">Chờ thực hiện</MenuItem>
+                                                        <MenuItem value="in_progress">Đang thực hiện</MenuItem>
+                                                        <MenuItem value="completed">Hoàn thành</MenuItem>
+                                                    </TextField>
+                                                </Grid2>
+                                                <Grid2 xs={12} md={1}>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => removeWorkTask(task.id)}
+                                                        sx={{ color: '#f44336', mt: 1 }}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Grid2>
+                                                <Grid2 xs={12}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        multiline
+                                                        rows={2}
+                                                        label="Mô tả công việc"
+                                                        value={task.description}
+                                                        onChange={(e) => updateWorkTask(task.id, 'description', e.target.value)}
+                                                        placeholder="Mô tả chi tiết công việc cần thực hiện..."
+                                                    />
+                                                </Grid2>
+                                            </Grid2>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+
+                                {workTasks.length === 0 && (
+                                    <Box sx={{ textAlign: 'center', py: 4, color: '#666' }}>
+                                        <Typography variant="body1">
+                                            Chưa có công việc nào. Nhấn "Thêm công việc" để bắt đầu.
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
+                        </CustomTabPanel>
+
+                        <CustomTabPanel value={tabValue} index={4}>
+                            <Grid2 container spacing={2}>
+                                <Grid2 xs={12}>
+                                    <InputField
+                                        label="Ghi chú bổ sung"
+                                        name="notes"
+                                        value={formData.notes}
+                                        onChange={handleInputChange2}
+                                        multiline
+                                        rows={6}
+                                        placeholder="Ghi chú bổ sung về quá trình bảo trì..."
+                                        minLabelWidth='100px'
+                                        fullWidth
+                                    />
+                                </Grid2>
+                            </Grid2>
+                        </CustomTabPanel>
+                    </Box>
+                </Box>
+            </Stack>
+
+            {/* Action Buttons */}
+            <Box sx={{
+                p: 2,
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 2,
+                backgroundColor: '#fafafa'
+            }}>
+                <Button
+                    variant="outlined"
+                    onClick={handleClose}
+                    sx={{
+                        fontSize: '1.2rem',
+                        minWidth: 120,
+                        color: '#f44336',
+                        borderColor: '#f44336',
+                        '&:hover': {
+                            backgroundColor: '#ffebee',
+                            borderColor: '#f44336'
+                        }
+                    }}
+                >
+                    Hủy
+                </Button>
+                <Button
+                    variant="contained"
+                    onClick={handleSubmit}
+                    startIcon={<SaveIcon />}
+                    disabled={loading}
+                    sx={{
+                        fontSize: '1.2rem',
+                        minWidth: 120,
+                        backgroundColor: '#1976d2',
+                        '&:hover': {
+                            backgroundColor: '#1565c0'
+                        }
+                    }}
+                >
+                    {loading ? 'Đang cập nhật...' : 'Cập nhật'}
+                </Button>
+            </Box>
+
+            {/* Success Snackbar */}
+            <Snackbar
+                open={showSuccess}
+                autoHideDuration={3000}
+                onClose={() => setShowSuccess(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert 
+                    onClose={() => setShowSuccess(false)} 
+                    severity="success" 
+                    sx={{ width: '100%' }}
+                >
+                    {successMessage}
+                </Alert>
+            </Snackbar>
+
+            {/* Error Snackbar */}
+            <Snackbar
+                open={!!error}
+                autoHideDuration={6000}
+                onClose={() => dispatch(clearError())}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert 
+                    onClose={() => dispatch(clearError())} 
+                    severity="error" 
+                    sx={{ width: '100%' }}
+                >
+                    Lỗi cập nhật: {error}
+                </Alert>
+            </Snackbar>
+        </Box>
+    );
+}
+
+export default EditMaintenanceForm;

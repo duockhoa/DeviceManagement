@@ -38,12 +38,11 @@ function InputField({
     const textFieldProps = getTextFieldWidth();
 
     return (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="body2" sx={{
                 fontSize: '1.2rem',
                 fontWeight: 'medium',
                 color: '#333',
-                minWidth: minLabelWidth,
                 whiteSpace: 'nowrap'
             }}>
                 {label}{required && <span style={{ color: '#f44336' }}> *</span>}:
@@ -51,7 +50,7 @@ function InputField({
             <TextField
                 name={name}
                 value={value}
-                onChange={onChange}
+                onChange={(e) => onChange(name, e.target.value)}
                 placeholder={placeholder}
                 variant="outlined"
                 size="small"

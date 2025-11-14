@@ -1,9 +1,13 @@
 import Box from '@mui/material/Box';
-import { Typography, IconButton, Divider, Button, Tabs, Tab, Dialog , Paper, Grid } from '@mui/material';
+import { Typography, IconButton, Divider, Button, Tabs, Tab, Dialog , Paper, Grid, CardMedia, List, ListItem, ListItemIcon, ListItemText, ListItemSecondaryAction, Chip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import DescriptionIcon from '@mui/icons-material/Description';
 import { Stack, width } from '@mui/system';
 import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect } from 'react';
@@ -109,16 +113,139 @@ const [componentsData, setComponentsData] = useState([
   }
 ]);
 
+// State cho thông số kỹ thuật
+const [specificationsData, setSpecificationsData] = useState([
+  {
+    id: 1,
+    parameter_name: "",
+    parameter_value: "",
+    unit: "",
+    min_value: "",
+    max_value: "",
+    remarks: "",
+  }
+]);
+
+// State cho vật tư tiêu hao
+const [consumablesData, setConsumablesData] = useState([
+  {
+    id: 1,
+    item_name: "",
+    specification: "",
+    unit: "",
+    replacement_cycle: "",
+    unit_price: "",
+    supplier: "",
+    remarks: "",
+  }
+]);
+
+// State cho ảnh thiết bị
+const [deviceImage, setDeviceImage] = useState(null);
+const [imagePreview, setImagePreview] = useState(null);
+
+// State cho tài liệu đính kèm
+const [attachedFiles, setAttachedFiles] = useState([]);
+
 // Handle thay đổi data từ InputTable
 const handleComponentsChange = (updatedData) => {
   console.log('Components data changed:', updatedData);
   setComponentsData(updatedData);
 };
 
+// Handle thay đổi data từ SpecificationTable
+const handleSpecificationsChange = (updatedData) => {
+  console.log('Specifications data changed:', updatedData);
+  setSpecificationsData(updatedData);
+};
+
+// Handle thay đổi data từ ConsumableTable
+const handleConsumablesChange = (updatedData) => {
+  console.log('Consumables data changed:', updatedData);
+  setConsumablesData(updatedData);
+};
+
+// Handle upload ảnh
+const handleImageSelect = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    if (file.type.startsWith('image/')) {
+      setDeviceImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('Vui lòng chọn file ảnh (JPG, PNG, GIF)');
+    }
+  }
+};
+
+// Handle xóa ảnh
+const handleRemoveImage = () => {
+  setDeviceImage(null);
+  setImagePreview(null);
+};
+
+// Handle upload files
+const handleFilesSelect = (event) => {
+  const files = Array.from(event.target.files);
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/png',
+    'image/gif'
+  ];
+
+  const validFiles = files.filter(file => {
+    if (file.size > maxSize) {
+      alert(`File "${file.name}" quá lớn. Vui lòng chọn file dưới 10MB`);
+      return false;
+    }
+    if (!allowedTypes.includes(file.type)) {
+      alert(`File "${file.name}" không được hỗ trợ. Chỉ chấp nhận: PDF, DOC, DOCX, JPG, PNG, GIF`);
+      return false;
+    }
+    return true;
+  });
+
+  const newFiles = validFiles.map(file => ({
+    id: Date.now() + Math.random(),
+    file: file,
+    name: file.name,
+    size: file.size,
+    type: file.type
+  }));
+
+  setAttachedFiles(prev => [...prev, ...newFiles]);
+};
+
+// Handle xóa file
+const handleRemoveFile = (fileId) => {
+  setAttachedFiles(prev => prev.filter(file => file.id !== fileId));
+};
+
+// Format file size
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
     const handleSave = () => {
         const submitData = {
             ...formData,
-            components: componentsData // Thêm data từ table
+            components: componentsData, // Thêm data từ table
+            specifications: specificationsData, // Thêm data thông số kỹ thuật
+            consumables: consumablesData, // Thêm data vật tư tiêu hao
+            deviceImage: deviceImage, // Thêm ảnh thiết bị
+            attachedFiles: attachedFiles // Thêm tài liệu đính kèm
           };
         dispatch(createAsset(submitData));
         handleClose();
@@ -237,6 +364,77 @@ const handleComponentsChange = (updatedData) => {
     headerName: 'Ghi chú',
     type: 'text',
     width: 300,
+    editable: true,
+  },
+];
+
+// Chuẩn bị dữ liệu cho bảng thông số kỹ thuật
+const specColumns = [
+  { field: 'parameter_name', headerName: 'Tên thông số', width: 250, editable: true },
+  { field: 'parameter_value', headerName: 'Giá trị', width: 150, editable: true },
+  {
+    field: 'unit',
+    headerName: 'Đơn vị',
+    type: 'singleSelect',
+    valueOptions: ['V', 'A', 'W', 'Hz', 'mm', 'cm', 'm', 'kg', '℃', 'bar', 'rpm', 'Khác'],
+    width: 120,
+    editable: true,
+  },
+  {
+    field: 'min_value',
+    headerName: 'Giá trị min',
+    type: 'number',
+    width: 140,
+    editable: true,
+  },
+  {
+    field: 'max_value',
+    headerName: 'Giá trị max',
+    type: 'number',
+    width: 140,
+    editable: true,
+  },
+  {
+    field: 'remarks',
+    headerName: 'Ghi chú',
+    type: 'text',
+    width: 200,
+    editable: true,
+  },
+];
+
+// Chuẩn bị dữ liệu cho bảng vật tư tiêu hao
+const consumableColumns = [
+  { field: 'item_name', headerName: 'Tên vật tư', width: 200, editable: true },
+  { field: 'specification', headerName: 'Thông số kỹ thuật', width: 180, editable: true },
+  {
+    field: 'unit',
+    headerName: 'Đơn vị',
+    type: 'singleSelect',
+    valueOptions: ['Lít', 'ml', 'Cái', 'Bộ', 'Kg', 'g', 'm', 'cm', 'Khác'],
+    width: 100,
+    editable: true,
+  },
+  {
+    field: 'replacement_cycle',
+    headerName: 'Chu kỳ thay (giờ)',
+    type: 'number',
+    width: 150,
+    editable: true,
+  },
+  {
+    field: 'unit_price',
+    headerName: 'Đơn giá (VNĐ)',
+    type: 'number',
+    width: 140,
+    editable: true,
+  },
+  { field: 'supplier', headerName: 'Nhà cung cấp', width: 160, editable: true },
+  {
+    field: 'remarks',
+    headerName: 'Ghi chú',
+    type: 'text',
+    width: 150,
     editable: true,
   },
 ];
@@ -406,7 +604,95 @@ const rows = [
                             </Grid2>
                         </Grid2>
                     </Grid2>
-                    <Box sx={{p:1 , border: "1px dashed #aaa" , minWidth: "100px" , height: "100%" }}></Box>
+                    
+                    {/* Image Upload Section */}
+                    <Box sx={{
+                        p: 1, 
+                        border: "2px dashed #aaa", 
+                        minWidth: "200px", 
+                        height: "240px",
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#fafafa',
+                        borderRadius: 1
+                    }}>
+                        {imagePreview ? (
+                            // Hiển thị ảnh đã chọn
+                            <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+                                <CardMedia
+                                    component="img"
+                                    sx={{
+                                        width: '100%',
+                                        height: '180px',
+                                        objectFit: 'cover',
+                                        borderRadius: 1
+                                    }}
+                                    image={imagePreview}
+                                    alt="Device preview"
+                                />
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    mt: 1,
+                                    gap: 1
+                                }}>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        component="label"
+                                        startIcon={<PhotoCameraIcon />}
+                                        sx={{ fontSize: '0.75rem', flex: 1 }}
+                                    >
+                                        Đổi ảnh
+                                        <input
+                                            type="file"
+                                            hidden
+                                            accept="image/*"
+                                            onChange={handleImageSelect}
+                                        />
+                                    </Button>
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleRemoveImage}
+                                        sx={{ color: '#f44336' }}
+                                    >
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            </Box>
+                        ) : (
+                            // Hiển thị khi chưa có ảnh
+                            <Box sx={{ 
+                                textAlign: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '100%'
+                            }}>
+                                <PhotoCameraIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
+                                <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                                    Ảnh thiết bị
+                                </Typography>
+                                <Button
+                                    variant="outlined"
+                                    component="label"
+                                    startIcon={<PhotoCameraIcon />}
+                                    sx={{ fontSize: '0.8rem' }}
+                                >
+                                    Chọn ảnh
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        onChange={handleImageSelect}
+                                    />
+                                </Button>
+                            </Box>
+                        )}
+                    </Box>
 
 
                 </Box>
@@ -546,23 +832,116 @@ const rows = [
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={2} >
                         <Grid2 container spacing={2} >
-                            Các thành bộ phận của thiết bị
+                          <Grid2 xs={12}>
+                            <InputTable 
+                              initialRows={specificationsData}
+                              columns={specColumns} 
+                              showRowNumber={true}
+                              showAddButton={true}
+                              onDataChange={handleSpecificationsChange}
+                            />
+                          </Grid2>
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={3}>
                         <Grid2 container spacing={2} >
-                            Các vật tư tiêu hao , doăng cao su, dầu nhớt, đơn vị tính đơn giá....
+                          <Grid2 xs={12}>
+                            <InputTable 
+                              initialRows={consumablesData}
+                              columns={consumableColumns} 
+                              showRowNumber={true}
+                              showAddButton={true}
+                              onDataChange={handleConsumablesChange}
+                            />
+                          </Grid2>
                         </Grid2>
                     </CustomTabPanel>
                     <CustomTabPanel value={tabValue} index={4}>
-                        <Box sx={{
-                            border: '2px dashed #ccc',
-                            borderRadius: 1,
-                            p: 3,
-                            textAlign: 'center',
-                            backgroundColor: '#fafafa'
-                        }}>
-                            Gồm tên tài liệu và file đính kèm
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {/* Upload Area */}
+                            <Box sx={{
+                                border: '2px dashed #ccc',
+                                borderRadius: 1,
+                                p: 3,
+                                textAlign: 'center',
+                                backgroundColor: '#fafafa',
+                                cursor: 'pointer',
+                                '&:hover': {
+                                    borderColor: '#1976d2',
+                                    backgroundColor: '#f0f7ff'
+                                }
+                            }}>
+                                <AttachFileIcon sx={{ fontSize: 48, color: '#ccc', mb: 1 }} />
+                                <Typography variant="h6" sx={{ color: '#666', mb: 1 }}>
+                                    Kéo thả file hoặc click để chọn
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: '#999', mb: 2 }}>
+                                    Hỗ trợ: PDF, DOC, DOCX, JPG, PNG, GIF (tối đa 10MB)
+                                </Typography>
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    startIcon={<AttachFileIcon />}
+                                >
+                                    Chọn tài liệu
+                                    <input
+                                        type="file"
+                                        hidden
+                                        multiple
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                                        onChange={handleFilesSelect}
+                                    />
+                                </Button>
+                            </Box>
+
+                            {/* Files List */}
+                            {attachedFiles.length > 0 && (
+                                <Box sx={{ 
+                                    border: '1px solid #ddd',
+                                    borderRadius: 1,
+                                    backgroundColor: '#fff'
+                                }}>
+                                    <Typography variant="h6" sx={{ p: 2, borderBottom: '1px solid #ddd' }}>
+                                        Tài liệu đính kèm ({attachedFiles.length})
+                                    </Typography>
+                                    <List>
+                                        {attachedFiles.map((file) => (
+                                            <ListItem key={file.id} divider>
+                                                <ListItemIcon>
+                                                    <DescriptionIcon color="primary" />
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    primary={file.name}
+                                                    secondary={
+                                                        <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                                                            <Chip 
+                                                                label={formatFileSize(file.size)} 
+                                                                size="small" 
+                                                                variant="outlined"
+                                                            />
+                                                            <Chip 
+                                                                label={file.type.split('/')[1].toUpperCase()} 
+                                                                size="small" 
+                                                                color="primary"
+                                                                variant="outlined"
+                                                            />
+                                                        </Box>
+                                                    }
+                                                />
+                                                <ListItemSecondaryAction>
+                                                    <IconButton 
+                                                        edge="end" 
+                                                        onClick={() => handleRemoveFile(file.id)}
+                                                        sx={{ color: '#f44336' }}
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </ListItemSecondaryAction>
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                </Box>
+                            )}
                         </Box>
                     </CustomTabPanel>
                     </Box>
@@ -611,7 +990,7 @@ const rows = [
                 </Button>
             </Box>
             <Dialog open={formOpen} onClose={handleCloseForm} maxWidth="md" fullWidth>
-               <FormComponent handleClose={handleCloseForm} />
+               {FormComponent && <FormComponent handleClose={handleCloseForm} />}
             </Dialog>
         </Box >
     );

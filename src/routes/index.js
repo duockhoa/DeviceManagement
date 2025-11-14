@@ -10,6 +10,7 @@ import Consumables from '../pages/Consumables';
 import Maintenance from '../pages/Maintenance';
 import Calibration from '../pages/Calibration';
 import Specifications from '../pages/Specifications';
+import AssetDetail from '../component/AssetsComponent/AssetDetail';
 const publicRoutes = [
     {
         path: '/',
@@ -19,6 +20,10 @@ const publicRoutes = [
     {
         path: 'devices',
         component: Devices,
+    },
+    {
+        path: 'devices/:id',
+        component: AssetDetail,
     },
 
     {

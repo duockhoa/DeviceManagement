@@ -1,18 +1,25 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { fetchAssets } from "../../../redux/slice/assetsSlice";
 import {
     Box,
     Typography,
     Chip,
-    Avatar
+    Avatar,
+    IconButton,
+    Tooltip
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import DevicesIcon from '@mui/icons-material/Devices';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Loading from '../../Loading';
 
 function AssetList() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const assets = useSelector((state) => state.assets.assets);
     const loading = useSelector((state) => state.assets.loading);
     const error = useSelector((state) => state.assets.error);
@@ -20,6 +27,10 @@ function AssetList() {
     useEffect(() => {
         dispatch(fetchAssets());
     }, [dispatch]);
+
+    const handleViewDetail = (id) => {
+        navigate(`/devices/${id}`);
+    };
 
     const columns = [
         {
@@ -146,6 +157,35 @@ function AssetList() {
                 <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
                     {new Date(params.value).toLocaleDateString('vi-VN')}
                 </Typography>
+            )
+        },
+        {
+            field: 'actions',
+            headerName: 'Thao tác',
+            width: 150,
+            sortable: false,
+            renderCell: (params) => (
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Tooltip title="Xem chi tiết">
+                        <IconButton 
+                            size="small" 
+                            color="primary"
+                            onClick={() => handleViewDetail(params.row.id)}
+                        >
+                            <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Chỉnh sửa">
+                        <IconButton size="small" color="warning">
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Xóa">
+                        <IconButton size="small" color="error">
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
             )
         }
     ];

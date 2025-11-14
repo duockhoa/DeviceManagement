@@ -1,7 +1,26 @@
 import { Box } from '@mui/material';
-function Categories() {
-    return <Box p={3} sx={{ backgroundColor: '#fff', height: '100vh' }}>
+import SubCategoriesList from '../../component/SubCategories/SubCategoriesList';
+import SubSidebarSpecification from '../../component/LayoutComponent/SubSidebarSpecification';
 
-        </Box>;
+function Categories() {
+    return (
+        <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
+            <Box sx={{ width: '300px', minWidth: '300px' }}>
+                <SubSidebarSpecification />
+            </Box>
+            
+            {/* Main Content - 75% width */}
+            <Box sx={{ 
+                flex: 1, 
+                backgroundColor: '#fff', 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                p: 1
+            }}>
+                <SubCategoriesList />
+            </Box>
+        </Box>
+    );
 }
 export default Categories;
