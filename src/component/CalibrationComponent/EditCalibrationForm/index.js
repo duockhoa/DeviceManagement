@@ -224,8 +224,7 @@ function EditCalibrationForm({ handleClose, calibrationData, onSuccess }) {
         setTabValue(newValue);
     };
 
-    const handleInputChange2 = (event) => {
-        const { name, value } = event.target;
+    const handleInputChange2 = (name, value) => {
         setFormData(prev => ({
             ...prev,
             [name]: value

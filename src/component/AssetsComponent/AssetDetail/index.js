@@ -21,7 +21,8 @@ import {
     Tab,
     Button,
     CircularProgress,
-    Alert
+    Alert,
+    Dialog
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
@@ -34,6 +35,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchAssetById } from '../../../redux/slice/assetsSlice';
 import { fetchMaintenanceByAsset } from '../../../redux/slice/maintenanceSlice';
 import Loading from '../../Loading';
+import EditAssetForm from '../EditAssetForm';
 
 function TabPanel({ children, value, index, ...other }) {
     return (
@@ -59,6 +61,7 @@ function AssetDetail() {
     const [maintenanceHistory, setMaintenanceHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
 
     useEffect(() => {
         const loadAssetData = async () => {
@@ -85,6 +88,20 @@ function AssetDetail() {
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
+    };
+
+    const handleEdit = () => {
+        setEditDialogOpen(true);
+    };
+
+    const handleCloseEdit = () => {
+        setEditDialogOpen(false);
+        // Reload asset data sau khi đóng dialog
+        if (id) {
+            dispatch(fetchAssetById(id)).unwrap()
+                .then(data => setAsset(data))
+                .catch(err => console.error('Error reloading asset:', err));
+        }
     };
 
     const handleBack = () => {
@@ -156,7 +173,11 @@ function AssetDetail() {
                     />
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button startIcon={<EditIcon />} variant="outlined">
+                    <Button 
+                        startIcon={<EditIcon />} 
+                        variant="outlined"
+                        onClick={handleEdit}
+                    >
                         Chỉnh sửa
                     </Button>
                     <Button startIcon={<BuildIcon />} variant="contained">
@@ -444,6 +465,21 @@ function AssetDetail() {
                     </Paper>
                 </Grid>
             </Grid>
+
+            {/* Dialog chỉnh sửa thiết bị */}
+            <Dialog
+                open={editDialogOpen}
+                onClose={handleCloseEdit}
+                maxWidth="xl"
+                fullWidth
+            >
+                {asset && (
+                    <EditAssetForm 
+                        handleClose={handleCloseEdit} 
+                        assetData={asset}
+                    />
+                )}
+            </Dialog>
         </Box>
     );
 }

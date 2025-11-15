@@ -1,14 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchAssets } from "../../../redux/slice/assetsSlice";
+import { fetchAssets, fetchAssetById } from "../../../redux/slice/assetsSlice";
 import {
     Box,
     Typography,
     Chip,
     Avatar,
     IconButton,
-    Tooltip
+    Tooltip,
+    Dialog
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import DevicesIcon from '@mui/icons-material/Devices';
@@ -16,6 +17,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Loading from '../../Loading';
+import EditAssetForm from '../EditAssetForm';
+import ExcelImportExport from '../ExcelImportExport';
 
 function AssetList() {
     const dispatch = useDispatch();
@@ -23,6 +26,9 @@ function AssetList() {
     const assets = useSelector((state) => state.assets.assets);
     const loading = useSelector((state) => state.assets.loading);
     const error = useSelector((state) => state.assets.error);
+    
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [selectedAsset, setSelectedAsset] = useState(null);
 
     useEffect(() => {
         dispatch(fetchAssets());
@@ -30,6 +36,35 @@ function AssetList() {
 
     const handleViewDetail = (id) => {
         navigate(`/devices/${id}`);
+    };
+
+    const handleEdit = async (asset) => {
+        try {
+            console.log('Edit clicked, asset:', asset);
+            // Fetch đầy đủ thông tin asset từ backend
+            const fullAssetData = await dispatch(fetchAssetById(asset.id)).unwrap();
+            console.log('Full asset data loaded:', fullAssetData);
+            console.log('Has GeneralInfo?', fullAssetData?.GeneralInfo);
+            console.log('Has Components?', fullAssetData?.Components);
+            console.log('Has Specifications?', fullAssetData?.Specifications);
+            console.log('Has Consumables?', fullAssetData?.Consumables);
+            setSelectedAsset(fullAssetData);
+            setEditDialogOpen(true);
+        } catch (error) {
+            console.error('Error loading asset data:', error);
+            alert('Lỗi khi tải thông tin thiết bị: ' + error.message);
+        }
+    };
+
+    const handleCloseEdit = () => {
+        console.log('Closing edit dialog');
+        setEditDialogOpen(false);
+        setSelectedAsset(null);
+    };
+
+    const handleImportSuccess = () => {
+        // Reload assets after successful import
+        dispatch(fetchAssets());
     };
 
     const columns = [
@@ -176,7 +211,11 @@ function AssetList() {
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Chỉnh sửa">
-                        <IconButton size="small" color="warning">
+                        <IconButton 
+                            size="small" 
+                            color="warning"
+                            onClick={() => handleEdit(params.row)}
+                        >
                             <EditIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
@@ -198,30 +237,53 @@ function AssetList() {
     }
 
     return (
-        <Box sx={{ height: "100%", width: '100%' }}>
-            <DataGrid
-                rows={assets}
-                columns={columns}
-                loading={loading}
-                error={error}
-                disableSelectionOnClick
-                hideFooterPagination
-                hideFooter
-                sx={{
-                    '& .MuiDataGrid-cell': {
-                        fontSize: '1.2rem',
-                        display: 'flex',
-                        alignItems: 'center'
-                    },
-                    '& .MuiDataGrid-columnHeaders': {
-                        fontSize: '1.2rem',
-                        fontWeight: 'bold'
-                    },
-                    '& .MuiDataGrid-row': {
-                        minHeight: '60px !important'
-                    }
-                }}
-            />
+        <Box sx={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Header with Excel buttons */}
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                <ExcelImportExport onImportSuccess={handleImportSuccess} />
+            </Box>
+
+            {/* DataGrid */}
+            <Box sx={{ flexGrow: 1 }}>
+                <DataGrid
+                    rows={assets}
+                    columns={columns}
+                    loading={loading}
+                    error={error}
+                    disableSelectionOnClick
+                    hideFooterPagination
+                    hideFooter
+                    sx={{
+                        '& .MuiDataGrid-cell': {
+                            fontSize: '1.2rem',
+                            display: 'flex',
+                            alignItems: 'center'
+                        },
+                        '& .MuiDataGrid-columnHeaders': {
+                            fontSize: '1.2rem',
+                            fontWeight: 'bold'
+                        },
+                        '& .MuiDataGrid-row': {
+                            minHeight: '60px !important'
+                        }
+                    }}
+                />
+            </Box>
+
+            {/* Dialog chỉnh sửa thiết bị */}
+            <Dialog
+                open={editDialogOpen}
+                onClose={handleCloseEdit}
+                maxWidth="xl"
+                fullWidth
+            >
+                {selectedAsset && (
+                    <EditAssetForm 
+                        handleClose={handleCloseEdit} 
+                        assetData={selectedAsset}
+                    />
+                )}
+            </Dialog>
         </Box>
     );
 }

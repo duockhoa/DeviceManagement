@@ -148,12 +148,20 @@ function CalibrationList() {
         {
             field: 'asset_id',
             headerName: 'Thiết bị',
-            width: 200,
-            renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontSize: '1.1rem' }}>
-                    Asset ID: {params.value}
-                </Typography>
-            )
+            width: 250,
+            renderCell: (params) => {
+                const asset = params.row.asset;
+                return (
+                    <Box>
+                        <Typography variant="body2" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
+                            {asset?.name || 'N/A'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.9rem' }}>
+                            {asset?.asset_code || `ID: ${params.value}`}
+                        </Typography>
+                    </Box>
+                );
+            }
         },
         {
             field: 'calibration_type',
@@ -225,12 +233,15 @@ function CalibrationList() {
         {
             field: 'technician_id',
             headerName: 'Kỹ thuật viên',
-            width: 150,
-            renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontSize: '1.1rem' }}>
-                    {params.value ? `Technician ID: ${params.value}` : 'Chưa phân công'}
-                </Typography>
-            )
+            width: 180,
+            renderCell: (params) => {
+                const technician = params.row.technician;
+                return (
+                    <Typography variant="body2" sx={{ fontSize: '1.1rem' }}>
+                        {technician?.name || (params.value ? `ID: ${params.value}` : 'Chưa phân công')}
+                    </Typography>
+                );
+            }
         },
         {
             field: 'actions',

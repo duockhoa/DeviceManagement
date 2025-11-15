@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import InputField from '../../InputComponent/InputField';
 import SelectField from '../../InputComponent/SelectField';
-import { createAsset } from "../../../redux/slice/assetsSlice"
+import { updateExistingAsset } from "../../../redux/slice/assetsSlice"
 import theme from '../../../theme';
 import AreaForm from '../../AreaComponent/AreaForm';
 import AddSubCategoriesForm from '../../SubCategories/SubCategoriesForm';
@@ -50,13 +50,13 @@ function a11yProps(index) {
     };
 }
 
-function AddAssetForm({ handleClose }) {
+function EditAssetForm({ handleClose, assetData }) {
+    console.log('EditAssetForm rendered, assetData:', assetData);
     const dispatch = useDispatch();
     const assetCategories = useSelector((state) => state.assetCategories.categories);
     const areas = useSelector((state) => state.areas.areas);
     const plants = useSelector((state) => state.plants.plants);
     const departments = useSelector((state) => state.departments.departments);
-    const assets = useSelector((state) => state.assets.assets);
     const assetsSubCategories = useSelector((state) => state.assetSubCategories.subCategories);
 
     const [tabValue, setTabValue] = useState(0);
@@ -65,17 +65,27 @@ function AddAssetForm({ handleClose }) {
     const [areaOptions, setAreaOptions] = useState(areas);
     const [subCategoryOptions, setSubCategoryOptions] = useState(assetsSubCategories);
 
-    // Form state cho thông tin chung
+    // Form state - khởi tạo từ assetData với mapping đúng
     const [formData, setFormData] = useState({
-        asset_code: '',
-        name: '',
-        category_id: '',
-        team_id: '',
-        area_id: '',
-        plant_id: '',
-        sub_category_id: '',
-        status: 'active',
-        generalInfo: null,
+        asset_code: assetData?.asset_code || '',
+        name: assetData?.name || '',
+        category_id: assetData?.category_id || '',
+        team_id: assetData?.team_id || assetData?.Department?.name || '',
+        area_id: assetData?.area_id || '',
+        plant_id: assetData?.plant_id || assetData?.Area?.plant_id || '',
+        sub_category_id: assetData?.sub_category_id || '',
+        status: assetData?.status || 'active',
+        generalInfo: assetData?.GeneralInfo ? {
+            manufacture_year: assetData.GeneralInfo.manufacture_year || '',
+            manufacturer: assetData.GeneralInfo.manufacturer || '',
+            country_of_origin: assetData.GeneralInfo.country_of_origin || '',
+            model: assetData.GeneralInfo.model || '',
+            serial_number: assetData.GeneralInfo.serial_number || '',
+            warranty_period_months: assetData.GeneralInfo.warranty_period_months || '',
+            warranty_expiration_date: assetData.GeneralInfo.warranty_expiry_date || '',
+            supplier: assetData.GeneralInfo.supplier || '',
+            description: assetData.GeneralInfo.description || ''
+        } : (assetData?.generalInfo || null),
     });
     const statusOptions = [
         {
@@ -113,21 +123,44 @@ function AddAssetForm({ handleClose }) {
         }));
     };
 
-    // Thêm state để quản lý data của table
-const [componentsData, setComponentsData] = useState([
-  {
+    // Thêm state để quản lý data của table - khởi tạo từ assetData với mapping đúng
+const [componentsData, setComponentsData] = useState(() => {
+  const components = assetData?.Components || assetData?.components;
+  if (components && components.length > 0) {
+    return components.map((comp, index) => ({
+      id: comp.id || index + 1,
+      component_name: comp.component_name || '',
+      specification: comp.specification || '',
+      quantity: comp.quantity || '',
+      unit: comp.unit || '',
+      remarks: comp.remarks || ''
+    }));
+  }
+  return [{
     id: 1,
     component_name: "",
     specification: "",
     quantity: "",
     unit: "",
     remarks: "",
-  }
-]);
+  }];
+});
 
 // State cho thông số kỹ thuật
-const [specificationsData, setSpecificationsData] = useState([
-  {
+const [specificationsData, setSpecificationsData] = useState(() => {
+  const specs = assetData?.Specifications || assetData?.specifications;
+  if (specs && specs.length > 0) {
+    return specs.map((spec, index) => ({
+      id: spec.id || index + 1,
+      parameter_name: spec.parameter_name || '',
+      parameter_value: spec.parameter_value || '',
+      unit: spec.unit || '',
+      min_value: spec.min_value || '',
+      max_value: spec.max_value || '',
+      remarks: spec.remarks || ''
+    }));
+  }
+  return [{
     id: 1,
     parameter_name: "",
     parameter_value: "",
@@ -135,12 +168,25 @@ const [specificationsData, setSpecificationsData] = useState([
     min_value: "",
     max_value: "",
     remarks: "",
-  }
-]);
+  }];
+});
 
 // State cho vật tư tiêu hao
-const [consumablesData, setConsumablesData] = useState([
-  {
+const [consumablesData, setConsumablesData] = useState(() => {
+  const consumables = assetData?.Consumables || assetData?.consumables;
+  if (consumables && consumables.length > 0) {
+    return consumables.map((cons, index) => ({
+      id: cons.id || index + 1,
+      item_name: cons.item_name || '',
+      specification: cons.specification || '',
+      unit: cons.unit || '',
+      replacement_cycle: cons.replacement_cycle || '',
+      unit_price: cons.unit_price || '',
+      supplier: cons.supplier || '',
+      remarks: cons.remarks || ''
+    }));
+  }
+  return [{
     id: 1,
     item_name: "",
     specification: "",
@@ -149,15 +195,27 @@ const [consumablesData, setConsumablesData] = useState([
     unit_price: "",
     supplier: "",
     remarks: "",
-  }
-]);
+  }];
+});
 
 // State cho ảnh thiết bị
 const [deviceImage, setDeviceImage] = useState(null);
-const [imagePreview, setImagePreview] = useState(null);
+const [imagePreview, setImagePreview] = useState(assetData?.image_url || assetData?.ImageUrl || null);
 
 // State cho tài liệu đính kèm
-const [attachedFiles, setAttachedFiles] = useState([]);
+const [attachedFiles, setAttachedFiles] = useState(() => {
+  const attachments = assetData?.Attachments || assetData?.attachments;
+  if (attachments && attachments.length > 0) {
+    return attachments.map((file, index) => ({
+      id: file.id || Date.now() + index,
+      name: file.file_name || file.name || '',
+      size: file.file_size || file.size || 0,
+      type: file.file_type || file.type || '',
+      url: file.file_url || file.url || ''
+    }));
+  }
+  return [];
+});
 
 // Handle thay đổi data từ InputTable
 const handleComponentsChange = (updatedData) => {
@@ -253,45 +311,20 @@ const formatFileSize = (bytes) => {
     const handleSave = () => {
         const submitData = {
             ...formData,
-            components: componentsData, // Thêm data từ table
-            specifications: specificationsData, // Thêm data thông số kỹ thuật
-            consumables: consumablesData, // Thêm data vật tư tiêu hao
-            deviceImage: deviceImage, // Thêm ảnh thiết bị
-            attachedFiles: attachedFiles // Thêm tài liệu đính kèm
-          };
-        dispatch(createAsset(submitData));
+            components: componentsData,
+            specifications: specificationsData,
+            consumables: consumablesData,
+            deviceImage: deviceImage,
+            attachedFiles: attachedFiles
+        };
+        dispatch(updateExistingAsset({ 
+            id: assetData.id, 
+            data: submitData 
+        }));
         handleClose();
     };
 
-    useEffect(() => {
-        // Tự động tạo mã thiết bị khi chọn nhóm thiết bị
-        if (formData.category_id) {
-            const selectedCategory = assetCategories.find(cat => cat.id === formData.category_id);
-            const prefix = selectedCategory ? selectedCategory.code : 'TB';
-            // Tìm mã lớn nhất hiện có với prefix này
-            const existingCodes = assets
-                .filter(asset => asset.asset_code.startsWith(prefix))
-                .map(asset => asset.asset_code);
-            let maxNumber = 0;
-            if (existingCodes.length > 0) {
-                const numbers = existingCodes.map(code => {
-                    const parts = code.split('-');
-                    return parts.length > 1 ? parseInt(parts[1], 10) : 0;
-                });
-                maxNumber = Math.max(...numbers);
-            }
-            setFormData(prev => ({
-                ...prev,
-                asset_code: `${prefix}-${(maxNumber + 1).toString().padStart(4, '0')}`
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                asset_code: ''
-            }));
-        }
-
-    }, [formData.category_id]);
+    // Không cần tự động tạo mã khi edit
     // Cập nhật danh sách khu vực khi có sự thay đổi
     useEffect(() => {
         if (formData.plant_id) {
@@ -476,7 +509,7 @@ const rows = [
                     fontSize: '1.8rem',
                     color: '#fff'
                 }}>
-                    THÔNG TIN THIẾT BỊ
+                    CHỈNH SỬA THIẾT BỊ
                 </Typography>
 
                 <IconButton onClick={handleClose} sx={{ color: '#fff' , p: 0.5  }}>
@@ -996,7 +1029,7 @@ const rows = [
                     }}
                     disabled={!isFormValid()}
                 >
-                    Lưu
+                    Cập nhật
                 </Button>
             </Box>
             <Dialog open={formOpen} onClose={handleCloseForm} maxWidth="md" fullWidth>
@@ -1006,4 +1039,4 @@ const rows = [
     );
 }
 
-export default AddAssetForm;
+export default EditAssetForm;
