@@ -9,7 +9,12 @@ import {
     Avatar,
     IconButton,
     Tooltip,
-    Dialog
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import DevicesIcon from '@mui/icons-material/Devices';
@@ -19,6 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import Loading from '../../Loading';
 import EditAssetForm from '../EditAssetForm';
 import ExcelImportExport from '../ExcelImportExport';
+import { deleteAsset } from '../../../services/assetsService';
 
 function AssetList() {
     const dispatch = useDispatch();
@@ -29,6 +35,8 @@ function AssetList() {
     
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [assetToDelete, setAssetToDelete] = useState(null);
 
     useEffect(() => {
         dispatch(fetchAssets());
@@ -65,6 +73,31 @@ function AssetList() {
     const handleImportSuccess = () => {
         // Reload assets after successful import
         dispatch(fetchAssets());
+    };
+
+    const handleDeleteClick = (asset) => {
+        setAssetToDelete(asset);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!assetToDelete) return;
+
+        try {
+            await deleteAsset(assetToDelete.id);
+            setDeleteDialogOpen(false);
+            setAssetToDelete(null);
+            // Reload danh sách
+            dispatch(fetchAssets());
+        } catch (error) {
+            console.error('Error deleting asset:', error);
+            alert('Lỗi khi xóa thiết bị: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteDialogOpen(false);
+        setAssetToDelete(null);
     };
 
     const columns = [
@@ -220,7 +253,11 @@ function AssetList() {
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Xóa">
-                        <IconButton size="small" color="error">
+                        <IconButton 
+                            size="small" 
+                            color="error"
+                            onClick={() => handleDeleteClick(params.row)}
+                        >
                             <DeleteIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
@@ -251,8 +288,13 @@ function AssetList() {
                     loading={loading}
                     error={error}
                     disableSelectionOnClick
-                    hideFooterPagination
-                    hideFooter
+                    pagination
+                    pageSizeOptions={[10, 25, 50, 100]}
+                    initialState={{
+                        pagination: {
+                            paginationModel: { pageSize: 25, page: 0 },
+                        },
+                    }}
                     sx={{
                         '& .MuiDataGrid-cell': {
                             fontSize: '1.2rem',
@@ -283,6 +325,27 @@ function AssetList() {
                         assetData={selectedAsset}
                     />
                 )}
+            </Dialog>
+
+            {/* Dialog xác nhận xóa */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={handleDeleteCancel}
+            >
+                <DialogTitle>Xác nhận xóa thiết bị</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Bạn có chắc chắn muốn xóa thiết bị <strong>{assetToDelete?.asset_code} - {assetToDelete?.name}</strong>?
+                        <br /><br />
+                        Hành động này sẽ xóa tất cả thông tin liên quan (thông số kỹ thuật, thành phần, vật tư tiêu hao, lịch sử bảo trì...) và không thể hoàn tác.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDeleteCancel}>Hủy</Button>
+                    <Button onClick={handleDeleteConfirm} color="error" variant="contained" autoFocus>
+                        Xóa
+                    </Button>
+                </DialogActions>
             </Dialog>
         </Box>
     );

@@ -15,6 +15,7 @@ import PropTypes from 'prop-types';
 import InputField from '../../InputComponent/InputField';
 import SelectField from '../../InputComponent/SelectField';
 import { updateExistingAsset } from "../../../redux/slice/assetsSlice"
+import { fetchPlants } from "../../../redux/slice/plantSlice"
 import theme from '../../../theme';
 import AreaForm from '../../AreaComponent/AreaForm';
 import AddSubCategoriesForm from '../../SubCategories/SubCategoriesForm';
@@ -51,7 +52,6 @@ function a11yProps(index) {
 }
 
 function EditAssetForm({ handleClose, assetData }) {
-    console.log('EditAssetForm rendered, assetData:', assetData);
     const dispatch = useDispatch();
     const assetCategories = useSelector((state) => state.assetCategories.categories);
     const areas = useSelector((state) => state.areas.areas);
@@ -64,15 +64,22 @@ function EditAssetForm({ handleClose, assetData }) {
     const [formOpen, setFormOpen] = useState(false);
     const [areaOptions, setAreaOptions] = useState(areas);
     const [subCategoryOptions, setSubCategoryOptions] = useState(assetsSubCategories);
+    
+    // Load plants if not loaded
+    useEffect(() => {
+        if (plants.length === 0) {
+            dispatch(fetchPlants());
+        }
+    }, [dispatch, plants.length]);
 
     // Form state - khởi tạo từ assetData với mapping đúng
     const [formData, setFormData] = useState({
         asset_code: assetData?.asset_code || '',
         name: assetData?.name || '',
-        category_id: assetData?.category_id || '',
+        category_id: assetData?.SubCategory?.category_id || '',
         team_id: assetData?.team_id || assetData?.Department?.name || '',
         area_id: assetData?.area_id || '',
-        plant_id: assetData?.plant_id || assetData?.Area?.plant_id || '',
+        plant_id: assetData?.Area?.Plant?.id || '',
         sub_category_id: assetData?.sub_category_id || '',
         status: assetData?.status || 'active',
         generalInfo: assetData?.GeneralInfo ? {
@@ -87,6 +94,7 @@ function EditAssetForm({ handleClose, assetData }) {
             description: assetData.GeneralInfo.description || ''
         } : (assetData?.generalInfo || null),
     });
+    
     const statusOptions = [
         {
             id: "active",
@@ -152,9 +160,10 @@ const [specificationsData, setSpecificationsData] = useState(() => {
   if (specs && specs.length > 0) {
     return specs.map((spec, index) => ({
       id: spec.id || index + 1,
-      parameter_name: spec.parameter_name || '',
-      parameter_value: spec.parameter_value || '',
-      unit: spec.unit || '',
+      spec_category_id: spec.spec_category_id || '',
+      parameter_name: spec.SpecCategory?.spec_name || spec.parameter_name || '',
+      parameter_value: spec.value || spec.parameter_value || '',
+      unit: spec.SpecCategory?.unit || spec.unit || '',
       min_value: spec.min_value || '',
       max_value: spec.max_value || '',
       remarks: spec.remarks || ''
@@ -162,6 +171,7 @@ const [specificationsData, setSpecificationsData] = useState(() => {
   }
   return [{
     id: 1,
+    spec_category_id: "",
     parameter_name: "",
     parameter_value: "",
     unit: "",

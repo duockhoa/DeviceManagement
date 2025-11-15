@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchMaintenance, deleteMaintenanceRecord } from "../../../redux/slice/maintenanceSlice";
 import { fetchUsers } from "../../../redux/slice/usersSlice";
+import { getMaintenanceByStatus } from "../../../services/maintenanceService";
 import {
     Box,
     Typography,
@@ -11,12 +12,14 @@ import {
     Tooltip,
     Snackbar,
     Alert,
-    Dialog
+    Dialog,
+    Paper
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import BuildIcon from '@mui/icons-material/Build';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import Loading from '../../Loading';
 import EditMaintenanceForm from '../EditMaintenanceForm';
 
@@ -30,9 +33,21 @@ function MaintenanceList() {
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedMaintenance, setSelectedMaintenance] = useState(null);
+    const [filteredMaintenance, setFilteredMaintenance] = useState([]);
 
     useEffect(() => {
-        dispatch(fetchMaintenance());
+        // Chỉ lấy maintenance với status 'pending' (chưa thực hiện)
+        const loadPendingMaintenance = async () => {
+            try {
+                console.log('🔄 Loading pending maintenance...');
+                const data = await getMaintenanceByStatus('pending');
+                console.log('✅ Pending maintenance loaded:', data);
+                setFilteredMaintenance(data);
+            } catch (error) {
+                console.error('❌ Error loading pending maintenance:', error);
+            }
+        };
+        loadPendingMaintenance();
         dispatch(fetchUsers());
     }, [dispatch]);
 
@@ -41,8 +56,9 @@ function MaintenanceList() {
             try {
                 await dispatch(deleteMaintenanceRecord(id)).unwrap();
                 
-                // Refresh data from server to ensure consistency
-                await dispatch(fetchMaintenance());
+                // Refresh pending maintenance list
+                const data = await getMaintenanceByStatus('pending');
+                setFilteredMaintenance(data);
                 
                 setNotification({
                     open: true,
@@ -64,9 +80,16 @@ function MaintenanceList() {
         setEditDialogOpen(true);
     };
 
-    const handleEditClose = () => {
+    const handleEditClose = async () => {
         setEditDialogOpen(false);
         setSelectedMaintenance(null);
+        // Reload pending maintenance
+        try {
+            const data = await getMaintenanceByStatus('pending');
+            setFilteredMaintenance(data);
+        } catch (error) {
+            console.error('Error reloading maintenance:', error);
+        }
     };
 
     const getStatusColor = (status) => {
@@ -130,7 +153,7 @@ function MaintenanceList() {
             headerName: 'Mã bảo trì',
             width: 130,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
                     {params.value}
                 </Typography>
             )
@@ -141,10 +164,10 @@ function MaintenanceList() {
             width: 200,
             renderCell: (params) => (
                 <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 'medium', fontSize: '1.1rem' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'medium', fontSize: '1.2rem' }}>
                         {params.row.asset?.name || 'N/A'}
                     </Typography>
-                    <Typography variant="caption" sx={{ fontSize: '1rem', color: '#666' }}>
+                    <Typography variant="caption" sx={{ fontSize: '1.1rem', color: '#666' }}>
                         {params.row.asset?.asset_code}
                     </Typography>
                 </Box>
@@ -160,7 +183,7 @@ function MaintenanceList() {
                     color="primary"
                     size="small"
                     variant="outlined"
-                    sx={{ fontSize: '1rem' }}
+                    sx={{ fontSize: '1.2rem' }}
                 />
             )
         },
@@ -173,7 +196,7 @@ function MaintenanceList() {
                     label={getPriorityText(params.value)}
                     color={getPriorityColor(params.value)}
                     size="small"
-                    sx={{ fontSize: '1rem' }}
+                    sx={{ fontSize: '1.2rem' }}
                 />
             )
         },
@@ -187,7 +210,7 @@ function MaintenanceList() {
                     color={getStatusColor(params.value)}
                     size="small"
                     sx={{
-                        fontSize: '1rem',
+                        fontSize: '1.2rem',
                         fontWeight: 'medium',
                         minWidth: '110px'
                     }}
@@ -199,7 +222,7 @@ function MaintenanceList() {
             headerName: 'Ngày dự kiến',
             width: 130,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontSize: '1.1rem' }}>
+                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
                     {params.value ? new Date(params.value).toLocaleDateString('vi-VN') : 'N/A'}
                 </Typography>
             )
@@ -209,7 +232,7 @@ function MaintenanceList() {
             headerName: 'Kỹ thuật viên',
             width: 150,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontSize: '1.1rem' }}>
+                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
                     {getTechnicianName(params.row.technician_id)}
                 </Typography>
             )
@@ -257,7 +280,7 @@ function MaintenanceList() {
         );
     }
 
-    if (!maintenance || maintenance.length === 0) {
+    if (!filteredMaintenance || filteredMaintenance.length === 0) {
         return (
             <Box sx={{ p: 3, textAlign: 'center' }}>
                 <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', mx: 'auto', mb: 2 }}>
@@ -279,9 +302,23 @@ function MaintenanceList() {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
+            p: 3
         }}>
+            {/* Header */}
+            <Paper sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <CalendarMonthIcon sx={{ fontSize: '2rem', color: 'primary.main' }} />
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: '1.8rem' }}>
+                        Lịch bảo trì
+                    </Typography>
+                </Box>
+                <Typography variant="body1" sx={{ fontSize: '1.2rem', color: 'text.secondary', mt: 0.5 }}>
+                    Quản lý kế hoạch bảo trì thiết bị
+                </Typography>
+            </Paper>
+
             <DataGrid
-                rows={maintenance}
+                rows={filteredMaintenance}
                 columns={columns}
                 pageSize={10}
                 rowsPerPageOptions={[10, 25, 50]}
@@ -292,11 +329,16 @@ function MaintenanceList() {
                     minHeight: 400,
                     border: 'none',
                     '& .MuiDataGrid-cell': {
-                        borderBottom: '1px solid #f0f0f0'
+                        borderBottom: '1px solid #f0f0f0',
+                        fontSize: '1.2rem'
                     },
                     '& .MuiDataGrid-columnHeaders': {
                         backgroundColor: '#f8f9fa',
                         borderBottom: '2px solid #e0e0e0'
+                    },
+                    '& .MuiDataGrid-columnHeaderTitle': {
+                        fontSize: '1.2rem',
+                        fontWeight: 600
                     }
                 }}
             />

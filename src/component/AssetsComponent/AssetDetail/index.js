@@ -159,10 +159,10 @@ function AssetDetail() {
                         <ArrowBackIcon />
                     </IconButton>
                     <Box>
-                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                        <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: '1.8rem' }}>
                             {asset.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.2rem' }}>
                             Mã thiết bị: {asset.asset_code}
                         </Typography>
                     </Box>
@@ -180,9 +180,6 @@ function AssetDetail() {
                     >
                         Chỉnh sửa
                     </Button>
-                    <Button startIcon={<BuildIcon />} variant="contained">
-                        Tạo lịch bảo trì
-                    </Button>
                 </Box>
             </Paper>
 
@@ -199,52 +196,52 @@ function AssetDetail() {
                             sx={{ objectFit: 'contain', p: 2, backgroundColor: '#fafafa' }}
                         />
                         <CardContent>
-                            <Typography variant="h6" gutterBottom>Thông tin cơ bản</Typography>
+                            <Typography variant="h6" gutterBottom sx={{ fontSize: '1.4rem', fontWeight: 'bold' }}>Thông tin cơ bản</Typography>
                             <Divider sx={{ mb: 2 }} />
                             
                             <Box sx={{ mb: 1 }}>
-                                <Typography variant="body2" color="text.secondary">Danh mục:</Typography>
-                                <Typography variant="body1">
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Danh mục:</Typography>
+                                <Typography variant="body1" sx={{ fontSize: '1.2rem' }}>
                                     {asset.SubCategory?.Category?.name || 'N/A'}
                                 </Typography>
                             </Box>
 
                             <Box sx={{ mb: 1 }}>
-                                <Typography variant="body2" color="text.secondary">Loại thiết bị:</Typography>
-                                <Typography variant="body1">
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Loại thiết bị:</Typography>
+                                <Typography variant="body1" sx={{ fontSize: '1.2rem' }}>
                                     {asset.SubCategory?.name || 'N/A'}
                                 </Typography>
                             </Box>
 
                             <Box sx={{ mb: 1 }}>
-                                <Typography variant="body2" color="text.secondary">Phòng ban:</Typography>
-                                <Typography variant="body1">
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Phòng ban:</Typography>
+                                <Typography variant="body1" sx={{ fontSize: '1.2rem' }}>
                                     {asset.Department?.name || 'N/A'}
                                 </Typography>
                             </Box>
 
                             <Box sx={{ mb: 1 }}>
-                                <Typography variant="body2" color="text.secondary">Vị trí:</Typography>
-                                <Typography variant="body1">
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Vị trí:</Typography>
+                                <Typography variant="body1" sx={{ fontSize: '1.2rem' }}>
                                     {asset.Area?.name || 'N/A'}
                                 </Typography>
                                 {asset.Area?.Plant && (
-                                    <Typography variant="caption" color="text.secondary">
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
                                         {asset.Area.Plant.name}
                                     </Typography>
                                 )}
                             </Box>
 
                             <Box sx={{ mb: 1 }}>
-                                <Typography variant="body2" color="text.secondary">Người tạo:</Typography>
-                                <Typography variant="body1">
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Người tạo:</Typography>
+                                <Typography variant="body1" sx={{ fontSize: '1.2rem' }}>
                                     {asset.Creator?.name || 'N/A'}
                                 </Typography>
                             </Box>
 
                             <Box sx={{ mb: 1 }}>
-                                <Typography variant="body2" color="text.secondary">Ngày tạo:</Typography>
-                                <Typography variant="body1">
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Ngày tạo:</Typography>
+                                <Typography variant="body1" sx={{ fontSize: '1.2rem' }}>
                                     {asset.created_at ? new Date(asset.created_at).toLocaleDateString('vi-VN') : 'N/A'}
                                 </Typography>
                             </Box>
@@ -269,51 +266,51 @@ function AssetDetail() {
                                 {asset.GeneralInfo ? (
                                     <Grid container spacing={2}>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant="body2" color="text.secondary">Năm sản xuất:</Typography>
-                                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Năm sản xuất:</Typography>
+                                            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.2rem' }}>
                                                 {asset.GeneralInfo.manufacture_year || 'N/A'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant="body2" color="text.secondary">Nhà sản xuất:</Typography>
-                                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Nhà sản xuất:</Typography>
+                                            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.2rem' }}>
                                                 {asset.GeneralInfo.manufacturer || 'N/A'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant="body2" color="text.secondary">Xuất xứ:</Typography>
-                                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Xuất xứ:</Typography>
+                                            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.2rem' }}>
                                                 {asset.GeneralInfo.country_of_origin || 'N/A'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant="body2" color="text.secondary">Model:</Typography>
-                                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Model:</Typography>
+                                            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.2rem' }}>
                                                 {asset.GeneralInfo.model || 'N/A'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant="body2" color="text.secondary">Số serial:</Typography>
-                                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Số serial:</Typography>
+                                            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.2rem' }}>
                                                 {asset.GeneralInfo.serial_number || 'N/A'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant="body2" color="text.secondary">Nhà cung cấp:</Typography>
-                                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Nhà cung cấp:</Typography>
+                                            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.2rem' }}>
                                                 {asset.GeneralInfo.supplier || 'N/A'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant="body2" color="text.secondary">Thời hạn bảo hành:</Typography>
-                                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Thời hạn bảo hành:</Typography>
+                                            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.2rem' }}>
                                                 {asset.GeneralInfo.warranty_period_months ? 
                                                     `${asset.GeneralInfo.warranty_period_months} tháng` : 'N/A'}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} md={6}>
-                                            <Typography variant="body2" color="text.secondary">Hết hạn bảo hành:</Typography>
-                                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>Hết hạn bảo hành:</Typography>
+                                            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.2rem' }}>
                                                 {asset.GeneralInfo.warranty_expiry_date ? 
                                                     new Date(asset.GeneralInfo.warranty_expiry_date).toLocaleDateString('vi-VN') : 'N/A'}
                                             </Typography>
@@ -331,23 +328,23 @@ function AssetDetail() {
                                         <Table size="small">
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell><strong>Tên linh kiện</strong></TableCell>
-                                                    <TableCell><strong>Mã linh kiện</strong></TableCell>
-                                                    <TableCell><strong>Thông số</strong></TableCell>
-                                                    <TableCell align="center"><strong>Số lượng</strong></TableCell>
-                                                    <TableCell><strong>Đơn vị</strong></TableCell>
-                                                    <TableCell><strong>Ghi chú</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Tên linh kiện</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Mã linh kiện</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Thông số</strong></TableCell>
+                                                    <TableCell align="center"><strong style={{ fontSize: '1.2rem' }}>Số lượng</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Đơn vị</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Ghi chú</strong></TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
                                                 {asset.Components.map((component) => (
                                                     <TableRow key={component.id}>
-                                                        <TableCell>{component.component_name}</TableCell>
-                                                        <TableCell>{component.component_code}</TableCell>
-                                                        <TableCell>{component.specification}</TableCell>
-                                                        <TableCell align="center">{component.quantity}</TableCell>
-                                                        <TableCell>{component.unit}</TableCell>
-                                                        <TableCell>{component.remarks}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{component.component_name}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{component.component_code}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{component.specification}</TableCell>
+                                                        <TableCell align="center" sx={{ fontSize: '1.2rem' }}>{component.quantity}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{component.unit}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{component.remarks}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
@@ -365,17 +362,17 @@ function AssetDetail() {
                                         <Table size="small">
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell><strong>Thông số</strong></TableCell>
-                                                    <TableCell><strong>Giá trị</strong></TableCell>
-                                                    <TableCell><strong>Ghi chú</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Thông số</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Giá trị</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Ghi chú</strong></TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
                                                 {asset.Specifications.map((spec) => (
                                                     <TableRow key={spec.id}>
-                                                        <TableCell>{spec.SpecCategory?.name || 'N/A'}</TableCell>
-                                                        <TableCell>{spec.value}</TableCell>
-                                                        <TableCell>{spec.remarks}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{spec.SpecCategory?.spec_name || 'N/A'}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{spec.value}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{spec.remarks}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
@@ -393,27 +390,28 @@ function AssetDetail() {
                                         <Table size="small">
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell><strong>Mã bảo trì</strong></TableCell>
-                                                    <TableCell><strong>Tiêu đề</strong></TableCell>
-                                                    <TableCell><strong>Loại</strong></TableCell>
-                                                    <TableCell><strong>Ngày thực hiện</strong></TableCell>
-                                                    <TableCell><strong>Trạng thái</strong></TableCell>
-                                                    <TableCell><strong>Kỹ thuật viên</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Mã bảo trì</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Tiêu đề</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Loại</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Ngày thực hiện</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Trạng thái</strong></TableCell>
+                                                    <TableCell><strong style={{ fontSize: '1.2rem' }}>Kỹ thuật viên</strong></TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
                                                 {maintenanceHistory.map((maintenance) => (
                                                     <TableRow key={maintenance.id}>
-                                                        <TableCell>{maintenance.maintenance_code}</TableCell>
-                                                        <TableCell>{maintenance.title}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{maintenance.maintenance_code}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{maintenance.title}</TableCell>
                                                         <TableCell>
                                                             <Chip 
                                                                 label={maintenance.maintenance_type === 'preventive' ? 'Phòng ngừa' : 'Sửa chữa'}
                                                                 size="small"
                                                                 color={maintenance.maintenance_type === 'preventive' ? 'primary' : 'warning'}
+                                                                sx={{ fontSize: '1.2rem' }}
                                                             />
                                                         </TableCell>
-                                                        <TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>
                                                             {new Date(maintenance.scheduled_date).toLocaleDateString('vi-VN')}
                                                         </TableCell>
                                                         <TableCell>
@@ -421,9 +419,10 @@ function AssetDetail() {
                                                                 label={maintenance.status}
                                                                 size="small"
                                                                 color="default"
+                                                                sx={{ fontSize: '1.2rem' }}
                                                             />
                                                         </TableCell>
-                                                        <TableCell>{maintenance.technician?.name || 'N/A'}</TableCell>
+                                                        <TableCell sx={{ fontSize: '1.2rem' }}>{maintenance.technician?.name || 'N/A'}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
@@ -444,8 +443,8 @@ function AssetDetail() {
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                                         <AttachFileIcon color="primary" />
                                                         <Box sx={{ flexGrow: 1 }}>
-                                                            <Typography variant="body1">{attachment.file_name}</Typography>
-                                                            <Typography variant="caption" color="text.secondary">
+                                                            <Typography variant="body1" sx={{ fontSize: '1.2rem' }}>{attachment.file_name}</Typography>
+                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
                                                                 {attachment.description || 'No description'}
                                                             </Typography>
                                                         </Box>

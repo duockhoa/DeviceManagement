@@ -35,6 +35,7 @@ import { createMaintenanceRecord } from '../../../redux/slice/maintenanceSlice';
 import { fetchAssets } from '../../../redux/slice/assetsSlice';
 import { fetchUsers } from '../../../redux/slice/usersSlice';
 import { getActiveConsumableCategories } from '../../../services/consumableCategoriesService';
+import { getAssetConsumables } from '../../../services/assetsService';
 import InputField from '../../InputComponent/InputField';
 import SelectField from '../../InputComponent/SelectField';
 import InputDate from '../../InputComponent/InputDate';
@@ -102,12 +103,30 @@ function AddMaintenanceForm({ handleClose }) {
 
     // State cho checklist bảo trì
     const [maintenanceChecklist, setMaintenanceChecklist] = useState([
-        { id: 1, task: 'Kiểm tra nguồn điện', completed: false, required: true },
-        { id: 2, task: 'Vệ sinh thiết bị', completed: false, required: true },
-        { id: 3, task: 'Kiểm tra các bộ phận chuyển động', completed: false, required: true },
-        { id: 4, task: 'Bôi trơn các khớp nối', completed: false, required: false },
-        { id: 5, task: 'Kiểm tra hệ thống an toàn', completed: false, required: true },
-        { id: 6, task: 'Cập nhật nhật ký bảo trì', completed: false, required: true }
+        { 
+            id: 1, 
+            task: 'Kiểm tra nguồn điện',
+            check_item: 'Điện áp đầu vào', 
+            standard_value: '220V ±10%',
+            check_method: 'Dùng đồng hồ vạn năng đo điện áp',
+            required: true 
+        },
+        { 
+            id: 2, 
+            task: 'Kiểm tra nhiệt độ',
+            check_item: 'Nhiệt độ vận hành', 
+            standard_value: '20-25°C',
+            check_method: 'Dùng nhiệt kế đo',
+            required: true 
+        },
+        { 
+            id: 3, 
+            task: 'Kiểm tra độ rung',
+            check_item: 'Độ rung thiết bị', 
+            standard_value: '<2mm/s',
+            check_method: 'Dùng máy đo độ rung',
+            required: true 
+        }
     ]);
 
     // State cho danh sách công việc
@@ -179,7 +198,7 @@ function AddMaintenanceForm({ handleClose }) {
         setTabValue(newValue);
     };
 
-    const handleInputChange2 = (field, value) => {
+    const handleInputChange2 = async (field, value) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
@@ -191,6 +210,35 @@ function AddMaintenanceForm({ handleClose }) {
                 ...prev,
                 [field]: ''
             }));
+        }
+
+        // Khi chọn thiết bị, tự động load vật tư tiêu hao của thiết bị đó
+        if (field === 'asset_id' && value) {
+            try {
+                const assetConsumables = await getAssetConsumables(value);
+                console.log('🔧 Asset consumables loaded:', assetConsumables);
+                
+                // Tự động thêm vật tư tiêu hao vào form
+                if (assetConsumables && assetConsumables.length > 0) {
+                    const consumablesData = assetConsumables.map(item => ({
+                        consumable_category_id: '', // User sẽ chọn từ dropdown
+                        item_name: item.item_name, // Tên vật tư từ asset
+                        specification: item.specification,
+                        quantity_required: 1,
+                        unit_cost: item.unit_price || '',
+                        total_cost: item.unit_price || '',
+                        notes: item.remarks || '',
+                        status: 'planned'
+                    }));
+                    
+                    setFormData(prev => ({
+                        ...prev,
+                        consumables: consumablesData
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading asset consumables:', error);
+            }
         }
     };
 
@@ -301,7 +349,19 @@ function AddMaintenanceForm({ handleClose }) {
                 scheduled_date: new Date(formData.scheduled_date).toISOString(),
                 estimated_duration: parseInt(formData.estimated_duration),
                 estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : null,
-                status: 'pending'
+                status: 'pending',
+                // Filter valid consumables (phải có consumable_category_id)
+                consumables: formData.consumables.filter(c => c.consumable_category_id && c.consumable_category_id !== ''),
+                // Add checklist data
+                checklist: maintenanceChecklist.map((item, index) => ({
+                    task_name: item.task,
+                    check_item: item.check_item || null,
+                    standard_value: item.standard_value || null,
+                    check_method: item.check_method || null,
+                    description: item.description || null,
+                    order_index: index,
+                    notes: item.required ? 'Bắt buộc' : 'Không bắt buộc'
+                }))
                 // Tạm thời không gửi attachedFiles
             };
 
@@ -335,7 +395,9 @@ function AddMaintenanceForm({ handleClose }) {
         setMaintenanceChecklist(prev => [...prev, {
             id: newId,
             task: '',
-            completed: false,
+            check_item: '',
+            standard_value: '',
+            check_method: '',
             required: false
         }]);
     };
@@ -767,47 +829,100 @@ function AddMaintenanceForm({ handleClose }) {
                                 </Button>
                             </Box>
 
-                            <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                                {maintenanceChecklist.map((item, index) => (
-                                    <Card key={item.id} sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
-                                        <CardContent sx={{ p: 2 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            checked={item.completed}
-                                                            onChange={(e) => handleChecklistChange(item.id, e.target.checked)}
-                                                            icon={<CheckCircleIcon sx={{ color: '#ccc' }} />}
-                                                            checkedIcon={<CheckCircleIcon sx={{ color: '#4caf50' }} />}
-                                                        />
-                                                    }
-                                                    label=""
-                                                />
-                                                <TextField
-                                                    fullWidth
-                                                    size="small"
-                                                    value={item.task}
-                                                    onChange={(e) => updateChecklistItem(item.id, e.target.value)}
-                                                    placeholder="Nhập nội dung kiểm tra..."
-                                                    variant="outlined"
-                                                    sx={{ mr: 1 }}
-                                                />
-                                                {item.required && (
-                                                    <Typography variant="caption" sx={{ color: '#f44336', minWidth: 60 }}>
-                                                        *Bắt buộc
-                                                    </Typography>
-                                                )}
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => removeChecklistItem(item.id)}
-                                                    sx={{ color: '#f44336' }}
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                            <Box sx={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.1rem' }}>
+                                    <thead>
+                                        <tr style={{ backgroundColor: theme.palette.primary.main }}>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '40px' }}>STT</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '200px' }}>Nội dung</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '150px' }}>Hạng mục kiểm tra</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '120px' }}>Tiêu chuẩn OK</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '200px' }}>Phương pháp kiểm tra</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'center', width: '80px' }}>Bắt buộc</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'center', width: '80px' }}>Xóa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {maintenanceChecklist.map((item, index) => (
+                                            <tr key={item.id} style={{ backgroundColor: index % 2 === 0 ? '#f9f9f9' : '#fff' }}>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                                                    {index + 1}
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        value={item.task}
+                                                        onChange={(e) => updateChecklistItem(item.id, e.target.value)}
+                                                        placeholder="Nội dung kiểm tra..."
+                                                        variant="outlined"
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        value={item.check_item || ''}
+                                                        onChange={(e) => {
+                                                            setMaintenanceChecklist(prev =>
+                                                                prev.map(i => i.id === item.id ? { ...i, check_item: e.target.value } : i)
+                                                            );
+                                                        }}
+                                                        placeholder="Hạng mục..."
+                                                        variant="outlined"
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        value={item.standard_value || ''}
+                                                        onChange={(e) => {
+                                                            setMaintenanceChecklist(prev =>
+                                                                prev.map(i => i.id === item.id ? { ...i, standard_value: e.target.value } : i)
+                                                            );
+                                                        }}
+                                                        placeholder="Giá trị chuẩn..."
+                                                        variant="outlined"
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        value={item.check_method || ''}
+                                                        onChange={(e) => {
+                                                            setMaintenanceChecklist(prev =>
+                                                                prev.map(i => i.id === item.id ? { ...i, check_method: e.target.value } : i)
+                                                            );
+                                                        }}
+                                                        placeholder="Phương pháp..."
+                                                        variant="outlined"
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                                                    <Checkbox
+                                                        checked={item.required || false}
+                                                        onChange={(e) => {
+                                                            setMaintenanceChecklist(prev =>
+                                                                prev.map(i => i.id === item.id ? { ...i, required: e.target.checked } : i)
+                                                            );
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => removeChecklistItem(item.id)}
+                                                        sx={{ color: '#f44336' }}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </Box>
 
                         </CustomTabPanel>

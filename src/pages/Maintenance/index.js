@@ -1,5 +1,4 @@
 import MaintenanceList from '../../component/MaintenanceComponent/MaintenanceList';
-import SubSidebarMaintenance from '../../component/LayoutComponent/SubSidebarMaintenance';
 import AddMaintenanceButton from '../../component/MaintenanceComponent/AddMaintenanceBtn';
 import {
     Box
@@ -8,12 +7,7 @@ import {
 function Maintenance() {
     return (
         <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
-            {/* SubSidebar - 25% width */}
-            <Box sx={{ width: '300px', minWidth: '300px' }}>
-                <SubSidebarMaintenance />
-            </Box>
-
-            {/* Main Content - 75% width */}
+            {/* Main Content - Full width */}
             <Box sx={{
                 flex: 1,
                 backgroundColor: '#fff',

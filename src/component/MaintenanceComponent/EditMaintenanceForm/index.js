@@ -170,6 +170,20 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                 estimated_cost: maintenanceData.estimated_cost || '',
                 notes: maintenanceData.notes || ''
             });
+
+            // Load checklist if exists
+            if (maintenanceData.checklists && maintenanceData.checklists.length > 0) {
+                setMaintenanceChecklist(maintenanceData.checklists.map(item => ({
+                    id: item.id,
+                    task: item.task_name,
+                    check_item: item.check_item || '',
+                    standard_value: item.standard_value || '',
+                    check_method: item.check_method || '',
+                    description: item.description || '',
+                    completed: item.is_completed,
+                    required: item.notes === 'Bắt buộc'
+                })));
+            }
         }
     }, [dispatch, assets, users, maintenanceData]);
 
@@ -253,7 +267,17 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                 ...updateData,
                 scheduled_date: new Date(formData.scheduled_date).toISOString(),
                 estimated_duration: parseInt(formData.estimated_duration),
-                estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : null
+                estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : null,
+                // Add checklist data
+                checklist: maintenanceChecklist.map((item, index) => ({
+                    task_name: item.task,
+                    check_item: item.check_item || null,
+                    standard_value: item.standard_value || null,
+                    check_method: item.check_method || null,
+                    description: item.description || null,
+                    order_index: index,
+                    notes: item.required ? 'Bắt buộc' : 'Không bắt buộc'
+                }))
             };
 
             console.log('Edit submit data:', submitData); // Debug log

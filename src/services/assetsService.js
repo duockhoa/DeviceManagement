@@ -122,3 +122,13 @@ export const deleteAsset = async (id) => {
   }
 };
 
+// GET /api/assets/:id/consumables - Lấy vật tư tiêu hao của asset
+export const getAssetConsumables = async (assetId) => {
+  try {
+    const response = await axios.get(`/assets/${assetId}/consumables`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching asset consumables:", error);
+    throw error;
+  }
+};

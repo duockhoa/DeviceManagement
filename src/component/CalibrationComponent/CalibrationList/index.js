@@ -140,7 +140,7 @@ function CalibrationList() {
             headerName: 'Mã hiệu chuẩn',
             width: 140,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
                     {params.value}
                 </Typography>
             )
@@ -153,10 +153,10 @@ function CalibrationList() {
                 const asset = params.row.asset;
                 return (
                     <Box>
-                        <Typography variant="body2" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
+                        <Typography variant="body2" sx={{ fontSize: '1.2rem', fontWeight: 500 }}>
                             {asset?.name || 'N/A'}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.9rem' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
                             {asset?.asset_code || `ID: ${params.value}`}
                         </Typography>
                     </Box>
@@ -173,7 +173,7 @@ function CalibrationList() {
                     color="primary"
                     size="small"
                     variant="outlined"
-                    sx={{ fontSize: '1rem' }}
+                    sx={{ fontSize: '1.2rem' }}
                 />
             )
         },
@@ -186,7 +186,7 @@ function CalibrationList() {
                     label={getPriorityLabel(params.value)}
                     color={getPriorityColor(params.value)}
                     size="small"
-                    sx={{ fontSize: '1rem' }}
+                    sx={{ fontSize: '1.2rem' }}
                 />
             )
         },
@@ -200,7 +200,7 @@ function CalibrationList() {
                     color={getStatusColor(params.value)}
                     size="small"
                     sx={{
-                        fontSize: '1rem',
+                        fontSize: '1.2rem',
                         fontWeight: 'medium',
                         minWidth: '110px'
                     }}
@@ -216,7 +216,7 @@ function CalibrationList() {
                     label={getResultLabel(params.value)}
                     color={getResultColor(params.value)}
                     size="small"
-                    sx={{ fontSize: '1rem' }}
+                    sx={{ fontSize: '1.2rem' }}
                 />
             )
         },
@@ -225,7 +225,7 @@ function CalibrationList() {
             headerName: 'Ngày dự kiến',
             width: 130,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontSize: '1.1rem' }}>
+                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
                     {params.value ? new Date(params.value).toLocaleDateString('vi-VN') : 'N/A'}
                 </Typography>
             )
@@ -237,7 +237,7 @@ function CalibrationList() {
             renderCell: (params) => {
                 const technician = params.row.technician;
                 return (
-                    <Typography variant="body2" sx={{ fontSize: '1.1rem' }}>
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
                         {technician?.name || (params.value ? `ID: ${params.value}` : 'Chưa phân công')}
                     </Typography>
                 );

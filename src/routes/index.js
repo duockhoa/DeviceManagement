@@ -8,6 +8,10 @@ import Devices from '../pages/Devices';
 import Categories from '../pages/Categories';
 import Consumables from '../pages/Consumables';
 import Maintenance from '../pages/Maintenance';
+import MaintenanceWork from '../pages/MaintenanceWork';
+import MaintenanceWorkDetail from '../pages/MaintenanceWorkDetail';
+import MaintenanceResult from '../pages/MaintenanceResult';
+import MaintenanceRecord from '../pages/MaintenanceRecord';
 import Calibration from '../pages/Calibration';
 import Specifications from '../pages/Specifications';
 import AssetDetail from '../component/AssetsComponent/AssetDetail';
@@ -37,6 +41,22 @@ const publicRoutes = [
     {
         path: '/maintenance',
         component: Maintenance,
+    },
+    {
+        path: '/maintenance-work',
+        component: MaintenanceWork,
+    },
+    {
+        path: '/maintenance-work/:id',
+        component: MaintenanceWorkDetail,
+    },
+    {
+        path: '/maintenance-result',
+        component: MaintenanceResult,
+    },
+    {
+        path: '/maintenance-record',
+        component: MaintenanceRecord,
     },
     {
         path: '/calibration',

@@ -25,6 +25,7 @@ import RepairIcon from '@mui/icons-material/Construction';
 import CalibrateIcon from '@mui/icons-material/Tune';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -272,19 +273,59 @@ export default function Sidebar() {
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/maintenance' ? activeTextStyle : commonTextStyle 
                                     }}
+                                    primary={!isOpen || 'Lịch bảo trì'}
+                                />
+                            </ListItemButton>
+                            <ListItemButton 
+                                sx={{ 
+                                    pl: 4, 
+                                    ...(location.pathname === '/maintenance-work' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/maintenance-work')}
+                            >
+                                <ListItemIcon>
+                                    <RepairIcon sx={location.pathname === '/maintenance-work' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/maintenance-work' ? activeTextStyle : commonTextStyle 
+                                    }}
                                     primary={!isOpen || 'Bảo trì thiết bị'}
                                 />
                             </ListItemButton>
-                            <ListItemButton sx={{ 
-                                pl: 4, 
-                                ...subItemHoverStyle 
-                            }}>
+                            <ListItemButton 
+                                sx={{ 
+                                    pl: 4,
+                                    ...(location.pathname === '/maintenance-result' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/maintenance-result')}
+                            >
                                 <ListItemIcon>
-                                    <RepairIcon sx={commonIconStyle} />
+                                    <AssignmentTurnedInIcon sx={location.pathname === '/maintenance-result' ? activeIconStyle : commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
-                                    primaryTypographyProps={{ sx: commonTextStyle }}
-                                    primary={!isOpen || 'Hồ sơ sửa chữa'}
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/maintenance-result' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={!isOpen || 'Kết quả bảo trì'}
+                                />
+                            </ListItemButton>
+
+                            <ListItemButton 
+                                sx={{ 
+                                    pl: 4,
+                                    ...(location.pathname === '/maintenance-record' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/maintenance-record')}
+                            >
+                                <ListItemIcon>
+                                    <RepairIcon sx={location.pathname === '/maintenance-record' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/maintenance-record' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={!isOpen || 'Hồ sơ bảo trì'}
                                 />
                             </ListItemButton>
                         </List>

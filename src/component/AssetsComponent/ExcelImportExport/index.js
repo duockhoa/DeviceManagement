@@ -67,8 +67,11 @@ function ExcelImportExport({ onImportSuccess }) {
                 return;
             }
             setSelectedFile(file);
+            setImportResult(null); // Reset result khi chọn file mới
             setImportDialogOpen(true);
         }
+        // Reset input để có thể chọn lại cùng file
+        event.target.value = '';
     };
 
     const handleImport = async () => {
@@ -89,14 +92,17 @@ function ExcelImportExport({ onImportSuccess }) {
 
             setImportResult(response.data.data);
             
+            // Reload danh sách nếu có ít nhất 1 thiết bị được import thành công
+            if (response.data.data.success.length > 0 && onImportSuccess) {
+                onImportSuccess();
+            }
+            
+            // Tự động đóng dialog nếu không có lỗi
             if (response.data.data.errors.length === 0) {
                 setTimeout(() => {
                     setImportDialogOpen(false);
                     setSelectedFile(null);
                     setImportResult(null);
-                    if (onImportSuccess) {
-                        onImportSuccess();
-                    }
                 }, 2000);
             }
         } catch (error) {
@@ -189,21 +195,42 @@ function ExcelImportExport({ onImportSuccess }) {
                                 <Typography variant="body2">
                                     <strong>Kết quả import:</strong><br />
                                     ✓ Thành công: {importResult.success.length} thiết bị<br />
+                                    {importResult.skipped && importResult.skipped.length > 0 && (
+                                        <>⊘ Bỏ qua: {importResult.skipped.length} thiết bị<br /></>
+                                    )}
                                     ✗ Lỗi: {importResult.errors.length} dòng
                                 </Typography>
                             </Alert>
 
                             {importResult.success.length > 0 && (
                                 <Box sx={{ mb: 2 }}>
-                                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'success.main' }}>
                                         Thiết bị đã import thành công:
                                     </Typography>
-                                    <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
+                                    <List dense sx={{ maxHeight: 200, overflow: 'auto', bgcolor: 'success.lighter' }}>
                                         {importResult.success.map((item, index) => (
                                             <ListItem key={index}>
                                                 <ListItemText
                                                     primary={`${item.asset_code} - ${item.name}`}
-                                                    secondary={`Dòng ${item.row}`}
+                                                    secondary={`Dòng ${item.row} | Components: ${item.components || 0} | Consumables: ${item.consumables || 0} | Specs: ${item.specifications || 0}`}
+                                                />
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                </Box>
+                            )}
+
+                            {importResult.skipped && importResult.skipped.length > 0 && (
+                                <Box sx={{ mb: 2 }}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'warning.main' }}>
+                                        Thiết bị đã bỏ qua (đã tồn tại):
+                                    </Typography>
+                                    <List dense sx={{ maxHeight: 200, overflow: 'auto', bgcolor: 'warning.lighter' }}>
+                                        {importResult.skipped.map((item, index) => (
+                                            <ListItem key={index}>
+                                                <ListItemText
+                                                    primary={`${item.asset_code} - ${item.name}`}
+                                                    secondary={`Dòng ${item.row} - ${item.reason}`}
                                                 />
                                             </ListItem>
                                         ))}
@@ -216,7 +243,7 @@ function ExcelImportExport({ onImportSuccess }) {
                                     <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'error.main' }}>
                                         Các lỗi cần xử lý:
                                     </Typography>
-                                    <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
+                                    <List dense sx={{ maxHeight: 200, overflow: 'auto', bgcolor: 'error.lighter' }}>
                                         {importResult.errors.map((item, index) => (
                                             <ListItem key={index}>
                                                 <ListItemText
@@ -235,6 +262,19 @@ function ExcelImportExport({ onImportSuccess }) {
                     <Button onClick={handleCloseImportDialog}>
                         {importResult ? 'Đóng' : 'Hủy'}
                     </Button>
+                    {importResult && (
+                        <Button 
+                            onClick={() => {
+                                setImportResult(null);
+                                setSelectedFile(null);
+                                fileInputRef.current?.click();
+                            }}
+                            variant="outlined"
+                            startIcon={<UploadFileIcon />}
+                        >
+                            Import file khác
+                        </Button>
+                    )}
                     {!importResult && (
                         <Button 
                             onClick={handleImport} 
