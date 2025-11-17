@@ -106,8 +106,10 @@ function InputNumber({
             return; // Không update nếu không hợp lệ
         }
         
-        // Tạo event mới
-        onChange(name, parsedValue);
+        // Call onChange with both event and value for flexibility
+        if (onChange) {
+            onChange(e, parsedValue, name);
+        }
     };
 
     // Handle blur để format

@@ -14,7 +14,7 @@
         "@mui/system": "^5.17.1",
         "@mui/x-charts": "^6.0.0",
         "@mui/x-data-grid": "^6.20.4",
-        "@mui/x-date-pickers": "^8.18.0",
+        "@mui/x-date-pickers": "^6.20.2",
         "@reduxjs/toolkit": "^2.0.0",
         "axios": "^1.7.9",
         "bootstrap": "^5.3.5",

@@ -13,8 +13,11 @@ import {
     Tab,
     Checkbox,
     FormControlLabel,
+    FormGroup,
     Card,
-    CardContent
+    CardContent,
+    Autocomplete,
+    Chip
 } from '@mui/material';
 import { Unstable_Grid2 as Grid2 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -28,6 +31,8 @@ import { updateMaintenanceRecord, clearError } from '../../../redux/slice/mainte
 import { fetchAssets } from '../../../redux/slice/assetsSlice';
 import { fetchUsers } from '../../../redux/slice/usersSlice';
 import { getActiveConsumableCategories } from '../../../services/consumableCategoriesService';
+import { getAssetConsumables } from '../../../services/assetsService';
+import { getMechanicalElectricalTechniciansService } from '../../../services/usersService';
 import InputField from '../../InputComponent/InputField';
 import SelectField from '../../InputComponent/SelectField';
 import InputDate from '../../InputComponent/InputDate';
@@ -75,7 +80,7 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
     const [formData, setFormData] = useState({
         maintenance_code: '',
         asset_id: '',
-        maintenance_type: 'preventive',
+        maintenance_type: 'cleaning',
         priority: 'medium',
         title: '',
         description: '',
@@ -88,14 +93,14 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
         tools_required: '',
         measuring_tools: '',
         safety_tools: '',
-        spare_parts: '',
-        consumables: [], // Changed from string to array
-        estimated_cost: '',
+        spare_parts: [],
+        consumables: [],
         notes: ''
     });
 
     // State cho danh mục vật tư tiêu hao
     const [consumableCategories, setConsumableCategories] = useState([]);
+    const [assetConsumables, setAssetConsumables] = useState([]);
 
     const [formErrors, setFormErrors] = useState({});
     const [successMessage, setSuccessMessage] = useState('');
@@ -104,16 +109,44 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
 
     // State cho checklist bảo trì
     const [maintenanceChecklist, setMaintenanceChecklist] = useState([
-        { id: 1, task: 'Kiểm tra nguồn điện', completed: false, required: true },
-        { id: 2, task: 'Vệ sinh thiết bị', completed: false, required: true },
-        { id: 3, task: 'Kiểm tra các bộ phận chuyển động', completed: false, required: true },
-        { id: 4, task: 'Bôi trơn các khớp nối', completed: false, required: false },
-        { id: 5, task: 'Kiểm tra hệ thống an toàn', completed: false, required: true },
-        { id: 6, task: 'Cập nhật nhật ký bảo trì', completed: false, required: true }
+        { 
+            id: 1, 
+            task: 'Kiểm tra nguồn điện',
+            check_item: 'Điện áp đầu vào', 
+            standard_value: '220V ±10%',
+            check_method: 'Dùng đồng hồ vạn năng đo điện áp',
+            required: true 
+        },
+        { 
+            id: 2, 
+            task: 'Kiểm tra nhiệt độ',
+            check_item: 'Nhiệt độ vận hành', 
+            standard_value: '20-25°C',
+            check_method: 'Dùng nhiệt kế đo',
+            required: true 
+        },
+        { 
+            id: 3, 
+            task: 'Kiểm tra độ rung',
+            check_item: 'Độ rung thiết bị', 
+            standard_value: '<2mm/s',
+            check_method: 'Dùng máy đo độ rung',
+            required: true 
+        }
     ]);
 
     // State cho danh sách công việc
     const [workTasks, setWorkTasks] = useState([]);
+    
+    // State cho 3 hạng mục công việc mặc định
+    const [defaultTasks, setDefaultTasks] = useState({
+        cleaning: { checked: false, assignedTo: [] },
+        inspection: { checked: false, assignedTo: [] },
+        maintenance: { checked: false, assignedTo: [] }
+    });
+    
+    // State cho danh sách nhân viên xưởng cơ điện
+    const [mechanicalStaff, setMechanicalStaff] = useState([]);
 
     useEffect(() => {
         // Fetch assets if not already loaded
@@ -125,6 +158,17 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
         if (!users || users.length === 0) {
             dispatch(fetchUsers());
         }
+        
+        // Load mechanical electrical staff
+        const loadMechanicalStaff = async () => {
+            try {
+                const staff = await getMechanicalElectricalTechniciansService();
+                setMechanicalStaff(staff || []);
+            } catch (error) {
+                console.error('Error loading mechanical staff:', error);
+            }
+        };
+        loadMechanicalStaff();
 
         // Load maintenance data for editing
         if (maintenanceData) {
@@ -139,10 +183,43 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
             };
             loadConsumableCategories();
 
+            // Load asset consumables if asset_id exists
+            const loadAssetConsumables = async () => {
+                if (maintenanceData.asset_id) {
+                    try {
+                        const assetConsumablesData = await getAssetConsumables(maintenanceData.asset_id);
+                        setAssetConsumables(assetConsumablesData || []);
+                    } catch (error) {
+                        console.error('Error loading asset consumables:', error);
+                    }
+                }
+            };
+            loadAssetConsumables();
+
+            console.log('maintenanceData:', maintenanceData);
+            console.log('maintenanceConsumables:', maintenanceData.maintenanceConsumables);
+            console.log('spare_parts raw:', maintenanceData.spare_parts);
+
+            // Parse spare_parts safely
+            let parsedSpareParts = [];
+            if (maintenanceData.spare_parts) {
+                try {
+                    if (typeof maintenanceData.spare_parts === 'string') {
+                        parsedSpareParts = JSON.parse(maintenanceData.spare_parts);
+                    } else if (Array.isArray(maintenanceData.spare_parts)) {
+                        parsedSpareParts = maintenanceData.spare_parts;
+                    }
+                    console.log('✅ Parsed spare_parts:', parsedSpareParts);
+                } catch (error) {
+                    console.error('❌ Error parsing spare_parts:', error);
+                    parsedSpareParts = [];
+                }
+            }
+
             setFormData({
                 maintenance_code: maintenanceData.maintenance_code || '',
                 asset_id: maintenanceData.asset_id || '',
-                maintenance_type: maintenanceData.maintenance_type || 'preventive',
+                maintenance_type: maintenanceData.maintenance_type || 'cleaning',
                 priority: maintenanceData.priority || 'medium',
                 title: maintenanceData.title || '',
                 description: maintenanceData.description || '',
@@ -156,18 +233,23 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                 tools_required: maintenanceData.tools_required || '',
                 measuring_tools: maintenanceData.measuring_tools || '',
                 safety_tools: maintenanceData.safety_tools || '',
-                spare_parts: maintenanceData.spare_parts || '',
+                spare_parts: parsedSpareParts,
                 consumables: maintenanceData.maintenanceConsumables ? 
-                    maintenanceData.maintenanceConsumables.map(item => ({
-                        consumable_category_id: item.consumable_category_id,
-                        quantity_required: item.quantity_required,
-                        quantity_used: item.quantity_used || null,
-                        unit_cost: item.unit_cost || '',
-                        total_cost: item.total_cost || '',
-                        notes: item.notes || '',
-                        status: item.status || 'planned'
-                    })) : [],
-                estimated_cost: maintenanceData.estimated_cost || '',
+                    maintenanceData.maintenanceConsumables.map(item => {
+                        console.log('Consumable item:', item);
+                        return {
+                            asset_consumable_id: item.asset_consumable_id || '',
+                            item_name: item.item_name || (item.assetConsumable ? item.assetConsumable.item_name : ''),
+                            specification: item.specification || (item.assetConsumable ? item.assetConsumable.specification : ''),
+                            consumable_category_id: item.consumable_category_id,
+                            quantity_required: item.quantity_required,
+                            quantity_used: item.quantity_used || null,
+                            unit_cost: item.unit_cost || '',
+                            total_cost: item.total_cost || '',
+                            notes: item.notes || '',
+                            status: item.status || 'planned'
+                        };
+                    }) : [],
                 notes: maintenanceData.notes || ''
             });
 
@@ -184,8 +266,69 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                     required: item.notes === 'Bắt buộc'
                 })));
             }
+            
+            // Load work tasks if exists
+            if (maintenanceData.workTasks && maintenanceData.workTasks.length > 0) {
+                // Phân loại work tasks thành defaultTasks và customTasks
+                const loadedDefaultTasks = {
+                    cleaning: { checked: false, assignedTo: [] },
+                    inspection: { checked: false, assignedTo: [] },
+                    maintenance: { checked: false, assignedTo: [] }
+                };
+                
+                const customTasks = [];
+                
+                maintenanceData.workTasks.forEach(task => {
+                    // Kiểm tra xem có phải default task không (dựa vào task_type)
+                    if (task.task_type && ['cleaning', 'inspection', 'maintenance'].includes(task.task_type)) {
+                        loadedDefaultTasks[task.task_type] = {
+                            checked: true,
+                            assignedTo: task.assigned_to ? JSON.parse(task.assigned_to) : []
+                        };
+                    } else {
+                        // Custom task
+                        customTasks.push({
+                            id: task.id,
+                            task_name: task.task_name || '',
+                            description: task.description || '',
+                            assigned_to: task.assigned_to || '',
+                            estimated_hours: task.estimated_hours || '',
+                            priority: task.priority || 'medium',
+                            status: task.status || 'pending'
+                        });
+                    }
+                });
+                
+                setDefaultTasks(loadedDefaultTasks);
+                setWorkTasks(customTasks);
+            }
         }
     }, [dispatch, assets, users, maintenanceData]);
+    
+    // Auto-check default task khi chọn loại bảo trì (chỉ khi tạo mới, không áp dụng khi edit)
+    useEffect(() => {
+        // Chỉ auto-check khi chưa có dữ liệu cũ (tạo mới)
+        if (!maintenanceData && formData.maintenance_type) {
+            setDefaultTasks(prev => {
+                const newTasks = {
+                    cleaning: { checked: false, assignedTo: [] },
+                    inspection: { checked: false, assignedTo: [] },
+                    maintenance: { checked: false, assignedTo: [] }
+                };
+                
+                // Tự động tích vào task tương ứng với loại được chọn
+                // Nếu chọn 'repair' thì không tự động tích
+                if (formData.maintenance_type !== 'repair') {
+                    newTasks[formData.maintenance_type] = {
+                        checked: true,
+                        assignedTo: prev[formData.maintenance_type]?.assignedTo || []
+                    };
+                }
+                
+                return newTasks;
+            });
+        }
+    }, [formData.maintenance_type, maintenanceData]);
 
     const validateForm = () => {
         const errors = {};
@@ -217,7 +360,9 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
             consumables: [
                 ...prev.consumables,
                 {
-                    consumable_category_id: '',
+                    asset_consumable_id: '',
+                    item_name: '',
+                    specification: '',
                     quantity_required: 1,
                     unit_cost: '',
                     total_cost: '',
@@ -231,19 +376,37 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
     const updateConsumable = (index, field, value) => {
         setFormData(prev => ({
             ...prev,
-            consumables: prev.consumables.map((item, i) =>
-                i === index
-                    ? {
-                        ...item,
-                        [field]: value,
-                        // Auto calculate total_cost if quantity_required or unit_cost changes
-                        total_cost: field === 'quantity_required' || field === 'unit_cost'
-                            ? (field === 'quantity_required' ? value : item.quantity_required || 0) *
-                              (field === 'unit_cost' ? value : item.unit_cost || 0)
-                            : item.total_cost
+            consumables: prev.consumables.map((item, i) => {
+                if (i !== index) return item;
+                
+                // Auto-fill when selecting asset_consumable_id
+                if (field === 'asset_consumable_id') {
+                    const selectedConsumable = assetConsumables.find(ac => ac.id === value);
+                    if (selectedConsumable) {
+                        return {
+                            ...item,
+                            asset_consumable_id: value,
+                            item_name: selectedConsumable.item_name,
+                            specification: selectedConsumable.specification,
+                            unit_cost: selectedConsumable.unit_price || 0,
+                            total_cost: (item.quantity_required || 1) * (selectedConsumable.unit_price || 0),
+                            notes: selectedConsumable.remarks || ''
+                        };
                     }
-                    : item
-            )
+                }
+                
+                // Auto calculate total_cost if quantity_required or unit_cost changes
+                const total_cost = field === 'quantity_required' || field === 'unit_cost'
+                    ? (field === 'quantity_required' ? value : item.quantity_required || 0) *
+                      (field === 'unit_cost' ? value : item.unit_cost || 0)
+                    : item.total_cost;
+                
+                return {
+                    ...item,
+                    [field]: value,
+                    total_cost
+                };
+            })
         }));
     };
 
@@ -252,6 +415,114 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
             ...prev,
             consumables: prev.consumables.filter((_, i) => i !== index)
         }));
+    };
+
+    // Spare parts management functions
+    const addSparePart = () => {
+        setFormData(prev => ({
+            ...prev,
+            spare_parts: [
+                ...prev.spare_parts,
+                {
+                    part_name: '',
+                    specification: '',
+                    quantity: 1,
+                    unit_price: '',
+                    total_price: '',
+                    notes: ''
+                }
+            ]
+        }));
+    };
+
+    const updateSparePart = (index, field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            spare_parts: prev.spare_parts.map((item, i) => {
+                if (i !== index) return item;
+                
+                const newItem = { ...item, [field]: value };
+                
+                // Auto calculate total_price if quantity or unit_price changes
+                if (field === 'quantity' || field === 'unit_price') {
+                    newItem.total_price = (field === 'quantity' ? value : item.quantity || 0) *
+                                         (field === 'unit_price' ? value : item.unit_price || 0);
+                }
+
+                return newItem;
+            })
+        }));
+    };
+
+    const removeSparePart = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            spare_parts: prev.spare_parts.filter((_, i) => i !== index)
+        }));
+    };
+
+    // Calculate estimated_cost automatically
+    const calculateEstimatedCost = () => {
+        const consumablesTotal = formData.consumables.reduce((sum, item) => {
+            return sum + (parseFloat(item.total_cost) || 0);
+        }, 0);
+
+        const sparePartsTotal = formData.spare_parts.reduce((sum, item) => {
+            return sum + (parseFloat(item.total_price) || 0);
+        }, 0);
+
+        return consumablesTotal + sparePartsTotal;
+    };
+
+    // Checklist management functions
+    const addChecklistItem = () => {
+        const newId = Math.max(...maintenanceChecklist.map(item => item.id)) + 1;
+        setMaintenanceChecklist(prev => [...prev, {
+            id: newId,
+            task: '',
+            check_item: '',
+            standard_value: '',
+            check_method: '',
+            required: false
+        }]);
+    };
+
+    const updateChecklistItem = (id, task) => {
+        setMaintenanceChecklist(prev =>
+            prev.map(item =>
+                item.id === id ? { ...item, task } : item
+            )
+        );
+    };
+
+    const removeChecklistItem = (id) => {
+        setMaintenanceChecklist(prev => prev.filter(item => item.id !== id));
+    };
+
+    // Work tasks management functions
+    const addWorkTask = () => {
+        const newId = Date.now();
+        setWorkTasks(prev => [...prev, {
+            id: newId,
+            task_name: '',
+            description: '',
+            assigned_to: '',
+            estimated_hours: '',
+            priority: 'medium',
+            status: 'pending'
+        }]);
+    };
+
+    const updateWorkTask = (id, field, value) => {
+        setWorkTasks(prev =>
+            prev.map(task =>
+                task.id === id ? { ...task, [field]: value } : task
+            )
+        );
+    };
+
+    const removeWorkTask = (id) => {
+        setWorkTasks(prev => prev.filter(task => task.id !== id));
     };
 
     const handleSubmit = async (event) => {
@@ -263,11 +534,16 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
 
         try {
             const { maintenance_code, ...updateData } = formData;
+            
+            // Calculate estimated cost from spare_parts and consumables
+            const estimatedCost = calculateEstimatedCost();
+            
             const submitData = {
                 ...updateData,
                 scheduled_date: new Date(formData.scheduled_date).toISOString(),
                 estimated_duration: parseInt(formData.estimated_duration),
-                estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : null,
+                estimated_cost: estimatedCost > 0 ? estimatedCost : null,
+                spare_parts: JSON.stringify(formData.spare_parts),
                 // Add checklist data
                 checklist: maintenanceChecklist.map((item, index) => ({
                     task_name: item.task,
@@ -277,7 +553,46 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                     description: item.description || null,
                     order_index: index,
                     notes: item.required ? 'Bắt buộc' : 'Không bắt buộc'
-                }))
+                })),
+                // Add work tasks data
+                workTasks: [
+                    // 3 hạng mục mặc định
+                    ...(defaultTasks.cleaning.checked ? [{
+                        task_name: 'Vệ sinh',
+                        task_type: 'cleaning',
+                        description: 'Vệ sinh thiết bị',
+                        assigned_to: defaultTasks.cleaning.assignedTo,
+                        status: 'pending',
+                        order_index: 0
+                    }] : []),
+                    ...(defaultTasks.inspection.checked ? [{
+                        task_name: 'Kiểm tra',
+                        task_type: 'inspection',
+                        description: 'Kiểm tra tình trạng thiết bị',
+                        assigned_to: defaultTasks.inspection.assignedTo,
+                        status: 'pending',
+                        order_index: 1
+                    }] : []),
+                    ...(defaultTasks.maintenance.checked ? [{
+                        task_name: 'Bảo trì',
+                        task_type: 'maintenance',
+                        description: 'Bảo trì thiết bị',
+                        assigned_to: defaultTasks.maintenance.assignedTo,
+                        status: 'pending',
+                        order_index: 2
+                    }] : []),
+                    // Công việc tùy chỉnh
+                    ...workTasks.map((task, index) => ({
+                        task_name: task.task_name,
+                        task_type: 'custom',
+                        description: task.description || null,
+                        assigned_to: task.assigned_to || [],
+                        estimated_hours: task.estimated_hours || null,
+                        status: task.status || 'pending',
+                        priority: task.priority || 'medium',
+                        order_index: 3 + index
+                    }))
+                ]
             };
 
             console.log('Edit submit data:', submitData); // Debug log
@@ -327,66 +642,11 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
         }
     };
 
-    // Helper functions cho checklist
-    const handleChecklistChange = (id, checked) => {
-        setMaintenanceChecklist(prev => 
-            prev.map(item => 
-                item.id === id ? { ...item, completed: checked } : item
-            )
-        );
-    };
-
-    const addChecklistItem = () => {
-        const newId = Math.max(...maintenanceChecklist.map(item => item.id)) + 1;
-        setMaintenanceChecklist(prev => [...prev, {
-            id: newId,
-            task: '',
-            completed: false,
-            required: false
-        }]);
-    };
-
-    const updateChecklistItem = (id, task) => {
-        setMaintenanceChecklist(prev =>
-            prev.map(item =>
-                item.id === id ? { ...item, task } : item
-            )
-        );
-    };
-
-    const removeChecklistItem = (id) => {
-        setMaintenanceChecklist(prev => prev.filter(item => item.id !== id));
-    };
-
-    // Helper functions cho work tasks  
-    const addWorkTask = () => {
-        const newId = Date.now();
-        setWorkTasks(prev => [...prev, {
-            id: newId,
-            task_name: '',
-            description: '',
-            assigned_to: '',
-            estimated_hours: '',
-            priority: 'medium',
-            status: 'pending'
-        }]);
-    };
-
-    const updateWorkTask = (id, field, value) => {
-        setWorkTasks(prev =>
-            prev.map(task =>
-                task.id === id ? { ...task, [field]: value } : task
-            )
-        );
-    };
-
-    const removeWorkTask = (id) => {
-        setWorkTasks(prev => prev.filter(task => task.id !== id));
-    };
-
     const maintenanceTypes = [
-        { value: 'preventive', label: 'Bảo trì phòng ngừa' },
-        { value: 'corrective', label: 'Bảo trì sửa chữa' }
+        { value: 'cleaning', label: 'Vệ sinh' },
+        { value: 'inspection', label: 'Kiểm tra' },
+        { value: 'maintenance', label: 'Bảo trì' },
+        { value: 'repair', label: 'Sửa chữa' }
     ];
 
     const priorities = [
@@ -536,10 +796,8 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                         <Grid2 xs={12} md={4}>
                             <InputNumber
                                 label="Chi phí ước tính (VNĐ)"
-                                name="cost"
-                                value={formData.cost}
-                                onChange={handleInputChange2}
-                                placeholder="Nhập chi phí dự tính"
+                                value={calculateEstimatedCost()}
+                                disabled
                             />
                         </Grid2>
 
@@ -649,32 +907,125 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                                     borderBottom: '2px solid #e0e0e0',
                                     pb: 1
                                 }}>
-                                    🛠️ Vật tư và Phụ tùng thay thế
+                                    📦 Vật tư và Phụ tùng thay thế
                                 </Typography>
 
                                 <Grid2 container spacing={3}>
-                                    {/* Danh sách phụ tùng thay thế */}
+                                    {/* Phụ tùng thay thế */}
                                     <Grid2 xs={12} md={6}>
-                                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: '#555' }}>
-                                            🔩 Phụ tùng chính
-                                        </Typography>
-                                        <InputField
-                                            label="Phụ tùng thay thế"
-                                            name="spare_parts"
-                                            value={formData.spare_parts || ''}
-                                            onChange={handleInputChange2}
-                                            multiline
-                                            rows={4}
-                                            placeholder="🔧 Danh sách phụ tùng cần thay:&#10;- Bộ lọc dầu&#10;- Dây đai truyền động&#10;- Ổ bi bánh xe..."
-                                            fullWidth
-                                        />
-                                    </Grid2>
+                                        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                                                🔩 Phụ tùng thay thế
+                                            </Typography>
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                startIcon={<AddIcon />}
+                                                onClick={addSparePart}
+                                                sx={{ minWidth: 120 }}
+                                            >
+                                                Thêm phụ tùng
+                                            </Button>
+                                        </Box>
 
+                                        <Box sx={{ maxHeight: 400, overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                                            {formData.spare_parts.length === 0 ? (
+                                                <Box sx={{ p: 3, textAlign: 'center', color: '#666' }}>
+                                                    <Typography variant="body2">
+                                                        Chưa có phụ tùng nào được thêm
+                                                    </Typography>
+                                                </Box>
+                                            ) : (
+                                                formData.spare_parts.map((part, index) => (
+                                                    <Card key={index} sx={{ mb: 1, mx: 1, mt: 1 }}>
+                                                        <CardContent sx={{ p: 2 }}>
+                                                            <Grid2 container spacing={2} alignItems="center">
+                                                                <Grid2 xs={12} md={6}>
+                                                                    <InputField
+                                                                        label="Tên phụ tùng"
+                                                                        name="part_name"
+                                                                        value={part.part_name}
+                                                                        onChange={(name, value) => updateSparePart(index, 'part_name', value)}
+                                                                        placeholder="Vd: Vòng bi SKF 6205"
+                                                                        fullWidth
+                                                                        size="small"
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={6}>
+                                                                    <InputField
+                                                                        label="Quy cách"
+                                                                        name="specification"
+                                                                        value={part.specification}
+                                                                        onChange={(name, value) => updateSparePart(index, 'specification', value)}
+                                                                        placeholder="Vd: 25x52x15mm"
+                                                                        fullWidth
+                                                                        size="small"
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={3}>
+                                                                    <InputNumber
+                                                                        label="Số lượng"
+                                                                        value={part.quantity}
+                                                                        onChange={(e, value) => updateSparePart(index, 'quantity', value)}
+                                                                        min={1}
+                                                                        step={1}
+                                                                        fullWidth
+                                                                        size="small"
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={3}>
+                                                                    <InputNumber
+                                                                        label="Đơn giá"
+                                                                        value={part.unit_price}
+                                                                        onChange={(e, value) => updateSparePart(index, 'unit_price', value)}
+                                                                        min={0}
+                                                                        fullWidth
+                                                                        size="small"
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={3}>
+                                                                    <InputNumber
+                                                                        label="Thành tiền"
+                                                                        value={part.total_price}
+                                                                        min={0}
+                                                                        fullWidth
+                                                                        size="small"
+                                                                        disabled
+                                                                    />
+                                                                </Grid2>
+                                                                <Grid2 xs={12} md={2}>
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        onClick={() => removeSparePart(index)}
+                                                                        sx={{ color: '#f44336', mt: 1 }}
+                                                                    >
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Grid2>
+                                                                <Grid2 xs={12}>
+                                                                    <InputField
+                                                                        label="Ghi chú"
+                                                                        name="notes"
+                                                                        value={part.notes}
+                                                                        onChange={(name, value) => updateSparePart(index, 'notes', value)}
+                                                                        size="small"
+                                                                        fullWidth
+                                                                        placeholder="Ghi chú về phụ tùng này..."
+                                                                    />
+                                                                </Grid2>
+                                                            </Grid2>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))
+                                            )}
+                                        </Box>
+                                    </Grid2>
+                                    
                                     {/* Vật tư tiêu hao */}
                                     <Grid2 xs={12} md={6}>
                                         <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
-                                                🧪 Vật tư tiêu hao cần thiết
+                                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                                                🧪 Vật tư tiêu hao
                                             </Typography>
                                             <Button
                                                 variant="outlined"
@@ -702,21 +1053,28 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                                                                 <Grid2 xs={12} md={4}>
                                                                     <SelectField
                                                                         label="Tên vật tư"
-                                                                        value={consumable.consumable_category_id}
-                                                                        onChange={(value) => updateConsumable(index, 'consumable_category_id', value)}
-                                                                        options={consumableCategories.map(cat => ({
-                                                                            id: cat.id,
-                                                                            name: cat.name
-                                                                        }))}
+                                                                        name={`consumable_${index}`}
+                                                                        value={consumable.asset_consumable_id}
+                                                                        onChange={(field, value) => updateConsumable(index, 'asset_consumable_id', value)}
+                                                                        options={assetConsumables}
+                                                                        valueKey="id"
+                                                                        labelKey="item_name"
+                                                                        placeholder={assetConsumables.length > 0 ? "Chọn vật tư của thiết bị" : "Chưa có vật tư (chọn thiết bị trước)"}
+                                                                        disabled={assetConsumables.length === 0}
                                                                         fullWidth
                                                                         size="small"
                                                                     />
+                                                                    {consumable.specification && (
+                                                                        <Typography variant="caption" sx={{ fontSize: '1rem', color: 'text.secondary', ml: 1 }}>
+                                                                            {consumable.specification}
+                                                                        </Typography>
+                                                                    )}
                                                                 </Grid2>
                                                                 <Grid2 xs={12} md={2}>
                                                                     <InputNumber
                                                                         label="Số lượng"
                                                                         value={consumable.quantity_required}
-                                                                        onChange={(value) => updateConsumable(index, 'quantity_required', value)}
+                                                                        onChange={(e, value) => updateConsumable(index, 'quantity_required', value)}
                                                                         min={0.1}
                                                                         step={0.1}
                                                                         fullWidth
@@ -727,7 +1085,7 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                                                                     <InputNumber
                                                                         label="Đơn giá"
                                                                         value={consumable.unit_cost}
-                                                                        onChange={(value) => updateConsumable(index, 'unit_cost', value)}
+                                                                        onChange={(e, value) => updateConsumable(index, 'unit_cost', value)}
                                                                         min={0}
                                                                         fullWidth
                                                                         size="small"
@@ -754,10 +1112,11 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                                                                     </IconButton>
                                                                 </Grid2>
                                                                 <Grid2 xs={12}>
-                                                                    <TextField
+                                                                    <InputField
                                                                         label="Ghi chú"
+                                                                        name="notes"
                                                                         value={consumable.notes}
-                                                                        onChange={(e) => updateConsumable(index, 'notes', e.target.value)}
+                                                                        onChange={(name, value) => updateConsumable(index, 'notes', value)}
                                                                         size="small"
                                                                         fullWidth
                                                                         placeholder="Ghi chú về vật tư này..."
@@ -771,21 +1130,17 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                                         </Box>
                                     </Grid2>
 
-                                    {/* Ước tính chi phí */}
+                                    {/* Hiển thị tổng chi phí ước tính */}
                                     <Grid2 xs={12}>
-                                        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', color: '#555' }}>
-                                            💰 Ước tính chi phí
-                                        </Typography>
-                                        <InputField
-                                            label="Chi phí dự kiến"
-                                            name="estimated_cost"
-                                            value={formData.estimated_cost || ''}
-                                            onChange={handleInputChange2}
-                                            multiline
-                                            rows={4}
-                                            placeholder="Ước tính chi phí vật tư:&#10;- Vật tư chính: 2,000,000 VNĐ&#10;- Vật tư tiêu hao: 300,000 VNĐ&#10;- Tổng cộng: 2,300,000 VNĐ"
-                                            fullWidth
-                                        />
+                                        <Box sx={{ p: 2, backgroundColor: '#e3f2fd', borderRadius: 1, border: '1px solid #2196f3' }}>
+                                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1565c0' }}>
+                                                💰 Tổng chi phí ước tính: {calculateEstimatedCost().toLocaleString('vi-VN')} VNĐ
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: '#666', mt: 1 }}>
+                                                Phụ tùng: {formData.spare_parts.reduce((sum, item) => sum + (parseFloat(item.total_price) || 0), 0).toLocaleString('vi-VN')} VNĐ + 
+                                                Vật tư tiêu hao: {formData.consumables.reduce((sum, item) => sum + (parseFloat(item.total_cost) || 0), 0).toLocaleString('vi-VN')} VNĐ
+                                            </Typography>
+                                        </Box>
                                     </Grid2>
                                 </Grid2>
                             </Box>
@@ -807,52 +1162,281 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                                 </Button>
                             </Box>
 
-                            <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                                {maintenanceChecklist.map((item, index) => (
-                                    <Card key={item.id} sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
-                                        <CardContent sx={{ p: 2 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            checked={item.completed}
-                                                            onChange={(e) => handleChecklistChange(item.id, e.target.checked)}
-                                                            icon={<CheckCircleIcon sx={{ color: '#ccc' }} />}
-                                                            checkedIcon={<CheckCircleIcon sx={{ color: '#4caf50' }} />}
-                                                        />
-                                                    }
-                                                    label=""
-                                                />
-                                                <TextField
-                                                    fullWidth
-                                                    size="small"
-                                                    value={item.task}
-                                                    onChange={(e) => updateChecklistItem(item.id, e.target.value)}
-                                                    placeholder="Nhập nội dung kiểm tra..."
-                                                    variant="outlined"
-                                                    sx={{ mr: 1 }}
-                                                />
-                                                {item.required && (
-                                                    <Typography variant="caption" sx={{ color: '#f44336', minWidth: 60 }}>
-                                                        *Bắt buộc
-                                                    </Typography>
-                                                )}
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => removeChecklistItem(item.id)}
-                                                    sx={{ color: '#f44336' }}
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                            <Box sx={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.1rem' }}>
+                                    <thead>
+                                        <tr style={{ backgroundColor: theme.palette.primary.main }}>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '40px' }}>STT</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '200px' }}>Nội dung</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '150px' }}>Hạng mục kiểm tra</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '120px' }}>Tiêu chuẩn OK</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'left', width: '200px' }}>Phương pháp kiểm tra</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'center', width: '80px' }}>Bắt buộc</th>
+                                            <th style={{ border: '1px solid #ddd', padding: '12px', color: '#fff', textAlign: 'center', width: '80px' }}>Xóa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {maintenanceChecklist.map((item, index) => (
+                                            <tr key={item.id} style={{ backgroundColor: index % 2 === 0 ? '#f9f9f9' : '#fff' }}>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                                                    {index + 1}
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        value={item.task}
+                                                        onChange={(e) => updateChecklistItem(item.id, e.target.value)}
+                                                        placeholder="Nội dung kiểm tra..."
+                                                        variant="outlined"
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        value={item.check_item || ''}
+                                                        onChange={(e) => {
+                                                            setMaintenanceChecklist(prev =>
+                                                                prev.map(i => i.id === item.id ? { ...i, check_item: e.target.value } : i)
+                                                            );
+                                                        }}
+                                                        placeholder="Hạng mục..."
+                                                        variant="outlined"
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        value={item.standard_value || ''}
+                                                        onChange={(e) => {
+                                                            setMaintenanceChecklist(prev =>
+                                                                prev.map(i => i.id === item.id ? { ...i, standard_value: e.target.value } : i)
+                                                            );
+                                                        }}
+                                                        placeholder="Giá trị chuẩn..."
+                                                        variant="outlined"
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size="small"
+                                                        value={item.check_method || ''}
+                                                        onChange={(e) => {
+                                                            setMaintenanceChecklist(prev =>
+                                                                prev.map(i => i.id === item.id ? { ...i, check_method: e.target.value } : i)
+                                                            );
+                                                        }}
+                                                        placeholder="Phương pháp..."
+                                                        variant="outlined"
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                                                    <Checkbox
+                                                        checked={item.required || false}
+                                                        onChange={(e) => {
+                                                            setMaintenanceChecklist(prev =>
+                                                                prev.map(i => i.id === item.id ? { ...i, required: e.target.checked } : i)
+                                                            );
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => removeChecklistItem(item.id)}
+                                                        sx={{ color: '#f44336' }}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </Box>
                         </CustomTabPanel>
 
                         <CustomTabPanel value={tabValue} index={3}>
                             {/* Danh sách công việc */}
+                            
+                            {/* 3 Hạng mục công việc mặc định */}
+                            <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                                    Hạng mục công việc chính
+                                </Typography>
+                                <FormGroup>
+                                    {/* Vệ sinh */}
+                                    <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={defaultTasks.cleaning.checked}
+                                                    onChange={(e) => setDefaultTasks(prev => ({
+                                                        ...prev,
+                                                        cleaning: { ...prev.cleaning, checked: e.target.checked }
+                                                    }))}
+                                                />
+                                            }
+                                            label={<Typography variant="body1" fontWeight="bold">Vệ sinh</Typography>}
+                                        />
+                                        {defaultTasks.cleaning.checked && (
+                                            <Box sx={{ ml: 4, mt: 1 }}>
+                                                <Autocomplete
+                                                    multiple
+                                                    size="small"
+                                                    options={mechanicalStaff}
+                                                    getOptionLabel={(option) => option.name}
+                                                    value={mechanicalStaff.filter(staff => 
+                                                        defaultTasks.cleaning.assignedTo.includes(staff.id)
+                                                    )}
+                                                    onChange={(e, newValue) => {
+                                                        setDefaultTasks(prev => ({
+                                                            ...prev,
+                                                            cleaning: { 
+                                                                ...prev.cleaning, 
+                                                                assignedTo: newValue.map(v => v.id)
+                                                            }
+                                                        }));
+                                                    }}
+                                                    renderInput={(params) => (
+                                                        <TextField
+                                                            {...params}
+                                                            label="Người thực hiện"
+                                                            placeholder="Chọn nhân viên xưởng cơ điện"
+                                                        />
+                                                    )}
+                                                    renderTags={(value, getTagProps) =>
+                                                        value.map((option, index) => (
+                                                            <Chip
+                                                                key={option.id}
+                                                                label={option.name}
+                                                                {...getTagProps({ index })}
+                                                                size="small"
+                                                            />
+                                                        ))
+                                                    }
+                                                />
+                                            </Box>
+                                        )}
+                                    </Box>
+                                    
+                                    {/* Kiểm tra */}
+                                    <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={defaultTasks.inspection.checked}
+                                                    onChange={(e) => setDefaultTasks(prev => ({
+                                                        ...prev,
+                                                        inspection: { ...prev.inspection, checked: e.target.checked }
+                                                    }))}
+                                                />
+                                            }
+                                            label={<Typography variant="body1" fontWeight="bold">Kiểm tra</Typography>}
+                                        />
+                                        {defaultTasks.inspection.checked && (
+                                            <Box sx={{ ml: 4, mt: 1 }}>
+                                                <Autocomplete
+                                                    multiple
+                                                    size="small"
+                                                    options={mechanicalStaff}
+                                                    getOptionLabel={(option) => option.name}
+                                                    value={mechanicalStaff.filter(staff => 
+                                                        defaultTasks.inspection.assignedTo.includes(staff.id)
+                                                    )}
+                                                    onChange={(e, newValue) => {
+                                                        setDefaultTasks(prev => ({
+                                                            ...prev,
+                                                            inspection: { 
+                                                                ...prev.inspection, 
+                                                                assignedTo: newValue.map(v => v.id)
+                                                            }
+                                                        }));
+                                                    }}
+                                                    renderInput={(params) => (
+                                                        <TextField
+                                                            {...params}
+                                                            label="Người thực hiện"
+                                                            placeholder="Chọn nhân viên xưởng cơ điện"
+                                                        />
+                                                    )}
+                                                    renderTags={(value, getTagProps) =>
+                                                        value.map((option, index) => (
+                                                            <Chip
+                                                                key={option.id}
+                                                                label={option.name}
+                                                                {...getTagProps({ index })}
+                                                                size="small"
+                                                            />
+                                                        ))
+                                                    }
+                                                />
+                                            </Box>
+                                        )}
+                                    </Box>
+                                    
+                                    {/* Bảo trì */}
+                                    <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={defaultTasks.maintenance.checked}
+                                                    onChange={(e) => setDefaultTasks(prev => ({
+                                                        ...prev,
+                                                        maintenance: { ...prev.maintenance, checked: e.target.checked }
+                                                    }))}
+                                                />
+                                            }
+                                            label={<Typography variant="body1" fontWeight="bold">Bảo trì</Typography>}
+                                        />
+                                        {defaultTasks.maintenance.checked && (
+                                            <Box sx={{ ml: 4, mt: 1 }}>
+                                                <Autocomplete
+                                                    multiple
+                                                    size="small"
+                                                    options={mechanicalStaff}
+                                                    getOptionLabel={(option) => option.name}
+                                                    value={mechanicalStaff.filter(staff => 
+                                                        defaultTasks.maintenance.assignedTo.includes(staff.id)
+                                                    )}
+                                                    onChange={(e, newValue) => {
+                                                        setDefaultTasks(prev => ({
+                                                            ...prev,
+                                                            maintenance: { 
+                                                                ...prev.maintenance, 
+                                                                assignedTo: newValue.map(v => v.id)
+                                                            }
+                                                        }));
+                                                    }}
+                                                    renderInput={(params) => (
+                                                        <TextField
+                                                            {...params}
+                                                            label="Người thực hiện"
+                                                            placeholder="Chọn nhân viên xưởng cơ điện"
+                                                        />
+                                                    )}
+                                                    renderTags={(value, getTagProps) =>
+                                                        value.map((option, index) => (
+                                                            <Chip
+                                                                key={option.id}
+                                                                label={option.name}
+                                                                {...getTagProps({ index })}
+                                                                size="small"
+                                                            />
+                                                        ))
+                                                    }
+                                                />
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </FormGroup>
+                            </Box>
+                            
+                            <Divider sx={{ my: 3 }} />
+                            
                             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                                     Danh sách công việc chi tiết

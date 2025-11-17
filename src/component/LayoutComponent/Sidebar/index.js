@@ -13,6 +13,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { setIsOpen } from '../../../redux/slice/sibarSlice';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import { setActiveCollapse } from '../../../redux/slice/sibarSlice';
+import { canViewMaintenanceResults } from '../../../utils/roleHelper';
 
 // Import các icon mới phù hợp
 import DevicesIcon from '@mui/icons-material/Devices';
@@ -26,6 +27,7 @@ import CalibrateIcon from '@mui/icons-material/Tune';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -34,6 +36,7 @@ export default function Sidebar() {
     const location = useLocation();
     const activeCollapse = useSelector((state) => state.sidebar.activeCollapse);
     const isOpen = useSelector((state) => state.sidebar.isOpen);
+    const user = useSelector((state) => state.user.userInfo); // Lấy thông tin user
 
     const handleClick = (event) => {
         const buttonId = event.currentTarget.id;
@@ -293,23 +296,27 @@ export default function Sidebar() {
                                     primary={!isOpen || 'Bảo trì thiết bị'}
                                 />
                             </ListItemButton>
-                            <ListItemButton 
-                                sx={{ 
-                                    pl: 4,
-                                    ...(location.pathname === '/maintenance-result' ? activeStyle : subItemHoverStyle)
-                                }}
-                                onClick={() => switchActiveSidebar('/maintenance-result')}
-                            >
-                                <ListItemIcon>
-                                    <AssignmentTurnedInIcon sx={location.pathname === '/maintenance-result' ? activeIconStyle : commonIconStyle} />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primaryTypographyProps={{ 
-                                        sx: location.pathname === '/maintenance-result' ? activeTextStyle : commonTextStyle 
+                            
+                            {/* Kết quả bảo trì - CHỈ QUẢN LÝ */}
+                            {canViewMaintenanceResults(user) && (
+                                <ListItemButton 
+                                    sx={{ 
+                                        pl: 4,
+                                        ...(location.pathname === '/maintenance-result' ? activeStyle : subItemHoverStyle)
                                     }}
-                                    primary={!isOpen || 'Kết quả bảo trì'}
-                                />
-                            </ListItemButton>
+                                    onClick={() => switchActiveSidebar('/maintenance-result')}
+                                >
+                                    <ListItemIcon>
+                                        <AssignmentTurnedInIcon sx={location.pathname === '/maintenance-result' ? activeIconStyle : commonIconStyle} />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primaryTypographyProps={{ 
+                                            sx: location.pathname === '/maintenance-result' ? activeTextStyle : commonTextStyle 
+                                        }}
+                                        primary={!isOpen || 'Kết quả bảo trì'}
+                                    />
+                                </ListItemButton>
+                            )}
 
                             <ListItemButton 
                                 sx={{ 
@@ -319,13 +326,13 @@ export default function Sidebar() {
                                 onClick={() => switchActiveSidebar('/maintenance-record')}
                             >
                                 <ListItemIcon>
-                                    <RepairIcon sx={location.pathname === '/maintenance-record' ? activeIconStyle : commonIconStyle} />
+                                    <AssessmentIcon sx={location.pathname === '/maintenance-record' ? activeIconStyle : commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/maintenance-record' ? activeTextStyle : commonTextStyle 
                                     }}
-                                    primary={!isOpen || 'Hồ sơ bảo trì'}
+                                    primary={!isOpen || 'Báo cáo tổng hợp'}
                                 />
                             </ListItemButton>
                         </List>

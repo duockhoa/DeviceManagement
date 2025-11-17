@@ -63,6 +63,7 @@ function MaintenanceWork() {
         switch (status) {
             case 'pending': return 'warning';
             case 'in_progress': return 'info';
+            case 'awaiting_approval': return 'secondary';
             case 'completed': return 'success';
             case 'cancelled': return 'error';
             default: return 'default';
@@ -73,6 +74,7 @@ function MaintenanceWork() {
         switch (status) {
             case 'pending': return 'Chờ xử lý';
             case 'in_progress': return 'Đang thực hiện';
+            case 'awaiting_approval': return 'Chờ phê duyệt';
             case 'completed': return 'Hoàn thành';
             case 'cancelled': return 'Đã hủy';
             default: return status;

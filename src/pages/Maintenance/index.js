@@ -1,10 +1,19 @@
 import MaintenanceList from '../../component/MaintenanceComponent/MaintenanceList';
 import AddMaintenanceButton from '../../component/MaintenanceComponent/AddMaintenanceBtn';
+import { useRef } from 'react';
 import {
     Box
 } from '@mui/material';
 
 function Maintenance() {
+    const maintenanceListRef = useRef();
+
+    const handleReload = () => {
+        if (maintenanceListRef.current && maintenanceListRef.current.reloadData) {
+            maintenanceListRef.current.reloadData();
+        }
+    };
+
     return (
         <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
             {/* Main Content - Full width */}
@@ -16,7 +25,7 @@ function Maintenance() {
                 flexDirection: 'column',
                 p: 1
             }}>
-                <MaintenanceList />
+                <MaintenanceList ref={maintenanceListRef} />
             </Box>
 
             {/* Fixed Add Button */}
@@ -26,7 +35,7 @@ function Maintenance() {
                 right: 40,
                 zIndex: 1000
             }}>
-                <AddMaintenanceButton />
+                <AddMaintenanceButton onReload={handleReload} />
             </Box>
         </Box>
     );

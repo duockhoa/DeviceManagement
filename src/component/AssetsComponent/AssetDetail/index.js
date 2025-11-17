@@ -404,10 +404,15 @@ function AssetDetail() {
                                                         <TableCell sx={{ fontSize: '1.2rem' }}>{maintenance.maintenance_code}</TableCell>
                                                         <TableCell sx={{ fontSize: '1.2rem' }}>{maintenance.title}</TableCell>
                                                         <TableCell>
-                                                            <Chip 
-                                                                label={maintenance.maintenance_type === 'preventive' ? 'Phòng ngừa' : 'Sửa chữa'}
+                                                            <Chip
+                                                                label={{
+                                                                    'cleaning': 'Vệ sinh',
+                                                                    'inspection': 'Kiểm tra',
+                                                                    'maintenance': 'Bảo trì',
+                                                                    'repair': 'Sửa chữa'
+                                                                }[maintenance.maintenance_type] || maintenance.maintenance_type}
                                                                 size="small"
-                                                                color={maintenance.maintenance_type === 'preventive' ? 'primary' : 'warning'}
+                                                                color={maintenance.maintenance_type === 'repair' ? 'warning' : 'primary'}
                                                                 sx={{ fontSize: '1.2rem' }}
                                                             />
                                                         </TableCell>

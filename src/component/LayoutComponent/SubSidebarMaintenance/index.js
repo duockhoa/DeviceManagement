@@ -65,8 +65,10 @@ function SubSidebarMaintenance() {
     ];
 
     const typeOptions = [
-        { value: 'preventive', label: 'Bảo trì phòng ngừa' },
-        { value: 'corrective', label: 'Bảo trì sửa chữa' }
+        { value: 'cleaning', label: 'Vệ sinh' },
+        { value: 'inspection', label: 'Kiểm tra' },
+        { value: 'maintenance', label: 'Bảo trì' },
+        { value: 'repair', label: 'Sửa chữa' }
     ];
 
     return (

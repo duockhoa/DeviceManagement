@@ -87,3 +87,25 @@ export const deleteMaintenance = async (id) => {
     throw error;
   }
 };
+
+// POST /api/maintenance/:id/approve - Phê duyệt maintenance
+export const approveMaintenance = async (id, data = {}) => {
+  try {
+    const response = await axios.post(`/maintenance/${id}/approve`, data);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error approving maintenance:", error);
+    throw error;
+  }
+};
+
+// POST /api/maintenance/:id/reject - Từ chối phê duyệt maintenance
+export const rejectMaintenance = async (id, reason) => {
+  try {
+    const response = await axios.post(`/maintenance/${id}/reject`, { reason });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error rejecting maintenance:", error);
+    throw error;
+  }
+};

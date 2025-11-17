@@ -8,6 +8,7 @@ import Devices from '../pages/Devices';
 import Categories from '../pages/Categories';
 import Consumables from '../pages/Consumables';
 import Maintenance from '../pages/Maintenance';
+import MaintenanceDetail from '../component/MaintenanceComponent/MaintenanceDetail';
 import MaintenanceWork from '../pages/MaintenanceWork';
 import MaintenanceWorkDetail from '../pages/MaintenanceWorkDetail';
 import MaintenanceResult from '../pages/MaintenanceResult';
@@ -41,6 +42,10 @@ const publicRoutes = [
     {
         path: '/maintenance',
         component: Maintenance,
+    },
+    {
+        path: '/maintenance/:id',
+        component: MaintenanceDetail,
     },
     {
         path: '/maintenance-work',

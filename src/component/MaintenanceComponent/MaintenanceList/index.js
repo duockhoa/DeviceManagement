@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchMaintenance, deleteMaintenanceRecord } from "../../../redux/slice/maintenanceSlice";
+import { useNavigate } from "react-router-dom";
+import { fetchMaintenance, deleteMaintenanceRecord, fetchMaintenanceById } from "../../../redux/slice/maintenanceSlice";
+import { canApproveMaintenance } from "../../../utils/roleHelper";
 import { fetchUsers } from "../../../redux/slice/usersSlice";
-import { getMaintenanceByStatus } from "../../../services/maintenanceService";
 import {
     Box,
     Typography,
@@ -19,35 +20,40 @@ import { DataGrid } from '@mui/x-data-grid';
 import BuildIcon from '@mui/icons-material/Build';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import Loading from '../../Loading';
 import EditMaintenanceForm from '../EditMaintenanceForm';
 
-function MaintenanceList() {
+const MaintenanceList = forwardRef((props, ref) => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const maintenance = useSelector((state) => state.maintenance.maintenance);
     const loading = useSelector((state) => state.maintenance.loading);
     const error = useSelector((state) => state.maintenance.error);
     const users = useSelector((state) => state.users.users);
+    const user = useSelector((state) => state.user.userInfo);
 
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedMaintenance, setSelectedMaintenance] = useState(null);
-    const [filteredMaintenance, setFilteredMaintenance] = useState([]);
+
+    // Expose reload method to parent component
+    useImperativeHandle(ref, () => ({
+        reloadData: async () => {
+            try {
+                console.log('🔄 Reloading all maintenance...');
+                await dispatch(fetchMaintenance()).unwrap();
+                console.log('✅ All maintenance reloaded');
+            } catch (error) {
+                console.error('❌ Error reloading maintenance:', error);
+            }
+        }
+    }));
 
     useEffect(() => {
-        // Chỉ lấy maintenance với status 'pending' (chưa thực hiện)
-        const loadPendingMaintenance = async () => {
-            try {
-                console.log('🔄 Loading pending maintenance...');
-                const data = await getMaintenanceByStatus('pending');
-                console.log('✅ Pending maintenance loaded:', data);
-                setFilteredMaintenance(data);
-            } catch (error) {
-                console.error('❌ Error loading pending maintenance:', error);
-            }
-        };
-        loadPendingMaintenance();
+        // Load tất cả maintenance
+        dispatch(fetchMaintenance());
         dispatch(fetchUsers());
     }, [dispatch]);
 
@@ -56,9 +62,8 @@ function MaintenanceList() {
             try {
                 await dispatch(deleteMaintenanceRecord(id)).unwrap();
                 
-                // Refresh pending maintenance list
-                const data = await getMaintenanceByStatus('pending');
-                setFilteredMaintenance(data);
+                // Refresh maintenance list
+                await dispatch(fetchMaintenance()).unwrap();
                 
                 setNotification({
                     open: true,
@@ -75,18 +80,27 @@ function MaintenanceList() {
         }
     };
 
-    const handleEdit = (maintenance) => {
-        setSelectedMaintenance(maintenance);
-        setEditDialogOpen(true);
+    const handleEdit = async (maintenance) => {
+        try {
+            // Fetch full maintenance details including consumables
+            const fullData = await dispatch(fetchMaintenanceById(maintenance.id)).unwrap();
+            console.log('Full maintenance data:', fullData);
+            setSelectedMaintenance(fullData);
+            setEditDialogOpen(true);
+        } catch (error) {
+            console.error('Error fetching maintenance details:', error);
+            // Fallback to using the data from list
+            setSelectedMaintenance(maintenance);
+            setEditDialogOpen(true);
+        }
     };
 
     const handleEditClose = async () => {
         setEditDialogOpen(false);
         setSelectedMaintenance(null);
-        // Reload pending maintenance
+        // Reload maintenance
         try {
-            const data = await getMaintenanceByStatus('pending');
-            setFilteredMaintenance(data);
+            await dispatch(fetchMaintenance()).unwrap();
         } catch (error) {
             console.error('Error reloading maintenance:', error);
         }
@@ -96,6 +110,7 @@ function MaintenanceList() {
         switch (status) {
             case 'pending': return 'warning';
             case 'in_progress': return 'info';
+            case 'awaiting_approval': return 'secondary';
             case 'completed': return 'success';
             case 'cancelled': return 'error';
             default: return 'default';
@@ -106,6 +121,7 @@ function MaintenanceList() {
         switch (status) {
             case 'pending': return 'Chờ xử lý';
             case 'in_progress': return 'Đang thực hiện';
+            case 'awaiting_approval': return 'Chờ phê duyệt';
             case 'completed': return 'Hoàn thành';
             case 'cancelled': return 'Đã hủy';
             default: return 'Không xác định';
@@ -177,15 +193,23 @@ function MaintenanceList() {
             field: 'maintenance_type',
             headerName: 'Loại bảo trì',
             width: 140,
-            renderCell: (params) => (
-                <Chip
-                    label={params.value === 'preventive' ? 'Phòng ngừa' : 'Sửa chữa'}
-                    color="primary"
-                    size="small"
-                    variant="outlined"
-                    sx={{ fontSize: '1.2rem' }}
-                />
-            )
+            renderCell: (params) => {
+                const typeLabels = {
+                    'cleaning': 'Vệ sinh',
+                    'inspection': 'Kiểm tra',
+                    'maintenance': 'Bảo trì',
+                    'repair': 'Sửa chữa'
+                };
+                return (
+                    <Chip
+                        label={typeLabels[params.value] || params.value}
+                        color="primary"
+                        size="small"
+                        variant="outlined"
+                        sx={{ fontSize: '1.2rem' }}
+                    />
+                );
+            }
         },
         {
             field: 'priority',
@@ -240,27 +264,40 @@ function MaintenanceList() {
         {
             field: 'actions',
             headerName: 'Thao tác',
-            width: 120,
+            width: 150,
             renderCell: (params) => (
                 <Box>
-                    <Tooltip title="Chỉnh sửa">
+                    <Tooltip title="Xem chi tiết">
                         <IconButton 
                             size="small" 
-                            color="primary"
-                            onClick={() => handleEdit(params.row)}
+                            color="info"
+                            onClick={() => navigate(`/maintenance/${params.row.id}`)}
                         >
-                            <EditIcon fontSize="small" />
+                            <VisibilityIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Xóa">
-                        <IconButton 
-                            size="small" 
-                            color="error"
-                            onClick={() => handleDelete(params.row.id)}
-                        >
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                    {canApproveMaintenance(user) && (
+                        <>
+                            <Tooltip title="Chỉnh sửa">
+                                <IconButton 
+                                    size="small" 
+                                    color="primary"
+                                    onClick={() => handleEdit(params.row)}
+                                >
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Xóa">
+                                <IconButton 
+                                    size="small" 
+                                    color="error"
+                                    onClick={() => handleDelete(params.row.id)}
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    )}
                 </Box>
             )
         }
@@ -280,7 +317,7 @@ function MaintenanceList() {
         );
     }
 
-    if (!filteredMaintenance || filteredMaintenance.length === 0) {
+    if (!maintenance || maintenance.length === 0) {
         return (
             <Box sx={{ p: 3, textAlign: 'center' }}>
                 <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', mx: 'auto', mb: 2 }}>
@@ -318,7 +355,7 @@ function MaintenanceList() {
             </Paper>
 
             <DataGrid
-                rows={filteredMaintenance}
+                rows={maintenance}
                 columns={columns}
                 pageSize={10}
                 rowsPerPageOptions={[10, 25, 50]}
@@ -385,6 +422,6 @@ function MaintenanceList() {
             </Snackbar>
         </Box>
     );
-}
+});
 
 export default MaintenanceList;

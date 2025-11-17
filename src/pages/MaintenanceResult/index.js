@@ -6,33 +6,19 @@ import {
     Paper,
     Chip,
     IconButton,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
     Alert,
     LinearProgress
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-import { getPendingApproval, approveWork } from '../../services/maintenanceWorkService';
+import { getMaintenanceResults } from '../../services/maintenanceWorkService';
 
 function MaintenanceResult() {
     const navigate = useNavigate();
     const [workOrders, setWorkOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedWO, setSelectedWO] = useState(null);
-    const [approveDialogOpen, setApproveDialogOpen] = useState(false);
-    const [approvalData, setApprovalData] = useState({
-        approved: true,
-        rejection_reason: ''
-    });
 
     useEffect(() => {
         loadWorkOrders();
@@ -41,11 +27,11 @@ function MaintenanceResult() {
     const loadWorkOrders = async () => {
         try {
             setLoading(true);
-            const data = await getPendingApproval();
+            const data = await getMaintenanceResults();
             setWorkOrders(data);
             setError(null);
         } catch (err) {
-            setError('Không thể tải danh sách công việc chờ duyệt');
+            setError('Không thể tải danh sách kết quả bảo trì');
             console.error(err);
         } finally {
             setLoading(false);
@@ -53,60 +39,44 @@ function MaintenanceResult() {
     };
 
     const handleViewDetail = (id) => {
-        navigate(`/maintenance-work/${id}`);
-    };
-
-    const handleOpenApprove = (wo, approved) => {
-        setSelectedWO(wo);
-        setApprovalData({
-            approved,
-            rejection_reason: ''
-        });
-        setApproveDialogOpen(true);
-    };
-
-    const handleCloseApprove = () => {
-        setApproveDialogOpen(false);
-        setSelectedWO(null);
-        setApprovalData({
-            approved: true,
-            rejection_reason: ''
-        });
-    };
-
-    const handleSubmitApproval = async () => {
-        if (!selectedWO) return;
-
-        if (!approvalData.approved && !approvalData.rejection_reason.trim()) {
-            alert('Vui lòng nhập lý do từ chối');
-            return;
-        }
-
-        try {
-            await approveWork(selectedWO.id, approvalData);
-            alert(approvalData.approved ? 'Đã phê duyệt công việc thành công' : 'Đã từ chối công việc');
-            handleCloseApprove();
-            loadWorkOrders();
-        } catch (err) {
-            alert('Lỗi khi xử lý phê duyệt: ' + err.message);
-        }
+        navigate(`/maintenance/${id}`);
     };
 
     const getPriorityColor = (priority) => {
         switch (priority) {
-            case 'high': return 'error';
-            case 'medium': return 'warning';
-            case 'low': return 'info';
+            case 'critical': return 'error';
+            case 'high': return 'warning';
+            case 'medium': return 'info';
+            case 'low': return 'success';
             default: return 'default';
         }
     };
 
     const getPriorityLabel = (priority) => {
         switch (priority) {
+            case 'critical': return 'Khẩn cấp';
             case 'high': return 'Cao';
             case 'medium': return 'Trung bình';
             case 'low': return 'Thấp';
             default: return priority;
+        }
+    };
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'in_progress': return 'info';
+            case 'awaiting_approval': return 'warning';
+            case 'completed': return 'success';
+            default: return 'default';
+        }
+    };
+
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'in_progress': return 'Đang thực hiện';
+            case 'awaiting_approval': return 'Chờ phê duyệt';
+            case 'completed': return 'Hoàn thành';
+            default: return status;
         }
     };
 
@@ -124,18 +94,31 @@ function MaintenanceResult() {
         {
             field: 'title',
             headerName: 'Tiêu đề',
-            width: 300,
+            width: 250,
             renderCell: (params) => (
                 <Box>
-                    <Typography sx={{ fontSize: '1.2rem' }}>
+                    <Typography sx={{ fontSize: '1.2rem', fontWeight: 500 }}>
                         {params.value}
                     </Typography>
                     {params.row.asset && (
-                        <Typography variant="caption" sx={{ fontSize: '1.1rem', color: '#666' }}>
+                        <Typography variant="caption" sx={{ fontSize: '1rem', color: '#666' }}>
                             TB: {params.row.asset.name}
                         </Typography>
                     )}
                 </Box>
+            )
+        },
+        {
+            field: 'status',
+            headerName: 'Trạng thái',
+            width: 150,
+            renderCell: (params) => (
+                <Chip 
+                    label={getStatusLabel(params.value)}
+                    color={getStatusColor(params.value)}
+                    size="small"
+                    sx={{ fontSize: '1.1rem' }}
+                />
             )
         },
         {
@@ -152,25 +135,6 @@ function MaintenanceResult() {
             )
         },
         {
-            field: 'checklist_progress',
-            headerName: 'Tiến độ checklist',
-            width: 200,
-            renderCell: (params) => (
-                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ flexGrow: 1 }}>
-                        <LinearProgress 
-                            variant="determinate" 
-                            value={params.value || 0}
-                            sx={{ height: 8, borderRadius: 1 }}
-                        />
-                    </Box>
-                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
-                        {params.value || 0}%
-                    </Typography>
-                </Box>
-            )
-        },
-        {
             field: 'technician',
             headerName: 'Kỹ thuật viên',
             width: 180,
@@ -182,50 +146,68 @@ function MaintenanceResult() {
         },
         {
             field: 'scheduled_date',
-            headerName: 'Ngày thực hiện',
-            width: 150,
+            headerName: 'Ngày dự kiến',
+            width: 130,
             renderCell: (params) => (
-                <Typography sx={{ fontSize: '1.2rem' }}>
+                <Typography sx={{ fontSize: '1.1rem' }}>
                     {params.value ? new Date(params.value).toLocaleDateString('vi-VN') : '-'}
+                </Typography>
+            )
+        },
+        {
+            field: 'actual_start_date',
+            headerName: 'Bắt đầu',
+            width: 140,
+            renderCell: (params) => (
+                <Typography sx={{ fontSize: '1.1rem' }}>
+                    {params.value ? new Date(params.value).toLocaleString('vi-VN', { 
+                        day: '2-digit', 
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : '-'}
+                </Typography>
+            )
+        },
+        {
+            field: 'actual_end_date',
+            headerName: 'Kết thúc',
+            width: 140,
+            renderCell: (params) => (
+                <Typography sx={{ fontSize: '1.1rem' }}>
+                    {params.value ? new Date(params.value).toLocaleString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : '-'}
+                </Typography>
+            )
+        },
+        {
+            field: 'actual_duration',
+            headerName: 'Thời gian thực hiện',
+            width: 120,
+            renderCell: (params) => (
+                <Typography sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'primary.main' }}>
+                    {params.value ? `${parseFloat(params.value).toFixed(1)}h` : '-'}
                 </Typography>
             )
         },
         {
             field: 'actions',
             headerName: 'Thao tác',
-            width: 250,
+            width: 120,
             sortable: false,
             renderCell: (params) => (
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleViewDetail(params.row.id)}
-                        title="Xem chi tiết"
-                    >
-                        <VisibilityIcon />
-                    </IconButton>
-                    <Button
-                        size="small"
-                        variant="contained"
-                        color="success"
-                        startIcon={<CheckCircleIcon />}
-                        onClick={() => handleOpenApprove(params.row, true)}
-                        sx={{ fontSize: '1rem' }}
-                    >
-                        Duyệt
-                    </Button>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        startIcon={<CancelIcon />}
-                        onClick={() => handleOpenApprove(params.row, false)}
-                        sx={{ fontSize: '1rem' }}
-                    >
-                        Từ chối
-                    </Button>
-                </Box>
+                <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => handleViewDetail(params.row.id)}
+                    title="Xem chi tiết"
+                >
+                    <VisibilityIcon />
+                </IconButton>
             )
         }
     ];
@@ -246,10 +228,19 @@ function MaintenanceResult() {
                 <Typography variant="h5" sx={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
                     Kết quả bảo trì
                 </Typography>
+                <Chip 
+                    label={`${workOrders.length} công việc`}
+                    color="primary"
+                    sx={{ fontSize: '1.2rem' }}
+                />
             </Box>
 
+            <Typography variant="body2" sx={{ mb: 3, fontSize: '1.1rem', color: '#666' }}>
+                Hiển thị tất cả công việc bảo trì đang thực hiện, chờ phê duyệt và đã hoàn thành
+            </Typography>
+
             {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert severity="error" sx={{ mb: 3, fontSize: '1.2rem' }}>
                     {error}
                 </Alert>
             )}
@@ -274,62 +265,6 @@ function MaintenanceResult() {
                     }}
                 />
             </Paper>
-
-            {/* Approval Dialog */}
-            <Dialog open={approveDialogOpen} onClose={handleCloseApprove} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    <Typography sx={{ fontSize: '1.6rem', fontWeight: 'bold' }}>
-                        {approvalData.approved ? 'Phê duyệt công việc' : 'Từ chối công việc'}
-                    </Typography>
-                </DialogTitle>
-                <DialogContent>
-                    {selectedWO && (
-                        <Box sx={{ mb: 2 }}>
-                            <Typography sx={{ fontSize: '1.2rem', mb: 1 }}>
-                                <strong>Mã:</strong> {selectedWO.maintenance_code}
-                            </Typography>
-                            <Typography sx={{ fontSize: '1.2rem', mb: 1 }}>
-                                <strong>Tiêu đề:</strong> {selectedWO.title}
-                            </Typography>
-                            <Typography sx={{ fontSize: '1.2rem', mb: 1 }}>
-                                <strong>Kỹ thuật viên:</strong> {selectedWO.technician?.name}
-                            </Typography>
-                        </Box>
-                    )}
-
-                    {!approvalData.approved && (
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={4}
-                            label="Lý do từ chối"
-                            value={approvalData.rejection_reason}
-                            onChange={(e) => setApprovalData({ ...approvalData, rejection_reason: e.target.value })}
-                            placeholder="Nhập lý do từ chối công việc..."
-                            required
-                        />
-                    )}
-
-                    {approvalData.approved && (
-                        <Alert severity="success">
-                            Sau khi phê duyệt, công việc sẽ được chuyển vào Hồ sơ bảo trì.
-                        </Alert>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseApprove} sx={{ fontSize: '1.1rem' }}>
-                        Hủy
-                    </Button>
-                    <Button 
-                        onClick={handleSubmitApproval} 
-                        variant="contained"
-                        color={approvalData.approved ? 'success' : 'error'}
-                        sx={{ fontSize: '1.1rem' }}
-                    >
-                        Xác nhận
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </Box>
     );
 }

@@ -7,7 +7,9 @@ import {
     deleteMaintenance,
     getMaintenanceByAsset,
     getMaintenanceByStatus,
-    getMaintenanceByTechnician
+    getMaintenanceByTechnician,
+    approveMaintenance,
+    rejectMaintenance
 } from '../../services/maintenanceService';
 
 // Fetch tất cả maintenance records
@@ -97,6 +99,32 @@ export const deleteMaintenanceRecord = createAsyncThunk(
             return response;
         } else {
             throw new Error(response?.message || 'Không thể xóa bảo trì');
+        }
+    }
+);
+
+// Phê duyệt maintenance
+export const approveMaintenanceRecord = createAsyncThunk(
+    'maintenance/approveMaintenanceRecord',
+    async ({ id, data }) => {
+        const response = await approveMaintenance(id, data);
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Không thể phê duyệt bảo trì');
+        }
+    }
+);
+
+// Từ chối phê duyệt maintenance
+export const rejectMaintenanceRecord = createAsyncThunk(
+    'maintenance/rejectMaintenanceRecord',
+    async ({ id, reason }) => {
+        const response = await rejectMaintenance(id, reason);
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Không thể từ chối phê duyệt');
         }
     }
 );
@@ -213,6 +241,48 @@ export const maintenanceSlice = createSlice({
                 state.success = true;
             })
             .addCase(deleteMaintenanceRecord.rejected, (state, action) => {
+                state.error = action.error.message;
+                state.loading = false;
+            })
+            .addCase(approveMaintenanceRecord.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(approveMaintenanceRecord.fulfilled, (state, action) => {
+                // Cập nhật maintenance trong danh sách
+                const index = state.maintenance.findIndex(item => item.id === action.payload.id);
+                if (index !== -1) {
+                    state.maintenance[index] = action.payload;
+                }
+                // Cập nhật currentMaintenance nếu đang xem chi tiết
+                if (state.currentMaintenance?.id === action.payload.id) {
+                    state.currentMaintenance = action.payload;
+                }
+                state.loading = false;
+                state.success = true;
+            })
+            .addCase(approveMaintenanceRecord.rejected, (state, action) => {
+                state.error = action.error.message;
+                state.loading = false;
+            })
+            .addCase(rejectMaintenanceRecord.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(rejectMaintenanceRecord.fulfilled, (state, action) => {
+                // Cập nhật maintenance trong danh sách
+                const index = state.maintenance.findIndex(item => item.id === action.payload.id);
+                if (index !== -1) {
+                    state.maintenance[index] = action.payload;
+                }
+                // Cập nhật currentMaintenance nếu đang xem chi tiết
+                if (state.currentMaintenance?.id === action.payload.id) {
+                    state.currentMaintenance = action.payload;
+                }
+                state.loading = false;
+                state.success = true;
+            })
+            .addCase(rejectMaintenanceRecord.rejected, (state, action) => {
                 state.error = action.error.message;
                 state.loading = false;
             });

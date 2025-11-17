@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchAssets, fetchAssetById } from "../../../redux/slice/assetsSlice";
+import { canApproveMaintenance } from "../../../utils/roleHelper";
 import {
     Box,
     Typography,
@@ -32,6 +33,7 @@ function AssetList() {
     const assets = useSelector((state) => state.assets.assets);
     const loading = useSelector((state) => state.assets.loading);
     const error = useSelector((state) => state.assets.error);
+    const user = useSelector((state) => state.user.userInfo);
     
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
@@ -243,24 +245,28 @@ function AssetList() {
                             <VisibilityIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Chỉnh sửa">
-                        <IconButton 
-                            size="small" 
-                            color="warning"
-                            onClick={() => handleEdit(params.row)}
-                        >
-                            <EditIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Xóa">
-                        <IconButton 
-                            size="small" 
-                            color="error"
-                            onClick={() => handleDeleteClick(params.row)}
-                        >
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                    {canApproveMaintenance(user) && (
+                        <>
+                            <Tooltip title="Chỉnh sửa">
+                                <IconButton 
+                                    size="small" 
+                                    color="warning"
+                                    onClick={() => handleEdit(params.row)}
+                                >
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Xóa">
+                                <IconButton 
+                                    size="small" 
+                                    color="error"
+                                    onClick={() => handleDeleteClick(params.row)}
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    )}
                 </Box>
             )
         }

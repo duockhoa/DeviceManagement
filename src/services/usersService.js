@@ -1,10 +1,11 @@
-import axios from './auth-axios';
+import authAxios from './auth-axios';
+import deviceAxios from './customize-axios';
 import Cookies from 'js-cookie';
 
 async function getUserService(id) {
     try {
         const id = Cookies.get('id');
-        const response = await axios.get(`/users/${id}`);
+        const response = await authAxios.get(`/users/${id}`);
         return response;
     } catch (error) {
         console.error('Error fetching user data:', error);
@@ -14,7 +15,7 @@ async function getUserService(id) {
 
 async function getAllUsersService() {
     try {
-        const response = await axios.get('/users');
+        const response = await authAxios.get('/users');
         if (response.status === 200) {
             return response.data.result;
         } else {
@@ -34,7 +35,7 @@ async function getAllUsersService() {
 async function changePasswordService(data) {
     try {
         const id = Cookies.get('id');
-        const response = await axios.put(`/users/${id}/password`, data);
+        const response = await authAxios.put(`/users/${id}/password`, data);
         if (response.status === 200) {
             return response.data.result;
         } else {
@@ -59,7 +60,7 @@ async function updateAvatarService(payload) {
         }
         const id = Cookies.get('id');
 
-        const response = await axios.put(`/users/${id}/avatar`, payload, {
+        const response = await authAxios.put(`/users/${id}/avatar`, payload, {
             headers: {
                 // Sửa Headers thành headers
                 'Content-Type': 'multipart/form-data',
@@ -87,4 +88,30 @@ async function updateAvatarService(payload) {
     }
 }
 
-export { getAllUsersService, changePasswordService, getUserService, updateAvatarService };
+// Lấy danh sách nhân viên kỹ thuật cơ điện (để gán vào bảo trì)
+async function getMechanicalElectricalTechniciansService() {
+    try {
+        const response = await deviceAxios.get('/departments/mechanical-electrical/technicians');
+        if (response.status === 200) {
+            return response.data.data;
+        } else {
+            throw new Error('Không thể lấy danh sách kỹ thuật viên cơ điện');
+        }
+    } catch (error) {
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Lỗi từ server');
+        } else if (error.request) {
+            throw new Error('Không thể kết nối đến server');
+        } else {
+            throw new Error(error.message || 'Đã xảy ra lỗi khi lấy danh sách kỹ thuật viên');
+        }
+    }
+}
+
+export { 
+    getAllUsersService, 
+    changePasswordService, 
+    getUserService, 
+    updateAvatarService,
+    getMechanicalElectricalTechniciansService 
+};
