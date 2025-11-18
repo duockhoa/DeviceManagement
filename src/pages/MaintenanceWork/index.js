@@ -6,6 +6,7 @@ import {
     Paper,
     Chip,
     IconButton,
+    Button,
     Tooltip,
     Alert,
     LinearProgress
@@ -179,18 +180,19 @@ function MaintenanceWork() {
         {
             field: 'actions',
             headerName: 'Thao tác',
-            width: 100,
+            width: 120,
             sortable: false,
             renderCell: (params) => (
-                <Tooltip title="Xem chi tiết">
-                    <IconButton 
-                        size="small" 
-                        color="primary"
-                        onClick={() => navigate(`/maintenance-work/${params.row.id}`)}
-                    >
-                        <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
+                <Button
+                    size="small"
+                    variant="outlined"
+                    color="info"
+                    startIcon={<VisibilityIcon />}
+                    onClick={() => navigate(`/maintenance-work/${params.row.id}`)}
+                    sx={{ fontSize: '1.1rem' }}
+                >
+                    Xem
+                </Button>
             )
         }
     ];

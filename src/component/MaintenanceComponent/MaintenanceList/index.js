@@ -10,6 +10,7 @@ import {
     Chip,
     Avatar,
     IconButton,
+    Button,
     Tooltip,
     Snackbar,
     Alert,
@@ -264,38 +265,41 @@ const MaintenanceList = forwardRef((props, ref) => {
         {
             field: 'actions',
             headerName: 'Thao tác',
-            width: 150,
+            width: 350,
             renderCell: (params) => (
-                <Box>
-                    <Tooltip title="Xem chi tiết">
-                        <IconButton 
-                            size="small" 
-                            color="info"
-                            onClick={() => navigate(`/maintenance/${params.row.id}`)}
-                        >
-                            <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        color="info"
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => navigate(`/maintenance/${params.row.id}`)}
+                        sx={{ fontSize: '1.1rem' }}
+                    >
+                        Xem
+                    </Button>
                     {canApproveMaintenance(user) && (
                         <>
-                            <Tooltip title="Chỉnh sửa">
-                                <IconButton 
-                                    size="small" 
-                                    color="primary"
-                                    onClick={() => handleEdit(params.row)}
-                                >
-                                    <EditIcon fontSize="small" />
-                                </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Xóa">
-                                <IconButton 
-                                    size="small" 
-                                    color="error"
-                                    onClick={() => handleDelete(params.row.id)}
-                                >
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
-                            </Tooltip>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<EditIcon />}
+                                onClick={() => handleEdit(params.row)}
+                                sx={{ fontSize: '1.1rem' }}
+                            >
+                                Sửa
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                startIcon={<DeleteIcon />}
+                                onClick={() => handleDelete(params.row.id)}
+                                sx={{ fontSize: '1.1rem' }}
+                            >
+                                Xóa
+                            </Button>
                         </>
                     )}
                 </Box>

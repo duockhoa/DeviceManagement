@@ -6,6 +6,7 @@ import {
     Paper,
     Chip,
     IconButton,
+    Button,
     Alert,
     LinearProgress
 } from '@mui/material';
@@ -200,14 +201,16 @@ function MaintenanceResult() {
             width: 120,
             sortable: false,
             renderCell: (params) => (
-                <IconButton
+                <Button
                     size="small"
-                    color="primary"
+                    variant="outlined"
+                    color="info"
+                    startIcon={<VisibilityIcon />}
                     onClick={() => handleViewDetail(params.row.id)}
-                    title="Xem chi tiết"
+                    sx={{ fontSize: '1.1rem' }}
                 >
-                    <VisibilityIcon />
-                </IconButton>
+                    Xem
+                </Button>
             )
         }
     ];

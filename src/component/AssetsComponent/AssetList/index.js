@@ -232,39 +232,42 @@ function AssetList() {
         {
             field: 'actions',
             headerName: 'Thao tác',
-            width: 150,
+            width: 350,
             sortable: false,
             renderCell: (params) => (
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Tooltip title="Xem chi tiết">
-                        <IconButton 
-                            size="small" 
-                            color="primary"
-                            onClick={() => handleViewDetail(params.row.id)}
-                        >
-                            <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        color="info"
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => handleViewDetail(params.row.id)}
+                        sx={{ fontSize: '1.1rem' }}
+                    >
+                        Xem
+                    </Button>
                     {canApproveMaintenance(user) && (
                         <>
-                            <Tooltip title="Chỉnh sửa">
-                                <IconButton 
-                                    size="small" 
-                                    color="warning"
-                                    onClick={() => handleEdit(params.row)}
-                                >
-                                    <EditIcon fontSize="small" />
-                                </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Xóa">
-                                <IconButton 
-                                    size="small" 
-                                    color="error"
-                                    onClick={() => handleDeleteClick(params.row)}
-                                >
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
-                            </Tooltip>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<EditIcon />}
+                                onClick={() => handleEdit(params.row)}
+                                sx={{ fontSize: '1.1rem' }}
+                            >
+                                Sửa
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                startIcon={<DeleteIcon />}
+                                onClick={() => handleDeleteClick(params.row)}
+                                sx={{ fontSize: '1.1rem' }}
+                            >
+                                Xóa
+                            </Button>
                         </>
                     )}
                 </Box>
