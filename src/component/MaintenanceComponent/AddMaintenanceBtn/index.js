@@ -4,11 +4,12 @@ import Dialog from '@mui/material/Dialog';
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import AddMaintenanceForm from "../AddMaintenanceForm";
-import { canCreateMaintenance } from "../../../utils/roleHelper";
+import usePermissions from "../../../hooks/usePermissions";
 
 function AddMaintenanceButton({ onReload }) {
     const [open, setOpen] = useState(false);
     const user = useSelector((state) => state.user.userInfo);
+    const { hasPermission } = usePermissions();
 
     const handleClose = () => {
         setOpen(false);
@@ -19,7 +20,7 @@ function AddMaintenanceButton({ onReload }) {
     };
 
     // Không hiển thị nút nếu user không có quyền
-    if (!canCreateMaintenance(user)) {
+    if (!hasPermission('maintenance.create')) {
         return null;
     }
 

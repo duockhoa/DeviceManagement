@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMaintenanceById, approveMaintenanceRecord, rejectMaintenanceRecord } from '../../../redux/slice/maintenanceSlice';
-import { canApproveMaintenance } from '../../../utils/roleHelper';
+import usePermissions from '../../../hooks/usePermissions';
 import {
     Box,
     Typography,
@@ -47,7 +47,8 @@ function MaintenanceDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const user = useSelector((state) => state.user.userInfo); // Lấy thông tin user
+    const user = useSelector((state) => state.user.userInfo);
+    const { hasPermission } = usePermissions();
     
     const [maintenanceData, setMaintenanceData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -241,8 +242,8 @@ function MaintenanceDetail() {
                     </Stack>
                 </Box>
 
-                {/* Nút phê duyệt - chỉ hiện khi status là awaiting_approval VÀ user là quản lý */}
-                {maintenanceData.status === 'awaiting_approval' && canApproveMaintenance(user) && (
+                {/* Nút phê duyệt - chỉ hiện khi status là awaiting_approval VÀ user có quyền approve */}
+                {maintenanceData.status === 'awaiting_approval' && hasPermission('maintenance.approve') && (
                     <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                         <Button
                             variant="contained"

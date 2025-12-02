@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchAssets, fetchAssetById } from "../../../redux/slice/assetsSlice";
-import { canApproveMaintenance } from "../../../utils/roleHelper";
+import usePermissions from "../../../hooks/usePermissions";
 import {
     Box,
     Typography,
@@ -34,6 +34,7 @@ function AssetList() {
     const loading = useSelector((state) => state.assets.loading);
     const error = useSelector((state) => state.assets.error);
     const user = useSelector((state) => state.user.userInfo);
+    const { hasPermission } = usePermissions();
     
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
@@ -246,29 +247,29 @@ function AssetList() {
                     >
                         Xem
                     </Button>
-                    {canApproveMaintenance(user) && (
-                        <>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color="primary"
-                                startIcon={<EditIcon />}
-                                onClick={() => handleEdit(params.row)}
-                                sx={{ fontSize: '1.1rem' }}
-                            >
-                                Sửa
-                            </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color="error"
-                                startIcon={<DeleteIcon />}
-                                onClick={() => handleDeleteClick(params.row)}
-                                sx={{ fontSize: '1.1rem' }}
-                            >
-                                Xóa
-                            </Button>
-                        </>
+                    {hasPermission('assets.update') && (
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            startIcon={<EditIcon />}
+                            onClick={() => handleEdit(params.row)}
+                            sx={{ fontSize: '1.1rem' }}
+                        >
+                            Sửa
+                        </Button>
+                    )}
+                    {hasPermission('assets.delete') && (
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={() => handleDeleteClick(params.row)}
+                            sx={{ fontSize: '1.1rem' }}
+                        >
+                            Xóa
+                        </Button>
                     )}
                 </Box>
             )

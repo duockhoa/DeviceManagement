@@ -2,7 +2,7 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchMaintenance, deleteMaintenanceRecord, fetchMaintenanceById } from "../../../redux/slice/maintenanceSlice";
-import { canApproveMaintenance } from "../../../utils/roleHelper";
+import usePermissions from "../../../hooks/usePermissions";
 import { fetchUsers } from "../../../redux/slice/usersSlice";
 import {
     Box,
@@ -34,6 +34,7 @@ const MaintenanceList = forwardRef((props, ref) => {
     const error = useSelector((state) => state.maintenance.error);
     const users = useSelector((state) => state.users.users);
     const user = useSelector((state) => state.user.userInfo);
+    const { hasPermission } = usePermissions();
 
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
     const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -278,29 +279,29 @@ const MaintenanceList = forwardRef((props, ref) => {
                     >
                         Xem
                     </Button>
-                    {canApproveMaintenance(user) && (
-                        <>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color="primary"
-                                startIcon={<EditIcon />}
-                                onClick={() => handleEdit(params.row)}
-                                sx={{ fontSize: '1.1rem' }}
-                            >
-                                Sửa
-                            </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color="error"
-                                startIcon={<DeleteIcon />}
-                                onClick={() => handleDelete(params.row.id)}
-                                sx={{ fontSize: '1.1rem' }}
-                            >
-                                Xóa
-                            </Button>
-                        </>
+                    {hasPermission('maintenance.update') && (
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            startIcon={<EditIcon />}
+                            onClick={() => handleEdit(params.row)}
+                            sx={{ fontSize: '1.1rem' }}
+                        >
+                            Sửa
+                        </Button>
+                    )}
+                    {hasPermission('maintenance.delete') && (
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={() => handleDelete(params.row.id)}
+                            sx={{ fontSize: '1.1rem' }}
+                        >
+                            Xóa
+                        </Button>
                     )}
                 </Box>
             )

@@ -13,7 +13,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { setIsOpen } from '../../../redux/slice/sibarSlice';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import { setActiveCollapse } from '../../../redux/slice/sibarSlice';
-import { canViewMaintenanceResults } from '../../../utils/roleHelper';
+import usePermissions from '../../../hooks/usePermissions';
 
 // Import các icon mới phù hợp
 import DevicesIcon from '@mui/icons-material/Devices';
@@ -40,7 +40,8 @@ export default function Sidebar() {
     const location = useLocation();
     const activeCollapse = useSelector((state) => state.sidebar.activeCollapse);
     const isOpen = useSelector((state) => state.sidebar.isOpen);
-    const user = useSelector((state) => state.user.userInfo); // Lấy thông tin user
+    const user = useSelector((state) => state.user.userInfo);
+    const { hasPermission } = usePermissions();
 
     const handleClick = (event) => {
         const buttonId = event.currentTarget.id;
@@ -337,7 +338,7 @@ export default function Sidebar() {
                             </ListItemButton>
                             
                             {/* Kết quả bảo trì - CHỈ QUẢN LÝ */}
-                            {canViewMaintenanceResults(user) && (
+                            {hasPermission('maintenance.report') && (
                                 <ListItemButton 
                                     sx={{ 
                                         pl: 4,
