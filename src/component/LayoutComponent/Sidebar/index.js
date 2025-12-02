@@ -28,6 +28,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import SecurityIcon from '@mui/icons-material/Security';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -155,7 +159,7 @@ export default function Sidebar() {
                         <HomeOutlinedIcon sx={location.pathname === '/' ? activeIconStyle : commonIconStyle} />
                     </ListItemIcon>
                     <ListItemText 
-                        primary={!isOpen || 'DashBoard'} 
+                        primary={isOpen ? 'DashBoard' : ''} 
                         primaryTypographyProps={{ 
                             sx: location.pathname === '/' ? activeTextStyle : commonTextStyle 
                         }} 
@@ -176,7 +180,7 @@ export default function Sidebar() {
                         </ListItemIcon>
                         <ListItemText
                             primaryTypographyProps={{ sx: commonTextStyle }}
-                            primary={!isOpen || 'Quản lý thiết bị'}
+                            primary={isOpen ? 'Quản lý thiết bị' : ''}
                         />
                         {activeCollapse.includes('deviceManagement') ? (
                             <ExpandMoreIcon sx={{ ml: 'auto', fontSize: '2.2rem' }} />
@@ -200,7 +204,7 @@ export default function Sidebar() {
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/devices' ? activeTextStyle : commonTextStyle 
                                     }}
-                                    primary={!isOpen || 'Danh mục thiết bị'}
+                                    primary={isOpen ? 'Danh mục thiết bị' : ''}
                                 />
                             </ListItemButton>
                             <ListItemButton sx={{ 
@@ -214,7 +218,7 @@ export default function Sidebar() {
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{    sx: location.pathname === '/specifications' ? activeTextStyle : commonTextStyle }}
-                                    primary={!isOpen || 'Thông số kỹ thuật'}
+                                    primary={isOpen ? 'Thông số kỹ thuật' : ''}
                                 />
                             </ListItemButton>
                             <ListItemButton
@@ -231,7 +235,7 @@ export default function Sidebar() {
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/consumables' ? activeTextStyle : commonTextStyle 
                                     }}
-                                    primary={!isOpen || 'Vật tư tiêu hao'}
+                                    primary={isOpen ? 'Tiêu chuẩn checklist' : ''}
                                 />
                             </ListItemButton>
 
@@ -252,7 +256,7 @@ export default function Sidebar() {
                         </ListItemIcon>
                         <ListItemText
                             primaryTypographyProps={{ sx: commonTextStyle }}
-                            primary={!isOpen || 'Bảo trì /Sửa chữa'}
+                                    primary={isOpen ? 'Bảo trì/Sửa chữa' : ''}
                         />
                         {activeCollapse.includes('maintenance') ? (
                             <ExpandMoreIcon sx={{ ml: 'auto', fontSize: '2.2rem' }} />
@@ -262,6 +266,41 @@ export default function Sidebar() {
                     </ListItemButton>
                     <Collapse in={activeCollapse.includes('maintenance')} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    ...(location.pathname === '/maintenance-plan' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/maintenance-plan')}
+                            >
+                                <ListItemIcon>
+                                    <EventNoteIcon sx={location.pathname === '/maintenance-plan' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                            <ListItemText
+                                primaryTypographyProps={{ 
+                                    sx: location.pathname === '/maintenance-plan' ? activeTextStyle : commonTextStyle 
+                                }}
+                                primary={isOpen ? 'Kế hoạch bảo trì' : ''}
+                            />
+                        </ListItemButton>
+
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    ...(location.pathname === '/work-requests/ops' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/work-requests/ops')}
+                            >
+                                <ListItemIcon>
+                                    <AssignmentIcon sx={location.pathname === '/work-requests/ops' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/work-requests/ops' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={isOpen ? 'Xử lý yêu cầu' : ''}
+                                />
+                            </ListItemButton>
                             <ListItemButton
                                 sx={{
                                     pl: 4,
@@ -276,7 +315,7 @@ export default function Sidebar() {
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/maintenance' ? activeTextStyle : commonTextStyle 
                                     }}
-                                    primary={!isOpen || 'Lịch bảo trì'}
+                                    primary={isOpen ? 'Lịch bảo trì' : ''}
                                 />
                             </ListItemButton>
                             <ListItemButton 
@@ -293,7 +332,7 @@ export default function Sidebar() {
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/maintenance-work' ? activeTextStyle : commonTextStyle 
                                     }}
-                                    primary={!isOpen || 'Bảo trì thiết bị'}
+                                    primary={isOpen ? 'Công việc bảo trì' : ''}
                                 />
                             </ListItemButton>
                             
@@ -313,7 +352,7 @@ export default function Sidebar() {
                                         primaryTypographyProps={{ 
                                             sx: location.pathname === '/maintenance-result' ? activeTextStyle : commonTextStyle 
                                         }}
-                                        primary={!isOpen || 'Kết quả bảo trì'}
+                                        primary={isOpen ? 'Kết quả bảo trì' : ''}
                                     />
                                 </ListItemButton>
                             )}
@@ -332,7 +371,100 @@ export default function Sidebar() {
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/maintenance-record' ? activeTextStyle : commonTextStyle 
                                     }}
-                                    primary={!isOpen || 'Báo cáo tổng hợp'}
+                                    primary={isOpen ? 'Báo cáo tổng hợp' : ''}
+                                />
+                            </ListItemButton>
+                        </List>
+                    </Collapse>
+                </div>
+                {/* Sự cố thiết bị */}
+                <div>
+                    <ListItemButton
+                        onClick={(e) => {
+                            handleClick(e);
+                        }}
+                        id="incidents"
+                        sx={{
+                            ...hoverStyle,
+                            py: 0.7,
+                        }}
+                    >
+                        <ListItemIcon sx={{ minWidth: '30px' }}>
+                            <WarningAmberIcon sx={commonIconStyle} />
+                        </ListItemIcon>
+                        <ListItemText primaryTypographyProps={{ sx: commonTextStyle }} primary={isOpen ? 'Sự cố & Yêu cầu' : ''} />
+                        {isOpen && (activeCollapse.includes('incidents') ? <ExpandMoreIcon /> : <ArrowForwardIosIcon sx={{ fontSize: 14 }} />)}
+                    </ListItemButton>
+                    <Collapse in={activeCollapse.includes('incidents') && isOpen} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            <ListItemButton 
+                                sx={{ 
+                                    pl: 4,
+                                    ...(location.pathname === '/incidents' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/incidents')}
+                            >
+                                <ListItemIcon>
+                                    <WarningAmberIcon sx={location.pathname === '/incidents' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/incidents' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={isOpen ? 'Sự cố' : ''}
+                                />
+                            </ListItemButton>
+
+                            <ListItemButton 
+                                sx={{ 
+                                    pl: 4,
+                                    ...(location.pathname === '/work-requests' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/work-requests')}
+                            >
+                                <ListItemIcon>
+                                    <AssignmentIcon sx={location.pathname === '/work-requests' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/work-requests' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={isOpen ? 'Yêu cầu xử lý' : ''}
+                                />
+                            </ListItemButton>
+
+                            <ListItemButton 
+                                sx={{ 
+                                    pl: 4,
+                                    ...(location.pathname === '/handovers' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/handovers')}
+                            >
+                                <ListItemIcon>
+                                    <BuildIcon sx={location.pathname === '/handovers' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/handovers' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={isOpen ? 'Bàn giao thiết bị' : ''}
+                                />
+                            </ListItemButton>
+                            <ListItemButton 
+                                sx={{ 
+                                    pl: 4,
+                                    ...(location.pathname === '/handovers/follow-up' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/handovers/follow-up')}
+                            >
+                                <ListItemIcon>
+                                    <AssignmentTurnedInIcon sx={location.pathname === '/handovers/follow-up' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/handovers/follow-up' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={isOpen ? 'Theo dõi bàn giao' : ''}
                                 />
                             </ListItemButton>
                         </List>
@@ -352,7 +484,7 @@ export default function Sidebar() {
                         </ListItemIcon>
                         <ListItemText
                             primaryTypographyProps={{ sx: commonTextStyle }}
-                            primary={!isOpen || 'Kiểm định/Hiệu chuẩn'}
+                            primary={isOpen ? 'Kiểm định/Hiệu chuẩn' : ''}
                         />
                         {activeCollapse.includes('calibration') ? (
                             <ExpandMoreIcon sx={{ ml: 'auto', fontSize: '2.2rem' }} />
@@ -376,7 +508,7 @@ export default function Sidebar() {
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/calibration' ? activeTextStyle : commonTextStyle 
                                     }}
-                                    primary={!isOpen || 'Hiệu chuẩn thiết bị'}
+                                    primary={isOpen ? 'Hiệu chuẩn thiết bị' : ''}
                                 />
                             </ListItemButton>
                             <ListItemButton sx={{ 
@@ -388,7 +520,7 @@ export default function Sidebar() {
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ sx: commonTextStyle }}
-                                    primary={!isOpen || 'Kiểm định thiết bị'}
+                                    primary={isOpen ? 'Kiểm định thiết bị' : ''}
                                 />
                             </ListItemButton>
                         </List>
@@ -414,11 +546,28 @@ export default function Sidebar() {
                         <FeedbackIcon sx={commonIconStyle} />
                     </ListItemIcon>
                     <ListItemText
-                        primary={!isOpen || 'Đóng góp ý kiến'}
+                        primary={isOpen ? 'Đóng góp ý kiến' : ''}
                         primaryTypographyProps={{ sx: commonTextStyle }}
                     />
                 </ListItemButton>
             </List>
+
+            <ListItemButton
+                onClick={() => switchActiveSidebar('/rbac')}
+                sx={{
+                    ...hoverStyle,
+                    py: 0.7,
+                    ...(location.pathname === '/rbac' ? activeStyle : {})
+                }}
+            >
+                <ListItemIcon sx={{ minWidth: '30px' }}>
+                    <SecurityIcon sx={location.pathname === '/rbac' ? activeIconStyle : commonIconStyle} />
+                </ListItemIcon>
+                <ListItemText
+                    primaryTypographyProps={{ sx: location.pathname === '/rbac' ? activeTextStyle : commonTextStyle }}
+                    primary={isOpen ? 'Phân quyền' : ''}
+                />
+            </ListItemButton>
 
             <Box flexGrow={1}></Box>
 
@@ -433,7 +582,7 @@ export default function Sidebar() {
                     letterSpacing: 1,
                 }}
             >
-                version: 1.1.18
+                version: 1.1.18 design by MR.Lee
             </Box>
         </Stack>
     );

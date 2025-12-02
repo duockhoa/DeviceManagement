@@ -42,7 +42,7 @@ const CustomToolbar = React.memo(({ onAddRow }) => {
 
 CustomToolbar.displayName = 'CustomToolbar';
 
-export default function InputTable({ 
+const InputTable = React.memo(function InputTable({ 
   initialRows = [], 
   columns = [], 
   showRowNumber = true, 
@@ -455,4 +455,8 @@ export default function InputTable({
       )}
     </Box>
   );
-}
+});
+
+InputTable.displayName = 'InputTable';
+
+export default InputTable;

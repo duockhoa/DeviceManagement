@@ -33,7 +33,7 @@ function CustomTabPanel(props) {
             aria-labelledby={`simple-tab-${index}`}
             {...other}
         >
-            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+            {value === index && <Box sx={{ p: 3, minHeight: 400 }}>{children}</Box>}
         </div>
     );
 }
@@ -755,11 +755,11 @@ const rows = [
                     <Box  sx={{ m: 2, border: '1px solid #aaa', display: 'flex', flexDirection: 'column', borderRadius: 1 , flex: 1  , backgroundColor: '#fff' }}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' , backgroundColor: '#e4eefdff' }}>
                         <Tabs value={tabValue} onChange={handleTabChange} aria-label="detail tabs">
-                            <Tab label="Thông tin chung" {...a11yProps(0)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
-                            <Tab label="Thành phần cấu tạo" {...a11yProps(1)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
-                            <Tab label="Thông số kỹ thuật" {...a11yProps(2)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
-                            <Tab label="Vật tư tiêu hao" {...a11yProps(3)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
-                            <Tab label="Tài liệu đính kèm" {...a11yProps(4)} sx={{  fontWeight: "bold" , fontSize: "10px"}}  />
+                            <Tab label="Thông tin chung" {...a11yProps(0)} sx={{  fontWeight: "bold" }}  />
+                            <Tab label="Thành phần cấu tạo" {...a11yProps(1)} sx={{  fontWeight: "bold" }}  />
+                            <Tab label="Thông số kỹ thuật" {...a11yProps(2)} sx={{  fontWeight: "bold" }}  />
+                            <Tab label="Vật tư tiêu hao" {...a11yProps(3)} sx={{  fontWeight: "bold" }}  />
+                            <Tab label="Tài liệu đính kèm" {...a11yProps(4)} sx={{  fontWeight: "bold" }}  />
                         </Tabs>
                     </Box>
                     <CustomTabPanel value={tabValue} index={0}>

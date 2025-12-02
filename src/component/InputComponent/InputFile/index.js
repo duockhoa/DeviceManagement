@@ -240,12 +240,12 @@ function InputFile({
                                 </Typography>
                                 
                                 <Stack direction="row" spacing={1} alignItems="center">
-                                    <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
+                                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                         {formatFileSize(fileItem.size)}
                                     </Typography>
                                     
                                     {fileItem.type && (
-                                        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                             • {fileItem.type.split('/')[1]?.toUpperCase() || 'FILE'}
                                         </Typography>
                                     )}

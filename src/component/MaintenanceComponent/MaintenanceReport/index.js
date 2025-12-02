@@ -50,27 +50,37 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 function MaintenanceReport() {
     const [period, setPeriod] = useState('month');
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [summaryData, setSummaryData] = useState(null);
     const [monthlyData, setMonthlyData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log('🚀 MaintenanceReport mounted, fetching data...');
         fetchReportData();
-    }, [period]);
+    }, [period, selectedMonth, selectedYear]);
 
     const fetchReportData = async () => {
         try {
             setLoading(true);
+            console.log('🔄 Fetching report data... period:', period);
             
-            // Lấy báo cáo tổng hợp
-            const summaryRes = await customAxios.get(`/maintenance/reports/summary?period=${period}`);
+            // Lấy báo cáo tổng hợp với tháng/năm được chọn
+            console.log('📊 Calling API: /maintenance/reports/summary');
+            const summaryRes = await customAxios.get(`/maintenance/reports/summary?period=${period}&month=${selectedMonth}&year=${selectedYear}`);
+            console.log('✅ Summary response:', summaryRes.data);
             setSummaryData(summaryRes.data.data);
 
             // Lấy báo cáo theo tháng
+            console.log('📈 Calling API: /maintenance/reports/monthly');
             const monthlyRes = await customAxios.get('/maintenance/reports/monthly');
+            console.log('✅ Monthly response:', monthlyRes.data);
             setMonthlyData(monthlyRes.data.data);
         } catch (error) {
-            console.error('Error fetching report data:', error);
+            console.error('❌ Error fetching report data:', error);
+            console.error('❌ Error response:', error.response?.data);
+            console.error('❌ Error status:', error.response?.status);
         } finally {
             setLoading(false);
         }
@@ -96,7 +106,7 @@ function MaintenanceReport() {
         { name: 'Vệ sinh', value: summaryData.current.cleaning },
         { name: 'Kiểm tra', value: summaryData.current.inspection },
         { name: 'Bảo trì', value: summaryData.current.maintenance },
-        { name: 'Sửa chữa', value: summaryData.current.repair }
+        { name: 'Sửa chữa', value: summaryData.current.corrective }
     ] : [];
 
     const statusData = summaryData ? [
@@ -117,23 +127,55 @@ function MaintenanceReport() {
     return (
         <Box sx={{ p: 3 }}>
             {/* Header */}
-            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
                     <AssignmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                     Báo cáo tổng hợp bảo trì
                 </Typography>
                 
-                <FormControl sx={{ minWidth: 200 }}>
-                    <InputLabel>Kỳ báo cáo</InputLabel>
-                    <Select
-                        value={period}
-                        label="Kỳ báo cáo"
-                        onChange={(e) => setPeriod(e.target.value)}
-                    >
-                        <MenuItem value="week">Tuần này</MenuItem>
-                        <MenuItem value="month">Tháng này</MenuItem>
-                    </Select>
-                </FormControl>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <FormControl sx={{ minWidth: 120 }}>
+                        <InputLabel>Tháng</InputLabel>
+                        <Select
+                            value={selectedMonth}
+                            label="Tháng"
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                        >
+                            {[...Array(12)].map((_, i) => (
+                                <MenuItem key={i + 1} value={i + 1}>
+                                    Tháng {i + 1}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <FormControl sx={{ minWidth: 120 }}>
+                        <InputLabel>Năm</InputLabel>
+                        <Select
+                            value={selectedYear}
+                            label="Năm"
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                        >
+                            {[2024, 2025, 2026, 2027, 2028].map((year) => (
+                                <MenuItem key={year} value={year}>
+                                    {year}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <FormControl sx={{ minWidth: 150 }}>
+                        <InputLabel>Kỳ báo cáo</InputLabel>
+                        <Select
+                            value={period}
+                            label="Kỳ báo cáo"
+                            onChange={(e) => setPeriod(e.target.value)}
+                        >
+                            <MenuItem value="week">Tuần</MenuItem>
+                            <MenuItem value="month">Tháng</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
             </Box>
 
             {summaryData && (
@@ -200,7 +242,7 @@ function MaintenanceReport() {
                                         <BuildIcon sx={{ fontSize: 40, color: '#fff', mr: 2 }} />
                                         <Box>
                                             <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#fff' }}>
-                                                {summaryData.current.cleaning + summaryData.current.inspection + summaryData.current.maintenance + summaryData.current.repair}
+                                                {summaryData.current.cleaning + summaryData.current.inspection + summaryData.current.maintenance + summaryData.current.corrective}
                                             </Typography>
                                             <Typography variant="body2" sx={{ color: '#fff' }}>
                                                 Tổng công việc
@@ -208,10 +250,10 @@ function MaintenanceReport() {
                                         </Box>
                                     </Box>
                                     <Box sx={{ display: 'flex', gap: 0.5, mt: 1, flexWrap: 'wrap' }}>
-                                        <Chip label={`VS: ${summaryData.current.cleaning}`} size="small" sx={{ bgcolor: '#fff', fontSize: '0.7rem' }} />
-                                        <Chip label={`KT: ${summaryData.current.inspection}`} size="small" sx={{ bgcolor: '#fff', fontSize: '0.7rem' }} />
-                                        <Chip label={`BT: ${summaryData.current.maintenance}`} size="small" sx={{ bgcolor: '#fff', fontSize: '0.7rem' }} />
-                                        <Chip label={`SC: ${summaryData.current.repair}`} size="small" sx={{ bgcolor: '#fff', fontSize: '0.7rem' }} />
+                                        <Chip label={`VS: ${summaryData.current.cleaning}`} size="small" sx={{ bgcolor: '#fff' }} />
+                                        <Chip label={`KT: ${summaryData.current.inspection}`} size="small" sx={{ bgcolor: '#fff' }} />
+                                        <Chip label={`BT: ${summaryData.current.maintenance}`} size="small" sx={{ bgcolor: '#fff' }} />
+                                        <Chip label={`SC: ${summaryData.current.corrective}`} size="small" sx={{ bgcolor: '#fff' }} />
                                     </Box>
                                 </CardContent>
                             </Card>
@@ -345,7 +387,7 @@ function MaintenanceReport() {
                                 <Bar dataKey="cleaning" fill="#4caf50" name="Vệ sinh" />
                                 <Bar dataKey="inspection" fill="#ff9800" name="Kiểm tra" />
                                 <Bar dataKey="maintenance" fill="#2196f3" name="Bảo trì" />
-                                <Bar dataKey="repair" fill="#f44336" name="Sửa chữa" />
+                                <Bar dataKey="corrective" fill="#f44336" name="Sửa chữa" />
                             </BarChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -376,7 +418,7 @@ function MaintenanceReport() {
                                                 <TableCell align="center">{asset.cleaning || 0}</TableCell>
                                                 <TableCell align="center">{asset.inspection || 0}</TableCell>
                                                 <TableCell align="center">{asset.maintenance || 0}</TableCell>
-                                                <TableCell align="center">{asset.repair || 0}</TableCell>
+                                                <TableCell align="center">{asset.corrective || 0}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

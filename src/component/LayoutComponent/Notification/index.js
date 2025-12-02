@@ -3,11 +3,27 @@ import { IconButton, Badge, Popover } from '@mui/material';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
 import NotificationList from '../NotificationList';
 import { useSelector, useDispatch } from 'react-redux';
+import { fetchUnreadCount } from '../../../redux/slice/notificationSlice';
 
 function Notification() {
     const [anchorEl, setAnchorEl] = useState(null);
+    const dispatch = useDispatch();
     const user = useSelector((state) => state.user.userInfo);
-    const unreadCount = 0;
+    const unreadCount = useSelector((state) => state.notifications.unreadCount);
+
+    useEffect(() => {
+        if (user?.id) {
+            // Fetch unread count khi component mount
+            dispatch(fetchUnreadCount(user.id));
+            
+            // Refresh unread count mỗi 30 giây
+            const interval = setInterval(() => {
+                dispatch(fetchUnreadCount(user.id));
+            }, 30000);
+            
+            return () => clearInterval(interval);
+        }
+    }, [user?.id, dispatch]);
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);

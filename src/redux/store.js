@@ -12,6 +12,8 @@ import assetSubCategories from './slice/assetSubCategoriesSlice';
 import consumablesReducer from './slice/consumableCategoriesSlice';
 import maintenanceReducer from './slice/maintenanceSlice';
 import calibrationReducer from './slice/calibrationSlice';
+import incidentsReducer from './slice/incidentsSlice';
+import notificationsReducer from './slice/notificationSlice';
 
 export default configureStore({
     reducer: {
@@ -27,6 +29,8 @@ export default configureStore({
         assetSubCategories: assetSubCategories,
         consumableCategories: consumablesReducer,
         maintenance: maintenanceReducer,
-        calibration: calibrationReducer
+        calibration: calibrationReducer,
+        incidents: incidentsReducer,
+        notifications: notificationsReducer
     },
 });

@@ -1,11 +1,15 @@
-import { Paper, Box, Grid, Card, CardContent, Typography, LinearProgress, Chip, Avatar } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import { Paper, Box, Grid, Card, CardContent, Typography, LinearProgress, Chip, Avatar, Divider } from '@mui/material';
 import {
     Devices as DevicesIcon,
     Build as BuildIcon,
     Warning as WarningIcon,
     CheckCircle as CheckCircleIcon,
     TrendingUp as TrendingUpIcon,
-    Assignment as AssignmentIcon,
+    ReportProblem as ReportProblemIcon,
+    Security as SecurityIcon,
+    Speed as SpeedIcon,
+    AccessTime as AccessTimeIcon,
 } from '@mui/icons-material';
 import {
     BarChart,
@@ -21,36 +25,214 @@ import {
     Line,
     ResponsiveContainer,
 } from 'recharts';
+import incidentsService from '../../services/incidentsService';
+import { getAllAssets } from '../../services/assetsService';
+import { getAllMaintenance } from '../../services/maintenanceService';
+const severityConfig = {
+    critical: { label: 'Khẩn cấp', color: '#d32f2f', weight: 4 },
+    high: { label: 'Cao', color: '#f57c00', weight: 3 },
+    medium: { label: 'Trung bình', color: '#0288d1', weight: 2 },
+    low: { label: 'Thấp', color: '#2e7d32', weight: 1 },
+};
 
-// Dữ liệu mẫu
-const deviceStats = [
-    { name: 'Thiết bị y tế', count: 45, color: '#1976d2' },
-    { name: 'Máy sản xuất', count: 32, color: '#388e3c' },
-    { name: 'Thiết bị văn phòng', count: 28, color: '#f57c00' },
-    { name: 'Thiết bị khác', count: 15, color: '#7b1fa2' },
-];
+const statusConfig = {
+    reported: { label: 'Đã báo cáo', color: '#512da8', progress: 15 },
+    investigating: { label: 'Đang điều tra', color: '#1976d2', progress: 40 },
+    in_progress: { label: 'Đang xử lý', color: '#0288d1', progress: 65 },
+    resolved: { label: 'Đã xử lý', color: '#2e7d32', progress: 90 },
+    closed: { label: 'Đã đóng', color: '#616161', progress: 100 },
+};
 
-const statusData = [
-    { name: 'Hoạt động tốt', value: 85, color: '#4caf50' },
-    { name: 'Cần bảo trì', value: 12, color: '#ff9800' },
-    { name: 'Hỏng hóc', value: 3, color: '#f44336' },
-];
+const formatRelativeTime = (value) => {
+    if (!value) return 'Chưa cập nhật';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Chưa cập nhật';
+    const diffMinutes = Math.round((Date.now() - date.getTime()) / 60000);
+    if (diffMinutes < 1) return 'Vừa xong';
+    if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+    const hours = Math.round(diffMinutes / 60);
+    if (hours < 24) return `${hours} giờ trước`;
+    const days = Math.round(hours / 24);
+    return `${days} ngày trước`;
+};
 
-const maintenanceData = [
-    { month: 'T1', scheduled: 8, completed: 6 },
-    { month: 'T2', scheduled: 12, completed: 10 },
-    { month: 'T3', scheduled: 15, completed: 14 },
-    { month: 'T4', scheduled: 10, completed: 9 },
-    { month: 'T5', scheduled: 18, completed: 16 },
-    { month: 'T6', scheduled: 14, completed: 13 },
-];
+const formatMinutes = (minutes) => {
+    if (!minutes && minutes !== 0) return 'Chưa có dữ liệu';
+    if (minutes < 1) return '< 1 phút';
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (hours === 0) return `${mins} phút`;
+    return `${hours}h ${mins}p`;
+};
 
 function DashBoard() {
+    const [assets, setAssets] = useState([]);
+    const [maintenances, setMaintenances] = useState([]);
+    const [incidentStats, setIncidentStats] = useState({ total: 0, byStatus: [], bySeverity: [] });
+    const [incidentList, setIncidentList] = useState([]);
+    const [incidentError, setIncidentError] = useState(null);
+    const [incidentLoading, setIncidentLoading] = useState(false);
+    const [summaryLoading, setSummaryLoading] = useState(false);
+    const [summaryError, setSummaryError] = useState(null);
+
+    useEffect(() => {
+        const loadIncidents = async () => {
+            setIncidentLoading(true);
+            setIncidentError(null);
+            try {
+                const [statsRes, listRes] = await Promise.all([
+                    incidentsService.getIncidentStatistics(),
+                    incidentsService.getAllIncidents(),
+                ]);
+                setIncidentStats(statsRes || { total: 0, byStatus: [], bySeverity: [] });
+                setIncidentList(Array.isArray(listRes) ? listRes : []);
+            } catch (error) {
+                setIncidentError(error?.toString?.() || 'Không thể tải dữ liệu sự cố');
+                setIncidentStats({ total: 0, byStatus: [], bySeverity: [] });
+                setIncidentList([]);
+            } finally {
+                setIncidentLoading(false);
+            }
+        };
+        loadIncidents();
+    }, []);
+
+    useEffect(() => {
+        const loadSummary = async () => {
+            setSummaryLoading(true);
+            setSummaryError(null);
+            try {
+                const [assetRes, maintenanceRes] = await Promise.all([getAllAssets(), getAllMaintenance()]);
+                const assetList = Array.isArray(assetRes) ? assetRes : assetRes?.data || [];
+                const maintenanceList = Array.isArray(maintenanceRes) ? maintenanceRes : maintenanceRes?.data || [];
+                setAssets(assetList);
+                setMaintenances(maintenanceList);
+            } catch (error) {
+                setSummaryError(error?.toString?.() || 'Không thể tải dữ liệu thiết bị/bảo trì');
+                setAssets([]);
+                setMaintenances([]);
+            } finally {
+                setSummaryLoading(false);
+            }
+        };
+        loadSummary();
+    }, []);
+
+    const statusCounts = useMemo(() => {
+        const counts = {};
+        (incidentStats.byStatus || []).forEach((item) => {
+            const status = item?.status || item?.dataValues?.status;
+            const count = Number(item?.count ?? item?.dataValues?.count ?? 0);
+            if (status) counts[status] = count;
+        });
+        return counts;
+    }, [incidentStats]);
+
+    const severityCounts = useMemo(() => {
+        const counts = {};
+        (incidentStats.bySeverity || []).forEach((item) => {
+            const severity = item?.severity || item?.dataValues?.severity;
+            const count = Number(item?.count ?? item?.dataValues?.count ?? 0);
+            if (severity) counts[severity] = count;
+        });
+        return counts;
+    }, [incidentStats]);
+
+    const openIncidentCount = useMemo(() => {
+        const openStatuses = ['reported', 'investigating', 'in_progress'];
+        return openStatuses.reduce((sum, key) => sum + (statusCounts[key] || 0), 0);
+    }, [statusCounts]);
+
+    const riskScore = useMemo(() => {
+        const total = Object.values(severityCounts).reduce((sum, val) => sum + val, 0);
+        if (!total) return 0;
+        const maxWeight = 4;
+        const weighted = Object.entries(severityCounts).reduce((sum, [severity, count]) => {
+            const weight = severityConfig[severity]?.weight || 1;
+            return sum + weight * count;
+        }, 0);
+        return Math.min(100, Math.round((weighted / (total * maxWeight)) * 100));
+    }, [severityCounts]);
+
+    const avgResponseText = useMemo(() => {
+        const durations = (incidentList || [])
+            .map((incident) => {
+                const start = incident.started_date || incident.resolved_date || incident.closed_date;
+                const reported = incident.reported_date;
+                if (!start || !reported) return null;
+                const diffMinutes = (new Date(start) - new Date(reported)) / 60000;
+                if (!Number.isFinite(diffMinutes) || diffMinutes < 0) return null;
+                return diffMinutes;
+            })
+            .filter((v) => v !== null);
+
+        if (!durations.length) return 'Chưa có dữ liệu';
+        const avg = durations.reduce((sum, v) => sum + v, 0) / durations.length;
+        return formatMinutes(avg);
+    }, [incidentList]);
+
+    const incidentsToShow = useMemo(() => (incidentList || []).slice(0, 3), [incidentList]);
+
+    const totalDevices = assets.length;
+    const activeDevices = assets.filter((item) => item.status === 'active').length;
+    const maintenanceOpen = maintenances.filter((m) => ['pending', 'in_progress', 'awaiting_approval'].includes(m.status)).length;
+    const deviceStats = useMemo(() => {
+        const palette = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00897b', '#c2185b'];
+        const counts = {};
+        assets.forEach((asset) => {
+            const category = asset?.SubCategory?.Category?.name || asset?.SubCategory?.name || 'Khác';
+            counts[category] = (counts[category] || 0) + 1;
+        });
+        return Object.entries(counts).map(([name, count], idx) => ({ name, count, color: palette[idx % palette.length] }));
+    }, [assets]);
+
+    const statusData = useMemo(() => {
+        return [
+            { name: 'Hoạt động tốt', value: activeDevices, color: '#4caf50' },
+            { name: 'Cần bảo trì', value: maintenanceOpen, color: '#ff9800' },
+            { name: 'Hỏng hóc', value: openIncidentCount, color: '#f44336' },
+        ];
+    }, [activeDevices, maintenanceOpen, openIncidentCount]);
+
+    const maintenanceData = useMemo(() => {
+        const now = new Date();
+        const months = [];
+        for (let i = 5; i >= 0; i -= 1) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            months.push({ key: `${date.getFullYear()}-${date.getMonth() + 1}`, label: `T${date.getMonth() + 1}` });
+        }
+
+        return months.map(({ key, label }) => {
+            const [year, month] = key.split('-').map((v) => parseInt(v, 10));
+            const scheduled = maintenances.filter((m) => {
+                const d = new Date(m.scheduled_date);
+                return d.getFullYear() === year && d.getMonth() + 1 === month;
+            }).length;
+            const completed = maintenances.filter((m) => {
+                const endDate = m.actual_end_date || m.scheduled_date;
+                const d = new Date(endDate);
+                return m.status === 'completed' && d.getFullYear() === year && d.getMonth() + 1 === month;
+            }).length;
+            return { month: label, scheduled, completed };
+        });
+    }, [maintenances]);
+
+    const getSeverityColor = (severity) => severityConfig[severity]?.color || '#616161';
+    const getSeverityLabel = (severity) => severityConfig[severity]?.label || severity || 'N/A';
+    const getStatusLabel = (status) => statusConfig[status]?.label || status || 'N/A';
+    const getStatusColor = (status) => statusConfig[status]?.color || '#616161';
+    const getProgressFromStatus = (status) => statusConfig[status]?.progress || 0;
+
     return (
         <Box p={3} sx={{ height: '100%', backgroundColor: '#f5f5f5', overflow: 'auto' }} component={Paper}>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
                 Tổng quan quản lý thiết bị
             </Typography>
+            {summaryError && (
+                <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+                    {summaryError}
+                </Typography>
+            )}
 
             {/* Cards thống kê tổng quan */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -60,7 +242,7 @@ function DashBoard() {
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box>
                                     <Typography variant="h4" fontWeight="bold">
-                                        120
+                                        {summaryLoading ? '...' : totalDevices}
                                     </Typography>
                                     <Typography variant="body2">Tổng thiết bị</Typography>
                                 </Box>
@@ -78,7 +260,7 @@ function DashBoard() {
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box>
                                     <Typography variant="h4" fontWeight="bold">
-                                        102
+                                        {summaryLoading ? '...' : activeDevices}
                                     </Typography>
                                     <Typography variant="body2">Hoạt động tốt</Typography>
                                 </Box>
@@ -96,7 +278,7 @@ function DashBoard() {
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box>
                                     <Typography variant="h4" fontWeight="bold">
-                                        15
+                                        {summaryLoading ? '...' : maintenanceOpen}
                                     </Typography>
                                     <Typography variant="body2">Cần bảo trì</Typography>
                                 </Box>
@@ -114,7 +296,7 @@ function DashBoard() {
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box>
                                     <Typography variant="h4" fontWeight="bold">
-                                        3
+                                        {incidentLoading ? '...' : openIncidentCount}
                                     </Typography>
                                     <Typography variant="body2">Hỏng hóc</Typography>
                                 </Box>
@@ -273,6 +455,213 @@ function DashBoard() {
                     </Card>
                 </Grid>
             </Grid>
+
+            {/* Đánh giá sự cố & rủi ro */}
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid item xs={12}>
+                    <Card>
+                        <CardContent>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                                <Box>
+                                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 0 }}>
+                                        Đánh giá sự cố & rủi ro
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Ưu tiên xử lý sự cố ảnh hưởng vận hành thiết bị và dịch vụ
+                                    </Typography>
+                                </Box>
+                                <Chip
+                                    icon={<TrendingUpIcon />}
+                                    label={incidentLoading ? 'Đang tải dữ liệu...' : 'Bảng theo dõi trực tiếp'}
+                                    sx={{ backgroundColor: '#e3f2fd', fontWeight: 'bold' }}
+                                />
+                            </Box>
+
+                            <Grid container spacing={2} mb={1}>
+                                <Grid item xs={12} md={4}>
+                                    <Box
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 2,
+                                            background: 'linear-gradient(135deg, #fff8e1 0%, #fff3e0 100%)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                        }}
+                                    >
+                                        <Avatar sx={{ bgcolor: '#f57c00' }}>
+                                            <ReportProblemIcon />
+                                        </Avatar>
+                                        <Box>
+                                            <Typography variant="h5" fontWeight="bold">
+                                                {openIncidentCount}
+                                            </Typography>
+                                            <Typography variant="body2">Sự cố đang mở</Typography>
+                                        </Box>
+                                    </Box>
+                                </Grid>
+
+                                <Grid item xs={12} md={4}>
+                                    <Box
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 2,
+                                            background: 'linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                        }}
+                                    >
+                                        <Avatar sx={{ bgcolor: '#2e7d32' }}>
+                                            <SpeedIcon />
+                                        </Avatar>
+                                        <Box>
+                                            <Typography variant="h6" fontWeight="bold">
+                                                {avgResponseText}
+                                            </Typography>
+                                            <Typography variant="body2">Thời gian phản hồi trung bình</Typography>
+                                        </Box>
+                                    </Box>
+                                </Grid>
+
+                                <Grid item xs={12} md={4}>
+                                    <Box
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 2,
+                                            background: 'linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                        }}
+                                    >
+                                        <Avatar sx={{ bgcolor: '#3949ab' }}>
+                                            <SecurityIcon />
+                                        </Avatar>
+                                        <Box width="100%">
+                                            <Typography variant="body2" fontWeight="bold">
+                                                Điểm rủi ro hiện tại
+                                            </Typography>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={riskScore}
+                                                sx={{ height: 8, borderRadius: 4, backgroundColor: '#c5cae9' }}
+                                            />
+                                            <Typography variant="caption" color="text.secondary">
+                                                {riskScore}% ngưỡng cảnh báo
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+
+                            <Divider sx={{ my: 2 }} />
+
+                            <Grid container spacing={2}>
+                                {incidentError && (
+                                    <Grid item xs={12}>
+                                        <Typography color="error" variant="body2">
+                                            {incidentError}
+                                        </Typography>
+                                    </Grid>
+                                )}
+
+                                {!incidentError && !incidentLoading && incidentsToShow.length === 0 && (
+                                    <Grid item xs={12}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Chưa có sự cố nào được ghi nhận.
+                                        </Typography>
+                                    </Grid>
+                                )}
+
+                                {incidentsToShow.map((incident) => (
+                                    <Grid item xs={12} md={4} key={incident.id}>
+                                        <Box
+                                            sx={{
+                                                p: 2,
+                                                borderRadius: 2,
+                                                backgroundColor: '#fafafa',
+                                                border: '1px solid #e0e0e0',
+                                                height: '100%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <Box display="flex" justifyContent="space-between" alignItems="center">
+                                                <Box display="flex" alignItems="center" gap={1.5}>
+                                                    <Avatar sx={{ bgcolor: getSeverityColor(incident.severity) }}>
+                                                        <WarningIcon />
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Typography variant="subtitle1" fontWeight="bold">
+                                                            {incident.title}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Mã {incident.incident_code || incident.id} •{' '}
+                                                            {incident.assignee?.name || incident.reporter?.name || 'Chưa phân công'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                                <Chip
+                                                    label={getSeverityLabel(incident.severity)}
+                                                    size="small"
+                                                    sx={{
+                                                        fontWeight: 'bold',
+                                                        backgroundColor: `${getSeverityColor(incident.severity)}22`,
+                                                        color: getSeverityColor(incident.severity),
+                                                    }}
+                                                />
+                                            </Box>
+
+                                            <Typography variant="body2" color="text.secondary">
+                                                {incident.impact || incident.description || 'Chưa cập nhật tác động'}
+                                            </Typography>
+
+                                            <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+                                                <Chip
+                                                    label={getStatusLabel(incident.status)}
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: `${getStatusColor(incident.status)}22`,
+                                                        color: getStatusColor(incident.status),
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                />
+                                                <Chip
+                                                    icon={<AccessTimeIcon />}
+                                                    label={formatRelativeTime(incident.updated_at || incident.reported_date)}
+                                                    size="small"
+                                                    sx={{ backgroundColor: '#f5f5f5' }}
+                                                />
+                                            </Box>
+
+                                            <Box mt={1}>
+                                                <LinearProgress
+                                                    variant="determinate"
+                                                    value={getProgressFromStatus(incident.status)}
+                                                    sx={{
+                                                        height: 8,
+                                                        borderRadius: 4,
+                                                        backgroundColor: '#e0e0e0',
+                                                        '& .MuiLinearProgress-bar': {
+                                                            backgroundColor: getSeverityColor(incident.severity),
+                                                        },
+                                                    }}
+                                                />
+                                                <Typography variant="caption" color="text.secondary" align="right">
+                                                    Hoàn thành {getProgressFromStatus(incident.status)}%
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
+
         </Box>
     );
 }

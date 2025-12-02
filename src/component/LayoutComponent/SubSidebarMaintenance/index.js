@@ -68,7 +68,7 @@ function SubSidebarMaintenance() {
         { value: 'cleaning', label: 'Vệ sinh' },
         { value: 'inspection', label: 'Kiểm tra' },
         { value: 'maintenance', label: 'Bảo trì' },
-        { value: 'repair', label: 'Sửa chữa' }
+        { value: 'corrective', label: 'Sửa chữa' }
     ];
 
     return (

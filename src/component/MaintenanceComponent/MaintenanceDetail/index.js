@@ -135,7 +135,7 @@ function MaintenanceDetail() {
             'cleaning': 'Vệ sinh',
             'inspection': 'Kiểm tra',
             'maintenance': 'Bảo trì',
-            'repair': 'Sửa chữa'
+            'corrective': 'Sửa chữa'
         };
         return typeLabels[type] || type;
     };
@@ -268,51 +268,51 @@ function MaintenanceDetail() {
                 )}
             </Paper>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={2} alignItems="stretch">
                 {/* Left Column */}
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {/* Thông tin chính */}
-                    <Paper sx={{ p: 3, mb: 3 }}>
-                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.3rem' }}>
+                    <Paper sx={{ p: 2.5 }}>
+                        <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 'bold', fontSize: '1.2rem' }}>
                             <BuildIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                             Thông tin bảo trì
                         </Typography>
-                        <Divider sx={{ mb: 2 }} />
+                        <Divider sx={{ mb: 1.5 }} />
                         
-                        <Grid container spacing={2}>
+                        <Grid container spacing={1.5}>
                             <Grid item xs={12}>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Tiêu đề
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem', fontWeight: 500 }}>
                                     {maintenanceData.title}
                                 </Typography>
                             </Grid>
                             
                             <Grid item xs={12} md={6}>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Loại bảo trì
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem' }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem' }}>
                                     {getMaintenanceTypeLabel(maintenanceData.maintenance_type)}
                                 </Typography>
                             </Grid>
 
                             <Grid item xs={12} md={6}>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Thiết bị
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem' }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem' }}>
                                     {maintenanceData.asset?.name || 'N/A'}
                                 </Typography>
                             </Grid>
 
                             {maintenanceData.description && (
                                 <Grid item xs={12}>
-                                    <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                    <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                         Mô tả
                                     </Typography>
-                                    <Typography variant="body1" sx={{ fontSize: '1.1rem', whiteSpace: 'pre-wrap' }}>
+                                    <Typography variant="body1" sx={{ fontSize: '1rem', whiteSpace: 'pre-wrap' }}>
                                         {maintenanceData.description}
                                     </Typography>
                                 </Grid>
@@ -321,18 +321,18 @@ function MaintenanceDetail() {
                     </Paper>
 
                     {/* Thời gian thực hiện */}
-                    <Paper sx={{ p: 3, mb: 3 }}>
-                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.3rem' }}>
+                    <Paper sx={{ p: 2.5 }}>
+                        <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 'bold', fontSize: '1.2rem' }}>
                             <AccessTimeIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                             Thời gian thực hiện
                         </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        <Grid container spacing={2}>
+                        <Divider sx={{ mb: 1.5 }} />
+                        <Grid container spacing={1.5}>
                             <Grid item xs={12} md={4}>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Bắt đầu thực tế
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem', fontWeight: 500 }}>
                                     {maintenanceData.actual_start_date ? 
                                         new Date(maintenanceData.actual_start_date).toLocaleString('vi-VN', {
                                             day: '2-digit',
@@ -346,10 +346,10 @@ function MaintenanceDetail() {
                             </Grid>
 
                             <Grid item xs={12} md={4}>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Kết thúc thực tế
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem', fontWeight: 500 }}>
                                     {maintenanceData.actual_end_date ? 
                                         new Date(maintenanceData.actual_end_date).toLocaleString('vi-VN', {
                                             day: '2-digit',
@@ -363,10 +363,10 @@ function MaintenanceDetail() {
                             </Grid>
 
                             <Grid item xs={12} md={4}>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Tổng thời gian
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1976d2' }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#1976d2' }}>
                                     {maintenanceData.actual_duration ? 
                                         `${parseFloat(maintenanceData.actual_duration).toFixed(2)} giờ` : '-'
                                     }
@@ -377,43 +377,43 @@ function MaintenanceDetail() {
 
                     {/* Phụ tùng thay thế */}
                     {spareParts.length > 0 && (
-                        <Paper sx={{ p: 3, mb: 3 }}>
-                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.3rem' }}>
+                        <Paper sx={{ p: 2.5 }}>
+                            <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 'bold', fontSize: '1.2rem' }}>
                                 🔩 Phụ tùng thay thế
                             </Typography>
-                            <Divider sx={{ mb: 2 }} />
+                            <Divider sx={{ mb: 1.5 }} />
                             <TableContainer>
                                 <Table>
                                     <TableHead>
                                         <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }}>STT</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }}>Tên phụ tùng</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }}>Quy cách</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }} align="right">Số lượng</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }} align="right">Đơn giá</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }} align="right">Thành tiền</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }}>STT</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }}>Tên phụ tùng</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }}>Quy cách</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }} align="right">Số lượng</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }} align="right">Đơn giá</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }} align="right">Thành tiền</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {spareParts.map((part, index) => (
                                             <TableRow key={index}>
-                                                <TableCell sx={{ fontSize: '1rem' }}>{index + 1}</TableCell>
-                                                <TableCell sx={{ fontSize: '1rem' }}>{part.part_name}</TableCell>
-                                                <TableCell sx={{ fontSize: '1rem' }}>{part.specification || '-'}</TableCell>
-                                                <TableCell sx={{ fontSize: '1rem' }} align="right">{part.quantity}</TableCell>
-                                                <TableCell sx={{ fontSize: '1rem' }} align="right">
+                                                <TableCell sx={{ fontSize: '0.95rem' }}>{index + 1}</TableCell>
+                                                <TableCell sx={{ fontSize: '0.95rem' }}>{part.part_name}</TableCell>
+                                                <TableCell sx={{ fontSize: '0.95rem' }}>{part.specification || '-'}</TableCell>
+                                                <TableCell sx={{ fontSize: '0.95rem' }} align="right">{part.quantity}</TableCell>
+                                                <TableCell sx={{ fontSize: '0.95rem' }} align="right">
                                                     {parseFloat(part.unit_price || 0).toLocaleString('vi-VN')} VNĐ
                                                 </TableCell>
-                                                <TableCell sx={{ fontSize: '1rem', fontWeight: 500 }} align="right">
+                                                <TableCell sx={{ fontWeight: 500 }} align="right">
                                                     {parseFloat(part.total_price || 0).toLocaleString('vi-VN')} VNĐ
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                         <TableRow>
-                                            <TableCell colSpan={5} sx={{ fontSize: '1.1rem', fontWeight: 'bold' }} align="right">
+                                            <TableCell colSpan={5} sx={{ fontSize: '1rem', fontWeight: 'bold' }} align="right">
                                                 Tổng cộng:
                                             </TableCell>
-                                            <TableCell sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'primary.main' }} align="right">
+                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold', color: 'primary.main' }} align="right">
                                                 {totalSparePartsCost.toLocaleString('vi-VN')} VNĐ
                                             </TableCell>
                                         </TableRow>
@@ -425,47 +425,47 @@ function MaintenanceDetail() {
 
                     {/* Vật tư tiêu hao */}
                     {maintenanceData.maintenanceConsumables && maintenanceData.maintenanceConsumables.length > 0 && (
-                        <Paper sx={{ p: 3, mb: 3 }}>
-                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.3rem' }}>
+                        <Paper sx={{ p: 2.5 }}>
+                            <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 'bold', fontSize: '1.2rem' }}>
                                 🧪 Vật tư tiêu hao
                             </Typography>
-                            <Divider sx={{ mb: 2 }} />
+                            <Divider sx={{ mb: 1.5 }} />
                             <TableContainer>
                                 <Table>
                                     <TableHead>
                                         <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }}>STT</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }}>Tên vật tư</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }}>Quy cách</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }} align="right">SL yêu cầu</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }} align="right">Đơn giá</TableCell>
-                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold' }} align="right">Thành tiền</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }}>STT</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }}>Tên vật tư</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }}>Quy cách</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }} align="right">SL yêu cầu</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }} align="right">Đơn giá</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' }} align="right">Thành tiền</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {maintenanceData.maintenanceConsumables.map((item, index) => (
                                             <TableRow key={index}>
-                                                <TableCell sx={{ fontSize: '1rem' }}>{index + 1}</TableCell>
-                                                <TableCell sx={{ fontSize: '1rem' }}>
+                                                <TableCell sx={{ fontSize: '0.95rem' }}>{index + 1}</TableCell>
+                                                <TableCell sx={{ fontSize: '0.95rem' }}>
                                                     {item.assetConsumable?.item_name || item.item_name || 'N/A'}
                                                 </TableCell>
-                                                <TableCell sx={{ fontSize: '1rem' }}>
+                                                <TableCell sx={{ fontSize: '0.95rem' }}>
                                                     {item.assetConsumable?.specification || item.specification || '-'}
                                                 </TableCell>
-                                                <TableCell sx={{ fontSize: '1rem' }} align="right">{item.quantity_required}</TableCell>
-                                                <TableCell sx={{ fontSize: '1rem' }} align="right">
+                                                <TableCell sx={{ fontSize: '0.95rem' }} align="right">{item.quantity_required}</TableCell>
+                                                <TableCell sx={{ fontSize: '0.95rem' }} align="right">
                                                     {parseFloat(item.unit_cost || 0).toLocaleString('vi-VN')} VNĐ
                                                 </TableCell>
-                                                <TableCell sx={{ fontSize: '1rem', fontWeight: 500 }} align="right">
+                                                <TableCell sx={{ fontWeight: 500 }} align="right">
                                                     {parseFloat(item.total_cost || 0).toLocaleString('vi-VN')} VNĐ
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                         <TableRow>
-                                            <TableCell colSpan={5} sx={{ fontSize: '1.1rem', fontWeight: 'bold' }} align="right">
+                                            <TableCell colSpan={5} sx={{ fontSize: '1rem', fontWeight: 'bold' }} align="right">
                                                 Tổng cộng:
                                             </TableCell>
-                                            <TableCell sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'primary.main' }} align="right">
+                                            <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold', color: 'primary.main' }} align="right">
                                                 {totalConsumablesCost.toLocaleString('vi-VN')} VNĐ
                                             </TableCell>
                                         </TableRow>
@@ -477,28 +477,28 @@ function MaintenanceDetail() {
                 </Grid>
 
                 {/* Right Column */}
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {/* Thời gian */}
-                    <Paper sx={{ p: 3, mb: 3 }}>
-                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.3rem' }}>
+                    <Paper sx={{ p: 2.5 }}>
+                        <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 'bold', fontSize: '1.2rem' }}>
                             <CalendarMonthIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                             Thời gian
                         </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        <Stack spacing={2}>
+                        <Divider sx={{ mb: 1.5 }} />
+                        <Stack spacing={1.5}>
                             <Box>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Ngày dự kiến
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem' }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem' }}>
                                     {new Date(maintenanceData.scheduled_date).toLocaleString('vi-VN')}
                                 </Typography>
                             </Box>
                             <Box>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Thời gian ước tính
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem' }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem' }}>
                                     {maintenanceData.estimated_duration} giờ
                                 </Typography>
                             </Box>
@@ -506,26 +506,26 @@ function MaintenanceDetail() {
                     </Paper>
 
                     {/* Nhân sự */}
-                    <Paper sx={{ p: 3, mb: 3 }}>
-                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.3rem' }}>
+                    <Paper sx={{ p: 2.5 }}>
+                        <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 'bold', fontSize: '1.2rem' }}>
                             <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                             Nhân sự
                         </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        <Stack spacing={2}>
+                        <Divider sx={{ mb: 1.5 }} />
+                        <Stack spacing={1.5}>
                             <Box>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Kỹ thuật viên
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem' }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem' }}>
                                     {maintenanceData.technician?.name || 'Chưa phân công'}
                                 </Typography>
                             </Box>
                             <Box>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '1rem' }}>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.95rem' }}>
                                     Người tạo
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontSize: '1.1rem' }}>
+                                <Typography variant="body1" sx={{ fontSize: '1rem' }}>
                                     {maintenanceData.creator?.name || 'N/A'}
                                 </Typography>
                             </Box>
@@ -610,7 +610,7 @@ function MaintenanceDetail() {
                                     <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', minWidth: '150px' }}>Hạng mục</TableCell>
                                     <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', width: '120px' }}>Tiêu chuẩn OK</TableCell>
                                     <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', minWidth: '180px' }}>Phương pháp</TableCell>
-                                    <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', width: '150px' }}>Số liệu thực tế</TableCell>
+                                    <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', width: '150px' }}>Kết quả</TableCell>
                                     <TableCell sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#fff', width: '100px', textAlign: 'center' }}>Đánh giá</TableCell>
                                 </TableRow>
                             </TableHead>

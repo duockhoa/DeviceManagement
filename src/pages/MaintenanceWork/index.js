@@ -14,11 +14,27 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import BuildIcon from '@mui/icons-material/Build';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { getMyWorkOrders } from '../../services/maintenanceWorkService';
+import { getMyWorkOrders, getMyRequestTasks } from '../../services/maintenanceWorkService';
+import axios from '../../services/customize-axios';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    MenuItem,
+    Stack
+} from '@mui/material';
 
 function MaintenanceWork() {
     const navigate = useNavigate();
     const [workOrders, setWorkOrders] = useState([]);
+    const [requestTasks, setRequestTasks] = useState([]);
+    const [reportOpen, setReportOpen] = useState(false);
+    const [reportingRequest, setReportingRequest] = useState(null);
+    const [reportStatus, setReportStatus] = useState('in_progress');
+    const [reportNote, setReportNote] = useState('');
+    const [reportLoading, setReportLoading] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -30,7 +46,25 @@ function MaintenanceWork() {
         try {
             setLoading(true);
             const data = await getMyWorkOrders();
-            setWorkOrders(data);
+            const reqTasks = await getMyRequestTasks();
+            // Chuẩn hóa dữ liệu yêu cầu để hiển thị chung
+            const mappedReq = (reqTasks || []).map((req) => ({
+                id: `req-${req.id}`,
+                type: 'request',
+                maintenance_code: req.request_code,
+                title: req.title,
+                asset: req.asset,
+                priority: req.priority || 'medium',
+                status: req.status || 'pending',
+                checklist_progress: 0,
+                scheduled_date: req.due_date,
+                estimated_duration: null,
+                technician_id: req.technician_id,
+                requester: req.requester,
+                request_id: req.id
+            }));
+            setWorkOrders([...(data || []), ...mappedReq]);
+            setRequestTasks(reqTasks || []);
             setError(null);
         } catch (err) {
             setError('Không thể tải danh sách công việc. Vui lòng thử lại.');
@@ -63,6 +97,7 @@ function MaintenanceWork() {
     const getStatusColor = (status) => {
         switch (status) {
             case 'pending': return 'warning';
+            case 'assigned': return 'info';
             case 'in_progress': return 'info';
             case 'awaiting_approval': return 'secondary';
             case 'completed': return 'success';
@@ -74,6 +109,7 @@ function MaintenanceWork() {
     const getStatusLabel = (status) => {
         switch (status) {
             case 'pending': return 'Chờ xử lý';
+            case 'assigned': return 'Đã phân công';
             case 'in_progress': return 'Đang thực hiện';
             case 'awaiting_approval': return 'Chờ phê duyệt';
             case 'completed': return 'Hoàn thành';
@@ -138,23 +174,29 @@ function MaintenanceWork() {
             field: 'checklist_progress',
             headerName: 'Tiến độ',
             width: 180,
-            renderCell: (params) => (
-                <Box sx={{ width: '100%' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="caption" sx={{ fontSize: '1.1rem' }}>
-                            Checklist
-                        </Typography>
-                        <Typography variant="caption" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
-                            {params.value}%
-                        </Typography>
+            renderCell: (params) => {
+                if (params.row.type === 'request') {
+                    return <Typography variant="caption" sx={{ fontSize: '1.1rem' }}>N/A</Typography>;
+                }
+                const progress = params.value || 0; // Đảm bảo luôn có giá trị số
+                return (
+                    <Box sx={{ width: '100%' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontSize: '1.1rem' }}>
+                                Checklist
+                            </Typography>
+                            <Typography variant="caption" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                {progress}%
+                            </Typography>
+                        </Box>
+                        <LinearProgress 
+                            variant="determinate" 
+                            value={progress} 
+                            sx={{ height: 6, borderRadius: 1 }}
+                        />
                     </Box>
-                    <LinearProgress 
-                        variant="determinate" 
-                        value={params.value} 
-                        sx={{ height: 6, borderRadius: 1 }}
-                    />
-                </Box>
-            )
+                );
+            }
         },
         {
             field: 'scheduled_date',
@@ -173,7 +215,7 @@ function MaintenanceWork() {
             align: 'center',
             renderCell: (params) => (
                 <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
-                    {params.value || 'N/A'}
+                    {params.value || (params.row.type === 'request' ? '--' : 'N/A')}
                 </Typography>
             )
         },
@@ -182,18 +224,50 @@ function MaintenanceWork() {
             headerName: 'Thao tác',
             width: 120,
             sortable: false,
-            renderCell: (params) => (
-                <Button
-                    size="small"
-                    variant="outlined"
-                    color="info"
-                    startIcon={<VisibilityIcon />}
-                    onClick={() => navigate(`/maintenance-work/${params.row.id}`)}
-                    sx={{ fontSize: '1.1rem' }}
-                >
-                    Xem
-                </Button>
-            )
+            renderCell: (params) => {
+                if (params.row.type === 'request') {
+                    return (
+                        <Stack direction="row" spacing={1}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="info"
+                                startIcon={<VisibilityIcon />}
+                                onClick={() => navigate('/work-requests/ops')}
+                                sx={{ fontSize: '1.1rem' }}
+                            >
+                                Xem yêu cầu
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                color="primary"
+                                onClick={() => {
+                                    setReportingRequest(params.row);
+                                    setReportStatus(params.row.status === 'pending' ? 'in_progress' : params.row.status);
+                                    setReportNote('');
+                                    setReportOpen(true);
+                                }}
+                                sx={{ fontSize: '1.1rem' }}
+                            >
+                                Báo cáo
+                            </Button>
+                        </Stack>
+                    );
+                }
+                return (
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        color="info"
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => navigate(`/maintenance-work/${params.row.id}`)}
+                        sx={{ fontSize: '1.1rem' }}
+                    >
+                        Xem
+                    </Button>
+                );
+            }
         }
     ];
 
@@ -243,6 +317,60 @@ function MaintenanceWork() {
                     }}
                 />
             </Paper>
+            <Dialog open={reportOpen} onClose={() => setReportOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Báo cáo xử lý yêu cầu</DialogTitle>
+                <DialogContent dividers>
+                    <Stack spacing={2} sx={{ mt: 1 }}>
+                        <TextField
+                            select
+                            label="Trạng thái"
+                            value={reportStatus}
+                            onChange={(e) => setReportStatus(e.target.value)}
+                            size="small"
+                        >
+                            {[
+                                { value: 'in_progress', label: 'Đang xử lý' },
+                                { value: 'closed', label: 'Đã hoàn thành' },
+                                { value: 'assigned', label: 'Đã phân công' }
+                            ].map((opt) => (
+                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField
+                            label="Ghi chú/tiến độ"
+                            multiline
+                            minRows={3}
+                            value={reportNote}
+                            onChange={(e) => setReportNote(e.target.value)}
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setReportOpen(false)}>Hủy</Button>
+                    <Button
+                        variant="contained"
+                        onClick={async () => {
+                            if (!reportingRequest) return;
+                            try {
+                                setReportLoading(true);
+                                await axios.post(`/work-requests/${reportingRequest.request_id}/progress`, {
+                                    status: reportStatus,
+                                    note: reportNote
+                                });
+                                await loadWorkOrders();
+                                setReportOpen(false);
+                            } catch (err) {
+                                alert(err?.toString?.() || 'Không thể cập nhật yêu cầu');
+                            } finally {
+                                setReportLoading(false);
+                            }
+                        }}
+                        disabled={reportLoading}
+                    >
+                        {reportLoading ? 'Đang lưu...' : 'Lưu'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

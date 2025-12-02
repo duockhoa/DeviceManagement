@@ -402,9 +402,9 @@ function EditCalibrationForm({ handleClose, calibrationData, onSuccess }) {
                     <Box sx={{ m: 2, border: '1px solid #aaa', display: 'flex', flexDirection: 'column', borderRadius: 1, flex: 1, backgroundColor: '#fff' }}>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider', backgroundColor: '#e4eefdff' }}>
                             <Tabs value={tabValue} onChange={handleTabChange} aria-label="detail tabs">
-                                <Tab label="Thông tin chi tiết" {...a11yProps(0)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
-                                <Tab label="Thông số kỹ thuật" {...a11yProps(1)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
-                                <Tab label="Ghi chú & Tài liệu" {...a11yProps(2)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
+                                <Tab label="Thông tin chi tiết" {...a11yProps(0)} sx={{ fontWeight: "bold" }} />
+                                <Tab label="Thông số kỹ thuật" {...a11yProps(1)} sx={{ fontWeight: "bold" }} />
+                                <Tab label="Ghi chú & Tài liệu" {...a11yProps(2)} sx={{ fontWeight: "bold" }} />
                             </Tabs>
                         </Box>
 

@@ -199,7 +199,7 @@ const MaintenanceList = forwardRef((props, ref) => {
                     'cleaning': 'Vệ sinh',
                     'inspection': 'Kiểm tra',
                     'maintenance': 'Bảo trì',
-                    'repair': 'Sửa chữa'
+                    'corrective': 'Sửa chữa'
                 };
                 return (
                     <Chip

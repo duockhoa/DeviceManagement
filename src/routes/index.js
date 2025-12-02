@@ -6,16 +6,25 @@ import Home from '../pages/Home';
 import DashBoard from '../pages/DashBoard';
 import Devices from '../pages/Devices';
 import Categories from '../pages/Categories';
-import Consumables from '../pages/Consumables';
+import ChecklistStandards from '../pages/ChecklistStandards';
 import Maintenance from '../pages/Maintenance';
 import MaintenanceDetail from '../component/MaintenanceComponent/MaintenanceDetail';
 import MaintenanceWork from '../pages/MaintenanceWork';
 import MaintenanceWorkDetail from '../pages/MaintenanceWorkDetail';
 import MaintenanceResult from '../pages/MaintenanceResult';
 import MaintenanceRecord from '../pages/MaintenanceRecord';
+import MaintenancePlan from '../pages/MaintenancePlan';
+import WorkRequests from '../pages/WorkRequests';
 import Calibration from '../pages/Calibration';
 import Specifications from '../pages/Specifications';
 import AssetDetail from '../component/AssetsComponent/AssetDetail';
+import IncidentsPage from '../pages/Incidents';
+import IncidentDetail from '../pages/IncidentDetail';
+import IncidentReport from '../pages/IncidentReport';
+import Handovers from '../pages/Handovers';
+import HandoversFollowUp from '../pages/HandoversFollowUp';
+import AccessControlPage from '../pages/AccessControl';
+import RBACManagement from '../pages/RBACManagement';
 const publicRoutes = [
     {
         path: '/',
@@ -37,11 +46,23 @@ const publicRoutes = [
     },
     {
         path: '/consumables',
-        component: Consumables,
+        component: ChecklistStandards,
     },
     {
         path: '/maintenance',
         component: Maintenance,
+    },
+    {
+        path: '/maintenance-plan',
+        component: MaintenancePlan,
+    },
+    {
+        path: '/work-requests',
+        component: WorkRequests,
+    },
+    {
+        path: '/work-requests/ops',
+        component: WorkRequests,
     },
     {
         path: '/maintenance/:id',
@@ -62,6 +83,30 @@ const publicRoutes = [
     {
         path: '/maintenance-record',
         component: MaintenanceRecord,
+    },
+    {
+        path: '/incidents',
+        component: IncidentsPage,
+    },
+    {
+        path: '/incidents/:id',
+        component: IncidentDetail,
+    },
+    {
+        path: '/handovers',
+        component: Handovers,
+    },
+    {
+        path: '/handovers/follow-up',
+        component: HandoversFollowUp,
+    },
+    {
+        path: '/access-control',
+        component: AccessControlPage,
+    },
+    {
+        path: '/rbac',
+        component: RBACManagement,
     },
     {
         path: '/calibration',

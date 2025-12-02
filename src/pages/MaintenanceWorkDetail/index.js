@@ -507,7 +507,7 @@ function MaintenanceWorkDetail() {
                                         'cleaning': 'Vệ sinh',
                                         'inspection': 'Kiểm tra',
                                         'maintenance': 'Bảo trì',
-                                        'repair': 'Sửa chữa'
+                                        'corrective': 'Sửa chữa'
                                     }[workOrder.maintenance_type] || workOrder.maintenance_type}
                                 </Typography>
                             </Box>
@@ -640,7 +640,7 @@ function MaintenanceWorkDetail() {
                                                 <th style={{ border: '1px solid #ddd', padding: '10px', color: '#fff', textAlign: 'left', width: '120px' }}>Hạng mục</th>
                                                 <th style={{ border: '1px solid #ddd', padding: '10px', color: '#fff', textAlign: 'left', width: '100px' }}>Tiêu chuẩn OK</th>
                                                 <th style={{ border: '1px solid #ddd', padding: '10px', color: '#fff', textAlign: 'left', width: '150px' }}>Phương pháp</th>
-                                                <th style={{ border: '1px solid #ddd', padding: '10px', color: '#fff', textAlign: 'left', width: '120px' }}>Số liệu thực tế</th>
+                                                <th style={{ border: '1px solid #ddd', padding: '10px', color: '#fff', textAlign: 'left', width: '120px' }}>Kết quả</th>
                                                 <th style={{ border: '1px solid #ddd', padding: '10px', color: '#fff', textAlign: 'center', width: '60px' }}>✓</th>
                                             </tr>
                                         </thead>
@@ -736,7 +736,7 @@ function MaintenanceWorkDetail() {
                                                                 task.task_type === 'maintenance' ? 'Bảo trì' : 'Khác'
                                                             }
                                                             size="small"
-                                                            sx={{ mt: 0.5, fontSize: '0.9rem' }}
+                                                            sx={{ mt: 0.5 }}
                                                         />
                                                     </td>
                                                     <td style={{ border: '1px solid #ddd', padding: '8px' }}>

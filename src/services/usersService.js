@@ -109,7 +109,8 @@ async function getMechanicalElectricalTechniciansService() {
 }
 
 export { 
-    getAllUsersService, 
+    getAllUsersService,
+    getAllUsersService as getAllUsers, // Alias for consistency
     changePasswordService, 
     getUserService, 
     updateAvatarService,

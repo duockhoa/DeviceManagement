@@ -17,7 +17,16 @@ import {
     Card,
     CardContent,
     Autocomplete,
-    Chip
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody
 } from '@mui/material';
 import { Unstable_Grid2 as Grid2 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -33,6 +42,7 @@ import { fetchUsers } from '../../../redux/slice/usersSlice';
 import { getActiveConsumableCategories } from '../../../services/consumableCategoriesService';
 import { getAssetConsumables } from '../../../services/assetsService';
 import { getMechanicalElectricalTechniciansService } from '../../../services/usersService';
+import checklistStandardService from '../../../services/checklistStandardService';
 import InputField from '../../InputComponent/InputField';
 import SelectField from '../../InputComponent/SelectField';
 import InputDate from '../../InputComponent/InputDate';
@@ -107,6 +117,11 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
     const [showSuccess, setShowSuccess] = useState(false);
     const [tabValue, setTabValue] = useState(0);
 
+    // Tiêu chuẩn checklist
+    const [checklistStandards, setChecklistStandards] = useState([]);
+    const [openStandardDialog, setOpenStandardDialog] = useState(false);
+    const [selectedStandardId, setSelectedStandardId] = useState('');
+
     // State cho checklist bảo trì
     const [maintenanceChecklist, setMaintenanceChecklist] = useState([
         { 
@@ -138,15 +153,28 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
     // State cho danh sách công việc
     const [workTasks, setWorkTasks] = useState([]);
     
-    // State cho 3 hạng mục công việc mặc định
+    // State cho hạng mục công việc mặc định (4 loại)
     const [defaultTasks, setDefaultTasks] = useState({
         cleaning: { checked: false, assignedTo: [] },
         inspection: { checked: false, assignedTo: [] },
-        maintenance: { checked: false, assignedTo: [] }
+        maintenance: { checked: false, assignedTo: [] },
+        corrective: { checked: false, assignedTo: [] }
     });
     
     // State cho danh sách nhân viên xưởng cơ điện
     const [mechanicalStaff, setMechanicalStaff] = useState([]);
+
+    useEffect(() => {
+        const loadStandards = async () => {
+            try {
+                const data = await checklistStandardService.list();
+                setChecklistStandards(data || []);
+            } catch (err) {
+                console.error('Error loading checklist standards:', err);
+            }
+        };
+        loadStandards();
+    }, []);
 
     useEffect(() => {
         // Fetch assets if not already loaded
@@ -273,17 +301,29 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                 const loadedDefaultTasks = {
                     cleaning: { checked: false, assignedTo: [] },
                     inspection: { checked: false, assignedTo: [] },
-                    maintenance: { checked: false, assignedTo: [] }
+                    maintenance: { checked: false, assignedTo: [] },
+                    corrective: { checked: false, assignedTo: [] }
                 };
                 
+                const normalizeAssigned = (value) => {
+                    if (!value && value !== 0) return [];
+                    try {
+                        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+                        if (Array.isArray(parsed)) return parsed;
+                        return parsed ? [parsed] : [];
+                    } catch (err) {
+                        return Array.isArray(value) ? value : [value];
+                    }
+                };
+
                 const customTasks = [];
                 
                 maintenanceData.workTasks.forEach(task => {
                     // Kiểm tra xem có phải default task không (dựa vào task_type)
-                    if (task.task_type && ['cleaning', 'inspection', 'maintenance'].includes(task.task_type)) {
+                    if (task.task_type && ['cleaning', 'inspection', 'maintenance', 'corrective'].includes(task.task_type)) {
                         loadedDefaultTasks[task.task_type] = {
                             checked: true,
-                            assignedTo: task.assigned_to ? JSON.parse(task.assigned_to) : []
+                            assignedTo: normalizeAssigned(task.assigned_to)
                         };
                     } else {
                         // Custom task
@@ -307,28 +347,16 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
     
     // Auto-check default task khi chọn loại bảo trì (chỉ khi tạo mới, không áp dụng khi edit)
     useEffect(() => {
-        // Chỉ auto-check khi chưa có dữ liệu cũ (tạo mới)
-        if (!maintenanceData && formData.maintenance_type) {
-            setDefaultTasks(prev => {
-                const newTasks = {
-                    cleaning: { checked: false, assignedTo: [] },
-                    inspection: { checked: false, assignedTo: [] },
-                    maintenance: { checked: false, assignedTo: [] }
-                };
-                
-                // Tự động tích vào task tương ứng với loại được chọn
-                // Nếu chọn 'repair' thì không tự động tích
-                if (formData.maintenance_type !== 'repair') {
-                    newTasks[formData.maintenance_type] = {
-                        checked: true,
-                        assignedTo: prev[formData.maintenance_type]?.assignedTo || []
-                    };
-                }
-                
-                return newTasks;
-            });
+        // Auto chọn công việc chính theo maintenance_type (áp dụng cả khi có dữ liệu mới thay đổi loại)
+        if (formData.maintenance_type) {
+            setDefaultTasks(prev => ({
+                cleaning: { ...prev.cleaning, checked: formData.maintenance_type === 'cleaning' },
+                inspection: { ...prev.inspection, checked: formData.maintenance_type === 'inspection' },
+                maintenance: { ...prev.maintenance, checked: formData.maintenance_type === 'maintenance' || formData.maintenance_type === 'preventive' },
+                corrective: { ...prev.corrective, checked: formData.maintenance_type === 'corrective' }
+            }));
         }
-    }, [formData.maintenance_type, maintenanceData]);
+    }, [formData.maintenance_type]);
 
     const validateForm = () => {
         const errors = {};
@@ -555,44 +583,69 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                     notes: item.required ? 'Bắt buộc' : 'Không bắt buộc'
                 })),
                 // Add work tasks data
-                workTasks: [
-                    // 3 hạng mục mặc định
-                    ...(defaultTasks.cleaning.checked ? [{
-                        task_name: 'Vệ sinh',
-                        task_type: 'cleaning',
-                        description: 'Vệ sinh thiết bị',
-                        assigned_to: defaultTasks.cleaning.assignedTo,
-                        status: 'pending',
-                        order_index: 0
-                    }] : []),
-                    ...(defaultTasks.inspection.checked ? [{
-                        task_name: 'Kiểm tra',
-                        task_type: 'inspection',
-                        description: 'Kiểm tra tình trạng thiết bị',
-                        assigned_to: defaultTasks.inspection.assignedTo,
-                        status: 'pending',
-                        order_index: 1
-                    }] : []),
-                    ...(defaultTasks.maintenance.checked ? [{
-                        task_name: 'Bảo trì',
-                        task_type: 'maintenance',
-                        description: 'Bảo trì thiết bị',
-                        assigned_to: defaultTasks.maintenance.assignedTo,
-                        status: 'pending',
-                        order_index: 2
-                    }] : []),
-                    // Công việc tùy chỉnh
-                    ...workTasks.map((task, index) => ({
-                        task_name: task.task_name,
-                        task_type: 'custom',
-                        description: task.description || null,
-                        assigned_to: task.assigned_to || [],
-                        estimated_hours: task.estimated_hours || null,
-                        status: task.status || 'pending',
-                        priority: task.priority || 'medium',
-                        order_index: 3 + index
-                    }))
-                ]
+                workTasks: (() => {
+                    const items = [];
+                    let orderIndex = 0;
+
+                    if (defaultTasks.cleaning.checked) {
+                        items.push({
+                            task_name: 'Vệ sinh',
+                            task_type: 'cleaning',
+                            description: 'Vệ sinh thiết bị',
+                            assigned_to: defaultTasks.cleaning.assignedTo,
+                            status: 'pending',
+                            order_index: orderIndex++
+                        });
+                    }
+
+                    if (defaultTasks.inspection.checked) {
+                        items.push({
+                            task_name: 'Kiểm tra',
+                            task_type: 'inspection',
+                            description: 'Kiểm tra tình trạng thiết bị',
+                            assigned_to: defaultTasks.inspection.assignedTo,
+                            status: 'pending',
+                            order_index: orderIndex++
+                        });
+                    }
+
+                    if (defaultTasks.maintenance.checked) {
+                        items.push({
+                            task_name: 'Bảo trì',
+                            task_type: 'maintenance',
+                            description: 'Bảo trì thiết bị',
+                            assigned_to: defaultTasks.maintenance.assignedTo,
+                            status: 'pending',
+                            order_index: orderIndex++
+                        });
+                    }
+
+                    if (defaultTasks.corrective.checked) {
+                        items.push({
+                            task_name: 'Sửa chữa',
+                            task_type: 'corrective',
+                            description: 'Sửa chữa / khắc phục sự cố',
+                            assigned_to: defaultTasks.corrective.assignedTo,
+                            status: 'pending',
+                            order_index: orderIndex++
+                        });
+                    }
+
+                    workTasks.forEach((task) => {
+                        items.push({
+                            task_name: task.task_name,
+                            task_type: 'custom',
+                            description: task.description || null,
+                            assigned_to: task.assigned_to || [],
+                            estimated_hours: task.estimated_hours || null,
+                            status: task.status || 'pending',
+                            priority: task.priority || 'medium',
+                            order_index: orderIndex++
+                        });
+                    });
+
+                    return items;
+                })()
             };
 
             console.log('Edit submit data:', submitData); // Debug log
@@ -646,7 +699,7 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
         { value: 'cleaning', label: 'Vệ sinh' },
         { value: 'inspection', label: 'Kiểm tra' },
         { value: 'maintenance', label: 'Bảo trì' },
-        { value: 'repair', label: 'Sửa chữa' }
+        { value: 'corrective', label: 'Sửa chữa' }
     ];
 
     const priorities = [
@@ -821,11 +874,11 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                     <Box sx={{ m: 2, border: '1px solid #aaa', display: 'flex', flexDirection: 'column', borderRadius: 1, flex: 1, backgroundColor: '#fff' }}>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider', backgroundColor: '#e4eefdff' }}>
                             <Tabs value={tabValue} onChange={handleTabChange} aria-label="detail tabs">
-                                <Tab label="Công cụ dụng cụ" {...a11yProps(0)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
-                                <Tab label="Vật tư thay thế" {...a11yProps(1)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
-                                <Tab label="Checklist bảo trì" {...a11yProps(2)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
-                                <Tab label="Danh sách công việc" {...a11yProps(3)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
-                                <Tab label="Ghi chú & Tài liệu" {...a11yProps(4)} sx={{ fontWeight: "bold", fontSize: "10px" }} />
+                                <Tab label="Công cụ dụng cụ" {...a11yProps(0)} sx={{ fontWeight: "bold" }} />
+                                <Tab label="Vật tư thay thế" {...a11yProps(1)} sx={{ fontWeight: "bold" }} />
+                                <Tab label="Checklist bảo trì" {...a11yProps(2)} sx={{ fontWeight: "bold" }} />
+                                <Tab label="Danh sách công việc" {...a11yProps(3)} sx={{ fontWeight: "bold" }} />
+                                <Tab label="Ghi chú & Tài liệu" {...a11yProps(4)} sx={{ fontWeight: "bold" }} />
                             </Tabs>
                         </Box>
 
@@ -1147,19 +1200,30 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                         </CustomTabPanel>
 
                         <CustomTabPanel value={tabValue} index={2}>
-                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                                     Danh sách kiểm tra bảo trì
                                 </Typography>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    startIcon={<AddIcon />}
-                                    onClick={addChecklistItem}
-                                    sx={{ minWidth: 150 }}
-                                >
-                                    Thêm mục kiểm tra
-                                </Button>
+                                <Stack direction="row" spacing={1}>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<AddIcon />}
+                                        onClick={addChecklistItem}
+                                        sx={{ minWidth: 150 }}
+                                    >
+                                        Thêm mục kiểm tra
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<AddIcon />}
+                                        onClick={() => setOpenStandardDialog(true)}
+                                        sx={{ minWidth: 180, backgroundColor: '#1976d2' }}
+                                    >
+                                        Áp dụng tiêu chuẩn
+                                    </Button>
+                                </Stack>
                             </Box>
 
                             <Box sx={{ overflowX: 'auto' }}>
@@ -1262,178 +1326,184 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                         <CustomTabPanel value={tabValue} index={3}>
                             {/* Danh sách công việc */}
                             
-                            {/* 3 Hạng mục công việc mặc định */}
-                            <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                                    Hạng mục công việc chính
-                                </Typography>
-                                <FormGroup>
-                                    {/* Vệ sinh */}
-                                    <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={defaultTasks.cleaning.checked}
-                                                    onChange={(e) => setDefaultTasks(prev => ({
-                                                        ...prev,
-                                                        cleaning: { ...prev.cleaning, checked: e.target.checked }
-                                                    }))}
-                                                />
-                                            }
-                                            label={<Typography variant="body1" fontWeight="bold">Vệ sinh</Typography>}
-                                        />
-                                        {defaultTasks.cleaning.checked && (
-                                            <Box sx={{ ml: 4, mt: 1 }}>
-                                                <Autocomplete
-                                                    multiple
-                                                    size="small"
-                                                    options={mechanicalStaff}
-                                                    getOptionLabel={(option) => option.name}
-                                                    value={mechanicalStaff.filter(staff => 
-                                                        defaultTasks.cleaning.assignedTo.includes(staff.id)
-                                                    )}
-                                                    onChange={(e, newValue) => {
-                                                        setDefaultTasks(prev => ({
-                                                            ...prev,
-                                                            cleaning: { 
-                                                                ...prev.cleaning, 
-                                                                assignedTo: newValue.map(v => v.id)
-                                                            }
-                                                        }));
-                                                    }}
-                                                    renderInput={(params) => (
-                                                        <TextField
-                                                            {...params}
-                                                            label="Người thực hiện"
-                                                            placeholder="Chọn nhân viên xưởng cơ điện"
-                                                        />
-                                                    )}
-                                                    renderTags={(value, getTagProps) =>
-                                                        value.map((option, index) => (
-                                                            <Chip
-                                                                key={option.id}
-                                                                label={option.name}
-                                                                {...getTagProps({ index })}
-                                                                size="small"
-                                                            />
-                                                        ))
-                                                    }
-                                                />
-                                            </Box>
+                    {/* Công việc chính theo loại bảo trì (hiển thị duy nhất loại tương ứng) */}
+                    <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                            Công việc chính (theo loại bảo trì)
+                        </Typography>
+
+                        {defaultTasks.cleaning.checked && (
+                            <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
+                                <Typography variant="body1" fontWeight="bold">Vệ sinh</Typography>
+                                <Box sx={{ ml: 2, mt: 1 }}>
+                                    <Autocomplete
+                                        multiple
+                                        size="small"
+                                        options={mechanicalStaff}
+                                        getOptionLabel={(option) => option.name}
+                                        value={mechanicalStaff.filter(staff => 
+                                            defaultTasks.cleaning.assignedTo.includes(staff.id)
                                         )}
-                                    </Box>
-                                    
-                                    {/* Kiểm tra */}
-                                    <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={defaultTasks.inspection.checked}
-                                                    onChange={(e) => setDefaultTasks(prev => ({
-                                                        ...prev,
-                                                        inspection: { ...prev.inspection, checked: e.target.checked }
-                                                    }))}
-                                                />
-                                            }
-                                            label={<Typography variant="body1" fontWeight="bold">Kiểm tra</Typography>}
-                                        />
-                                        {defaultTasks.inspection.checked && (
-                                            <Box sx={{ ml: 4, mt: 1 }}>
-                                                <Autocomplete
-                                                    multiple
-                                                    size="small"
-                                                    options={mechanicalStaff}
-                                                    getOptionLabel={(option) => option.name}
-                                                    value={mechanicalStaff.filter(staff => 
-                                                        defaultTasks.inspection.assignedTo.includes(staff.id)
-                                                    )}
-                                                    onChange={(e, newValue) => {
-                                                        setDefaultTasks(prev => ({
-                                                            ...prev,
-                                                            inspection: { 
-                                                                ...prev.inspection, 
-                                                                assignedTo: newValue.map(v => v.id)
-                                                            }
-                                                        }));
-                                                    }}
-                                                    renderInput={(params) => (
-                                                        <TextField
-                                                            {...params}
-                                                            label="Người thực hiện"
-                                                            placeholder="Chọn nhân viên xưởng cơ điện"
-                                                        />
-                                                    )}
-                                                    renderTags={(value, getTagProps) =>
-                                                        value.map((option, index) => (
-                                                            <Chip
-                                                                key={option.id}
-                                                                label={option.name}
-                                                                {...getTagProps({ index })}
-                                                                size="small"
-                                                            />
-                                                        ))
-                                                    }
-                                                />
-                                            </Box>
+                                        onChange={(e, newValue) => {
+                                            setDefaultTasks(prev => ({
+                                                ...prev,
+                                                cleaning: { 
+                                                    ...prev.cleaning, 
+                                                    assignedTo: newValue.map(v => v.id)
+                                                }
+                                            }));
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Người thực hiện"
+                                                placeholder="Chọn nhân viên xưởng cơ điện"
+                                            />
                                         )}
-                                    </Box>
-                                    
-                                    {/* Bảo trì */}
-                                    <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={defaultTasks.maintenance.checked}
-                                                    onChange={(e) => setDefaultTasks(prev => ({
-                                                        ...prev,
-                                                        maintenance: { ...prev.maintenance, checked: e.target.checked }
-                                                    }))}
-                                                />
-                                            }
-                                            label={<Typography variant="body1" fontWeight="bold">Bảo trì</Typography>}
-                                        />
-                                        {defaultTasks.maintenance.checked && (
-                                            <Box sx={{ ml: 4, mt: 1 }}>
-                                                <Autocomplete
-                                                    multiple
+                                        renderTags={(value, getTagProps) =>
+                                            value.map((option, index) => (
+                                                <Chip
+                                                    key={option.id}
+                                                    label={option.name}
+                                                    {...getTagProps({ index })}
                                                     size="small"
-                                                    options={mechanicalStaff}
-                                                    getOptionLabel={(option) => option.name}
-                                                    value={mechanicalStaff.filter(staff => 
-                                                        defaultTasks.maintenance.assignedTo.includes(staff.id)
-                                                    )}
-                                                    onChange={(e, newValue) => {
-                                                        setDefaultTasks(prev => ({
-                                                            ...prev,
-                                                            maintenance: { 
-                                                                ...prev.maintenance, 
-                                                                assignedTo: newValue.map(v => v.id)
-                                                            }
-                                                        }));
-                                                    }}
-                                                    renderInput={(params) => (
-                                                        <TextField
-                                                            {...params}
-                                                            label="Người thực hiện"
-                                                            placeholder="Chọn nhân viên xưởng cơ điện"
-                                                        />
-                                                    )}
-                                                    renderTags={(value, getTagProps) =>
-                                                        value.map((option, index) => (
-                                                            <Chip
-                                                                key={option.id}
-                                                                label={option.name}
-                                                                {...getTagProps({ index })}
-                                                                size="small"
-                                                            />
-                                                        ))
-                                                    }
                                                 />
-                                            </Box>
-                                        )}
-                                    </Box>
-                                </FormGroup>
+                                            ))
+                                        }
+                                    />
+                                </Box>
                             </Box>
+                        )}
+
+                        {defaultTasks.inspection.checked && (
+                            <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
+                                <Typography variant="body1" fontWeight="bold">Kiểm tra</Typography>
+                                <Box sx={{ ml: 2, mt: 1 }}>
+                                    <Autocomplete
+                                        multiple
+                                        size="small"
+                                        options={mechanicalStaff}
+                                        getOptionLabel={(option) => option.name}
+                                        value={mechanicalStaff.filter(staff => 
+                                            defaultTasks.inspection.assignedTo.includes(staff.id)
+                                        )}
+                                        onChange={(e, newValue) => {
+                                            setDefaultTasks(prev => ({
+                                                ...prev,
+                                                inspection: { 
+                                                    ...prev.inspection, 
+                                                    assignedTo: newValue.map(v => v.id)
+                                                }
+                                            }));
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Người thực hiện"
+                                                placeholder="Chọn nhân viên xưởng cơ điện"
+                                            />
+                                        )}
+                                        renderTags={(value, getTagProps) =>
+                                            value.map((option, index) => (
+                                                <Chip
+                                                    key={option.id}
+                                                    label={option.name}
+                                                    {...getTagProps({ index })}
+                                                    size="small"
+                                                />
+                                            ))
+                                        }
+                                    />
+                                </Box>
+                            </Box>
+                        )}
+
+                        {defaultTasks.maintenance.checked && (
+                            <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
+                                <Typography variant="body1" fontWeight="bold">Bảo trì</Typography>
+                                <Box sx={{ ml: 2, mt: 1 }}>
+                                    <Autocomplete
+                                        multiple
+                                        size="small"
+                                        options={mechanicalStaff}
+                                        getOptionLabel={(option) => option.name}
+                                        value={mechanicalStaff.filter(staff => 
+                                            defaultTasks.maintenance.assignedTo.includes(staff.id)
+                                        )}
+                                        onChange={(e, newValue) => {
+                                            setDefaultTasks(prev => ({
+                                                ...prev,
+                                                maintenance: { 
+                                                    ...prev.maintenance, 
+                                                    assignedTo: newValue.map(v => v.id)
+                                                }
+                                            }));
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Người thực hiện"
+                                                placeholder="Chọn nhân viên xưởng cơ điện"
+                                            />
+                                        )}
+                                        renderTags={(value, getTagProps) =>
+                                            value.map((option, index) => (
+                                                <Chip
+                                                    key={option.id}
+                                                    label={option.name}
+                                                    {...getTagProps({ index })}
+                                                    size="small"
+                                                />
+                                            ))
+                                        }
+                                    />
+                                </Box>
+                            </Box>
+                        )}
+
+                        {defaultTasks.corrective.checked && (
+                            <Box sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
+                                <Typography variant="body1" fontWeight="bold">Sửa chữa</Typography>
+                                <Box sx={{ ml: 2, mt: 1 }}>
+                                    <Autocomplete
+                                        multiple
+                                        size="small"
+                                        options={mechanicalStaff}
+                                        getOptionLabel={(option) => option.name}
+                                        value={mechanicalStaff.filter(staff => 
+                                            defaultTasks.corrective.assignedTo.includes(staff.id)
+                                        )}
+                                        onChange={(e, newValue) => {
+                                            setDefaultTasks(prev => ({
+                                                ...prev,
+                                                corrective: { 
+                                                    ...prev.corrective, 
+                                                    assignedTo: newValue.map(v => v.id)
+                                                }
+                                            }));
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Người thực hiện"
+                                                placeholder="Chọn nhân viên xưởng cơ điện"
+                                            />
+                                        )}
+                                        renderTags={(value, getTagProps) =>
+                                            value.map((option, index) => (
+                                                <Chip
+                                                    key={option.id}
+                                                    label={option.name}
+                                                    {...getTagProps({ index })}
+                                                    size="small"
+                                                />
+                                            ))
+                                        }
+                                    />
+                                </Box>
+                            </Box>
+                        )}
+                    </Box>
                             
                             <Divider sx={{ my: 3 }} />
                             
@@ -1567,6 +1637,86 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                     </Box>
                 </Box>
             </Stack>
+
+            {/* Dialog chọn tiêu chuẩn checklist */}
+            <Dialog open={openStandardDialog} onClose={() => setOpenStandardDialog(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Áp dụng tiêu chuẩn checklist</DialogTitle>
+                <DialogContent dividers>
+                    <Stack spacing={2}>
+                        <Typography variant="body2">
+                            Chọn một tiêu chuẩn để tự động thêm các hạng mục checklist vào lệnh bảo trì.
+                        </Typography>
+                        <TextField
+                            select
+                            label="Tiêu chuẩn checklist"
+                            size="small"
+                            value={selectedStandardId}
+                            onChange={(e) => setSelectedStandardId(e.target.value)}
+                            fullWidth
+                        >
+                            <MenuItem value="">-- Chọn checklist --</MenuItem>
+                            {checklistStandards.map((std) => (
+                                <MenuItem key={std.id} value={std.id}>
+                                    {std.name} ({std.items?.length || 0} hạng mục)
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        {selectedStandardId && (
+                            <Box sx={{ maxHeight: 320, overflow: 'auto' }}>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>STT</TableCell>
+                                            <TableCell>Nội dung</TableCell>
+                                            <TableCell>Hạng mục</TableCell>
+                                            <TableCell>Tiêu chuẩn OK</TableCell>
+                                            <TableCell>Phương pháp</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {(checklistStandards.find((s) => s.id === Number(selectedStandardId))?.items || []).map((item, idx) => (
+                                            <TableRow key={idx}>
+                                                <TableCell>{idx + 1}</TableCell>
+                                                <TableCell>{item.task || item.name}</TableCell>
+                                                <TableCell>{item.check_item}</TableCell>
+                                                <TableCell>{item.standard_value}</TableCell>
+                                                <TableCell>{item.method}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </Box>
+                        )}
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenStandardDialog(false)}>Hủy</Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => {
+                            const chosen = checklistStandards.find((s) => s.id === Number(selectedStandardId));
+                            if (!chosen) return;
+                            const maxId = maintenanceChecklist.length ? Math.max(...maintenanceChecklist.map((i) => i.id)) : 0;
+                            let nextId = maxId + 1;
+                            const newItems = (chosen.items || []).map((item) => ({
+                                id: nextId++,
+                                task: item.task || item.name || '',
+                                check_item: item.check_item || '',
+                                standard_value: item.standard_value || '',
+                                check_method: item.method || '',
+                                required: Boolean(item.required)
+                            }));
+                            setMaintenanceChecklist((prev) => [...prev, ...newItems]);
+                            setSelectedStandardId('');
+                            setOpenStandardDialog(false);
+                        }}
+                        disabled={!selectedStandardId}
+                    >
+                        Áp dụng checklist
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Action Buttons */}
             <Box sx={{

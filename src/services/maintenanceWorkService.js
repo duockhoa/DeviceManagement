@@ -11,6 +11,17 @@ export const getMyWorkOrders = async () => {
     }
 };
 
+// Lấy danh sách yêu cầu xưởng được phân công cho user (chưa tạo lịch bảo trì)
+export const getMyRequestTasks = async () => {
+    try {
+        const response = await customAxios.get('/work-requests/my-tasks');
+        return response.data?.data || [];
+    } catch (error) {
+        console.error('Error fetching my request tasks:', error);
+        throw error;
+    }
+};
+
 // Lấy kết quả bảo trì (quản lý) - in_progress, awaiting_approval, completed
 export const getMaintenanceResults = async () => {
     try {

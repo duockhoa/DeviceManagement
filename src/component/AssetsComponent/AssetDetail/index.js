@@ -409,10 +409,10 @@ function AssetDetail() {
                                                                     'cleaning': 'Vệ sinh',
                                                                     'inspection': 'Kiểm tra',
                                                                     'maintenance': 'Bảo trì',
-                                                                    'repair': 'Sửa chữa'
+                                                                    'corrective': 'Sửa chữa'
                                                                 }[maintenance.maintenance_type] || maintenance.maintenance_type}
                                                                 size="small"
-                                                                color={maintenance.maintenance_type === 'repair' ? 'warning' : 'primary'}
+                                                                color={maintenance.maintenance_type === 'corrective' ? 'warning' : 'primary'}
                                                                 sx={{ fontSize: '1.2rem' }}
                                                             />
                                                         </TableCell>
