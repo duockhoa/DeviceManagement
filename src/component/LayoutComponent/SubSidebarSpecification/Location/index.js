@@ -13,7 +13,8 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button
+    Button,
+    IconButton
 } from '@mui/material';
 import {
     ExpandMore,
@@ -42,6 +43,7 @@ function Location({ isOpen, onToggle }) {
     };
     const handleClose = () => {
         setOpen(false);
+        dispatch(fetchAreas()); // Refresh list after adding
     };
 
     return (
@@ -63,20 +65,17 @@ function Location({ isOpen, onToggle }) {
                         sx: { fontSize: '1.4rem', fontWeight: 'medium' }
                     }}
                 />
-                <ListItemIcon
+                <IconButton
+                    size="small"
+                    onClick={handleAddClick}
                     sx={{
-                        minWidth: '30px',
-                        minHeight: '30px',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
                         '&:hover': {
                             backgroundColor: 'rgba(25, 118, 210, 0.1)',
                         }
                     }}
-                    onClick={handleAddClick}
                 >
-                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2', margin: 'auto' }} />
-                </ListItemIcon>
+                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2' }} />
+                </IconButton>
                 {isOpen ?
                     <ExpandLess sx={{ fontSize: '2rem' }} /> :
                     <ExpandMore sx={{ fontSize: '2rem' }} />

@@ -1,12 +1,15 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import AssetCategoryForm from '../../../CategoriesComponent/AssetCategoryForm';
 import {
     Box,
     ListItemButton,
     ListItemIcon,
     ListItemText,
     Collapse,
-    Typography
+    Typography,
+    IconButton,
+    Dialog
 } from '@mui/material';
 import {
     ExpandMore,
@@ -18,6 +21,7 @@ import { fetchAssetCategories } from '../../../../redux/slice/assetCategoriesSli
 
 function Categories({ isOpen, onToggle }) {
     const dispatch = useDispatch();
+    const [open, setOpen] = React.useState(false);
     
     // Lấy dữ liệu từ Redux store
     const { categories, loading, error } = useSelector(state => state.assetCategories);
@@ -30,7 +34,12 @@ function Categories({ isOpen, onToggle }) {
     // Handle click nút Add
     const handleAddClick = (event) => {
         event.stopPropagation(); // Ngăn không cho trigger onToggle
-        console.log('Add button clicked!');
+        setOpen(true);
+    };
+    
+    const handleClose = () => {
+        setOpen(false);
+        dispatch(fetchAssetCategories()); // Refresh list after adding
     };
 
     return (
@@ -52,21 +61,17 @@ function Categories({ isOpen, onToggle }) {
                         sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
-                <ListItemIcon 
-                    sx={{ 
-
-                        minWidth: '30px',
-                        minHeight: '30px',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
+                <IconButton
+                    size="small"
+                    onClick={handleAddClick}
+                    sx={{
                         '&:hover': {
                             backgroundColor: 'rgba(25, 118, 210, 0.1)',
                         }
                     }}
-                    onClick={handleAddClick}
                 >
-                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2' , margin: 'auto' }} />
-                </ListItemIcon>
+                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2' }} />
+                </IconButton>
                 {isOpen ? 
                     <ExpandLess sx={{ fontSize: '2rem' }} /> : 
                     <ExpandMore sx={{ fontSize: '2rem' }} />
@@ -104,6 +109,10 @@ function Categories({ isOpen, onToggle }) {
                     )}
                 </Box>
             </Collapse>
+            
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                <AssetCategoryForm handleClose={handleClose} />
+            </Dialog>
         </Box>
     );
 }

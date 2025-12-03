@@ -22,11 +22,23 @@ function AddSubCategoriesForm({ handleClose }) {
     });
     console.log(assetCategories);
     
-    const onChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+    const onChange = (nameOrEvent, value) => {
+        // SelectField passes (name, value)
+        // InputField passes (event)
+        if (typeof nameOrEvent === 'string') {
+            // SelectField: nameOrEvent is field name, value is field value
+            setFormData({
+                ...formData,
+                [nameOrEvent]: value
+            });
+        } else {
+            // InputField: nameOrEvent is event object
+            const event = nameOrEvent;
+            setFormData({
+                ...formData,
+                [event.target.name]: event.target.value
+            });
+        }
     };
     const onSubmit = async(e) => {
         e.preventDefault();

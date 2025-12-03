@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import AreaForm from '../../../AreaComponent/AreaForm';
-import theme from '../../../../theme';
+import PlantFrom from '../../../PlantComponent/PlantFrom';
 import {
     Box,
     ListItemButton,
@@ -10,30 +9,26 @@ import {
     Collapse,
     Typography,
     Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
     IconButton
 } from '@mui/material';
 import {
     ExpandMore,
     ExpandLess,
-    LocationOn,
+    Apartment,
     Add
 } from '@mui/icons-material';
-import { fetchAreas } from '../../../../redux/slice/areaSlice';
+import { fetchPlants } from '../../../../redux/slice/plantSlice';
 
-function Location({ isOpen, onToggle }) {
+function Plant({ isOpen, onToggle }) {
     const dispatch = useDispatch();
     const [open, setOpen] = React.useState(false);
 
     // Lấy dữ liệu từ Redux store
-    const { areas, loading, error } = useSelector(state => state.areas);
+    const { plants, loading, error } = useSelector(state => state.plants);
 
-    // Fetch areas khi component mount
+    // Fetch plants khi component mount
     useEffect(() => {
-        dispatch(fetchAreas());
+        dispatch(fetchPlants());
     }, [dispatch]);
 
     // Handle click nút Add
@@ -41,9 +36,10 @@ function Location({ isOpen, onToggle }) {
         event.stopPropagation(); // Ngăn không cho trigger onToggle
         setOpen(true);
     };
+    
     const handleClose = () => {
         setOpen(false);
-        dispatch(fetchAreas()); // Refresh list after adding
+        dispatch(fetchPlants()); // Refresh list after adding
     };
 
     return (
@@ -57,10 +53,10 @@ function Location({ isOpen, onToggle }) {
                 }}
             >
                 <ListItemIcon sx={{ minWidth: '35px' }}>
-                    <LocationOn sx={{ fontSize: '1.8rem', color: '#1976d2' }} />
+                    <Apartment sx={{ fontSize: '1.8rem', color: '#1976d2' }} />
                 </ListItemIcon>
                 <ListItemText
-                    primary="Location"
+                    primary="Plant"
                     primaryTypographyProps={{
                         sx: { fontSize: '1.4rem', fontWeight: 'medium' }
                     }}
@@ -96,28 +92,29 @@ function Location({ isOpen, onToggle }) {
                                 Error: {error}
                             </Typography>
                         </Box>
-                    ) : areas.length > 0 ? (
-                        areas.map((area, index) => (
-                            <Box key={area.id || index} sx={{ mb: 0.5 }}>
+                    ) : plants.length > 0 ? (
+                        plants.map((plant, index) => (
+                            <Box key={plant.id || index} sx={{ mb: 0.5 }}>
                                 <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
-                                    ✓ {area.name}
+                                    ✓ {plant.name}
                                 </Typography>
                             </Box>
                         ))
                     ) : (
                         <Box sx={{ mb: 0.5 }}>
                             <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
-                                Không có khu vực
+                                Không có plant
                             </Typography>
                         </Box>
                     )}
                 </Box>
             </Collapse>
+            
             <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                    <AreaForm handleClose={handleClose} />
+                <PlantFrom handleClose={handleClose} />
             </Dialog>
         </Box>
     );
 }
 
-export default Location;
+export default Plant;

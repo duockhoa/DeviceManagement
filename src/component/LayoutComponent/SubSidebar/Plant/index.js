@@ -1,12 +1,15 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import PlantFrom from '../../../PlantComponent/PlantFrom';
 import {
     Box,
     ListItemButton,
     ListItemIcon,
     ListItemText,
     Collapse,
-    Chip
+    Chip,
+    IconButton,
+    Dialog
 } from '@mui/material';
 import {
     ExpandMore,
@@ -18,6 +21,7 @@ import { fetchPlants } from '../../../../redux/slice/plantSlice';
 
 function Plant({ isOpen, onToggle }) {
     const dispatch = useDispatch();
+    const [open, setOpen] = React.useState(false);
     
     // Lấy dữ liệu từ Redux store
     const { plants, loading, error } = useSelector(state => state.plants);
@@ -30,7 +34,12 @@ function Plant({ isOpen, onToggle }) {
     // Handle click nút Add
     const handleAddClick = (event) => {
         event.stopPropagation(); // Ngăn không cho trigger onToggle
-        console.log('Add plant button clicked!');
+        setOpen(true);
+    };
+    
+    const handleClose = () => {
+        setOpen(false);
+        dispatch(fetchPlants()); // Refresh list after adding
     };
 
     return (
@@ -52,20 +61,17 @@ function Plant({ isOpen, onToggle }) {
                         sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
-                <ListItemIcon 
-                    sx={{ 
-                        minWidth: '30px',
-                        minHeight: '30px',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
+                <IconButton
+                    size="small"
+                    onClick={handleAddClick}
+                    sx={{
                         '&:hover': {
                             backgroundColor: 'rgba(25, 118, 210, 0.1)',
                         }
                     }}
-                    onClick={handleAddClick}
                 >
-                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2', margin: 'auto' }} />
-                </ListItemIcon>
+                    <Add sx={{ fontSize: '1.8rem', color: '#1976d2' }} />
+                </IconButton>
                 {isOpen ? 
                     <ExpandLess sx={{ fontSize: '2rem' }} /> : 
                     <ExpandMore sx={{ fontSize: '2rem' }} />
@@ -123,6 +129,10 @@ function Plant({ isOpen, onToggle }) {
                     )}
                 </Box>
             </Collapse>
+            
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                <PlantFrom handleClose={handleClose} />
+            </Dialog>
         </Box>
     );
 }

@@ -22,11 +22,21 @@ function AreaForm({ handleClose }) {
         description: ''
     });
     
-    const onChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+    const onChange = (nameOrEvent, value) => {
+        // SelectField/InputField passes (name, value)
+        // Other components pass (event)
+        if (typeof nameOrEvent === 'string') {
+            setFormData({
+                ...formData,
+                [nameOrEvent]: value
+            });
+        } else {
+            const event = nameOrEvent;
+            setFormData({
+                ...formData,
+                [event.target.name]: event.target.value
+            });
+        }
     };
     const onSubmit = async(e) => {
         e.preventDefault();

@@ -553,22 +553,24 @@ export default function Sidebar() {
                 </ListItemButton>
             </List>
 
-            <ListItemButton
-                onClick={() => switchActiveSidebar('/rbac')}
-                sx={{
-                    ...hoverStyle,
-                    py: 0.7,
-                    ...(location.pathname === '/rbac' ? activeStyle : {})
-                }}
-            >
-                <ListItemIcon sx={{ minWidth: '30px' }}>
-                    <SecurityIcon sx={location.pathname === '/rbac' ? activeIconStyle : commonIconStyle} />
-                </ListItemIcon>
-                <ListItemText
-                    primaryTypographyProps={{ sx: location.pathname === '/rbac' ? activeTextStyle : commonTextStyle }}
-                    primary={isOpen ? 'Phân quyền' : ''}
-                />
-            </ListItemButton>
+            {hasPermission('rbac.manage') && (
+                <ListItemButton
+                    onClick={() => switchActiveSidebar('/rbac')}
+                    sx={{
+                        ...hoverStyle,
+                        py: 0.7,
+                        ...(location.pathname === '/rbac' ? activeStyle : {})
+                    }}
+                >
+                    <ListItemIcon sx={{ minWidth: '30px' }}>
+                        <SecurityIcon sx={location.pathname === '/rbac' ? activeIconStyle : commonIconStyle} />
+                    </ListItemIcon>
+                    <ListItemText
+                        primaryTypographyProps={{ sx: location.pathname === '/rbac' ? activeTextStyle : commonTextStyle }}
+                        primary={isOpen ? 'Phân quyền' : ''}
+                    />
+                </ListItemButton>
+            )}
 
             <Box flexGrow={1}></Box>
 

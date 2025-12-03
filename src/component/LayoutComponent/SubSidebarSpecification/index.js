@@ -9,7 +9,10 @@ import {
 import {
     Search
 } from '@mui/icons-material';
+import Plant from './Plant';
+import Location from './Location';
 import Categories from './Category';
+import Department from './Department';
 
 function SubSidebarSpecification() {
     const [openSections, setOpenSections] = useState({
@@ -70,12 +73,29 @@ function SubSidebarSpecification() {
             {/* Filter Sections */}
             <Box sx={{ flex: 1, overflowY: 'auto' }}>
                 <List sx={{ p: 0 }}>
+                    {/* Plant Section */}
+                    <Plant 
+                        isOpen={openSections.plant}
+                        onToggle={() => toggleSection('plant')}
+                    />
+                    
+                    {/* Location Section */}
+                    <Location 
+                        isOpen={openSections.location}
+                        onToggle={() => toggleSection('location')}
+                    />
+                    
                     {/* Categories Section */}
                     <Categories 
                         isOpen={openSections.category}
                         onToggle={() => toggleSection('category')}
                     />
-
+                    
+                    {/* Department Section */}
+                    <Department 
+                        isOpen={openSections.department}
+                        onToggle={() => toggleSection('department')}
+                    />
                 </List>
             </Box>
         </Box>

@@ -4,19 +4,18 @@ import { Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useState } from "react";
 import InputField from "../../InputComponent/InputField";
-import { createNewPlant } from "../../../redux/slice/plantSlice";
+import { createNewAssetCategory } from "../../../redux/slice/assetCategoriesSlice";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import theme from "../../../theme";
 import CloseIcon from '@mui/icons-material/Close';
 
-function PlantForm({ handleClose }) {
+function AssetCategoryForm({ handleClose }) {
     const dispatch = useDispatch();
-    const error = useSelector((state) => state.plants.error);
-    const loading = useSelector((state) => state.plants.loading);
+    const error = useSelector((state) => state.assetCategories.error);
+    const loading = useSelector((state) => state.assetCategories.loading);
     const [formData, setFormData] = useState({
         code: '',
         name: '',
-        address: '',
         description: ''
     });
     
@@ -39,7 +38,7 @@ function PlantForm({ handleClose }) {
     
     const onSubmit = async(e) => {
         e.preventDefault();
-        await dispatch(createNewPlant(formData));
+        await dispatch(createNewAssetCategory(formData));
         if (!loading && !error) {
             handleClose();
         }
@@ -48,40 +47,29 @@ function PlantForm({ handleClose }) {
     return (
         <Box sx={{ p: 2, pt: 0 }}>
             <Typography variant="h6" sx={{ textAlign: 'center', fontWeight: 'bold', p: 2, fontSize: "1.8rem", color: theme.palette.primary.main }}>
-                THÊM PLANT
+                THÊM LOẠI THIẾT BỊ
             </Typography>
             {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
             <Grid2 sx={{ p: 2 }} container spacing={2}>
                 <Grid2 xs={12}>
                     <InputField
-                        label="Mã Plant"
+                        label="Mã loại"
                         name="code"
                         value={formData.code}
                         onChange={onChange}
                         required
-                        placeholder="Nhập mã plant"
+                        placeholder="Nhập mã loại thiết bị"
                         minLabelWidth="80px"
                     />
                 </Grid2>
                 <Grid2 xs={12}>
                     <InputField
-                        label="Tên Plant"
+                        label="Tên loại"
                         name="name"
                         value={formData.name}
                         onChange={onChange}
                         required
-                        placeholder="Nhập tên plant"
-                        minLabelWidth="80px"
-                    />
-                </Grid2>
-                <Grid2 xs={12}>
-                    <InputField
-                        label="Địa chỉ"
-                        name="address"
-                        value={formData.address}
-                        onChange={onChange}
-                        required
-                        placeholder="Nhập địa chỉ"
+                        placeholder="Nhập tên loại thiết bị"
                         minLabelWidth="80px"
                     />
                 </Grid2>
@@ -128,4 +116,4 @@ function PlantForm({ handleClose }) {
     );
 }
 
-export default PlantForm;
+export default AssetCategoryForm;

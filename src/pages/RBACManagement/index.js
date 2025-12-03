@@ -37,6 +37,7 @@ import {
     VpnKey as KeyIcon
 } from '@mui/icons-material';
 import rbacService from '../../services/rbacService';
+import { PermissionGuard } from '../../hooks/usePermissions';
 
 // Tên module tiếng Việt
 const MODULE_NAMES = {
@@ -52,7 +53,7 @@ const MODULE_NAMES = {
     'rbac': 'Phân quyền'
 };
 
-export default function RBACManagement() {
+function RBACManagement() {
     const [tabValue, setTabValue] = useState(0);
     
     // Roles
@@ -597,5 +598,13 @@ export default function RBACManagement() {
                 </DialogActions>
             </Dialog>
         </Box>
+    );
+}
+
+export default function RBACManagementWithGuard() {
+    return (
+        <PermissionGuard permission="rbac.manage">
+            <RBACManagement />
+        </PermissionGuard>
     );
 }
