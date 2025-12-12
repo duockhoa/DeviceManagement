@@ -40,16 +40,17 @@ export default function MaintenancePlan() {
 
     return (
         <Box sx={{ p: 3, bgcolor: '#f5f6fa', minHeight: '100vh' }}>
-            <Paper elevation={0} sx={{ mb: 2, p: 2, bgcolor: '#fff', borderRadius: 1, border: '1px solid #e0e0e0' }}>
-                <Typography variant="h5" fontWeight="bold">
-                    Kế hoạch bảo trì
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Quản lý kế hoạch bảo trì import từ Excel.
-                </Typography>
+            <Paper elevation={0} sx={{ mb: 2, p: 2, bgcolor: '#fff', borderRadius: 1, border: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <Typography variant="h5" fontWeight="bold">
+                        Kế hoạch bảo trì
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Quản lý kế hoạch bảo trì import từ Excel.
+                    </Typography>
+                </Box>
+                <MaintenancePlanImport onApproved={loadBatches} />
             </Paper>
-
-            <MaintenancePlanImport onApproved={loadBatches} />
 
             <Card variant="outlined" sx={{ mb: 2 }}>
                 <CardContent sx={{ p: 2 }}>
@@ -63,14 +64,15 @@ export default function MaintenancePlan() {
                     {message && (
                         <Typography variant="body2" color="primary" sx={{ mb: 1 }}>{message}</Typography>
                     )}
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '40px 1.5fr 1fr 1fr 1fr 220px', fontWeight: 'bold', fontSize: '1.2rem', px: 1, py: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                        <span>#</span><span>Tiêu đề</span><span>Trạng thái</span><span>Ngày tạo</span><span>Người tạo</span><span style={{ textAlign: 'right' }}>Thao tác</span>
-                    </Box>
+                    <Box sx={{ minWidth: 900, overflowX: 'auto' }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '40px 1.5fr 1fr 1fr 1fr 220px', fontWeight: 'bold', fontSize: '1.2rem', px: 1, py: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                            <span>#</span><span>Tiêu đề</span><span>Trạng thái</span><span>Ngày tạo</span><span>Người tạo</span><span style={{ textAlign: 'right' }}>Thao tác</span>
+                        </Box>
                     {batches.length === 0 && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Chưa có kế hoạch nào.</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>Chưa có kế hoạch nào.</Typography>
                     )}
                     {batches.map((b, idx) => (
-                        <Box key={b.id} sx={{ display: 'grid', gridTemplateColumns: '40px 1.5fr 1fr 1fr 1fr 220px', alignItems: 'center', px: 1, py: 1, borderBottom: '1px solid #eee', bgcolor: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
+                        <Box key={b.id} sx={{ display: 'grid', gridTemplateColumns: '40px 1.5fr 1fr 1fr 1fr 220px', alignItems: 'center', px: 1, py: 1, borderBottom: '1px solid #eee' }}>
                             <Typography variant="body2">{idx + 1}</Typography>
                             <Typography variant="body2" fontWeight="bold">{b.title}</Typography>
                             <Box>
@@ -134,6 +136,7 @@ export default function MaintenancePlan() {
                             </Stack>
                         </Box>
                     ))}
+                    </Box>
                 </CardContent>
             </Card>
 

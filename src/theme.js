@@ -5,30 +5,36 @@ const theme = createTheme({
     cssVariables: true,
     palette: {},
     typography: {
-        fontSize: 15, // Tăng base từ 14 lên 15
-        htmlFontSize: 16,
+        fontSize: 14,
+        htmlFontSize: 12, // Vì html root = 75% = 12px
+        fontFamily: '"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         body1: {
-            fontSize: '1.05rem', // 16.8px
+            fontSize: '1.4rem', // 16.8px
         },
         body2: {
-            fontSize: '1rem', // 16px (trước đây 0.875rem = 14px)
+            fontSize: '1.3rem', // 15.6px
         },
         caption: {
-            fontSize: '0.9rem', // 14.4px (trước đây 0.75rem = 12px)
+            fontSize: '1.2rem', // 14.4px
         },
         button: {
-            fontSize: '1rem', // Tăng cỡ chữ button
+            fontSize: '1.3rem', // 15.6px
             fontWeight: 500,
+            textTransform: 'none',
         },
         h6: {
-            fontSize: '1.25rem', // 20px
+            fontSize: '1.6rem', // 19.2px
+            fontWeight: 600,
+        },
+        h5: {
+            fontSize: '1.8rem', // 21.6px
             fontWeight: 600,
         },
         subtitle1: {
-            fontSize: '1.05rem',
+            fontSize: '1.3rem', // 15.6px
         },
         subtitle2: {
-            fontSize: '1rem',
+            fontSize: '1.2rem', // 14.4px
         },
     },
     components: {
@@ -39,10 +45,11 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     '& .MuiInputBase-input': {
-                        fontSize: '1rem', // Tăng lên 16px
+                        fontSize: '1.3rem', // 15.6px
+                        padding: '12px 14px',
                     },
                     '& .MuiInputLabel-root': {
-                        fontSize: '1rem',
+                        fontSize: '1.3rem',
                     },
                 },
             },
@@ -50,45 +57,73 @@ const theme = createTheme({
         MuiButton: {
             styleOverrides: {
                 root: {
-                    fontSize: '1rem',
-                    padding: '8px 18px',
+                    fontSize: '1.3rem', // 15.6px
+                    padding: '10px 20px',
+                    borderRadius: '6px',
                 },
                 sizeSmall: {
-                    fontSize: '0.9rem',
-                    padding: '6px 14px',
+                    fontSize: '1.2rem',
+                    padding: '8px 16px',
+                },
+                sizeLarge: {
+                    fontSize: '1.4rem',
+                    padding: '12px 24px',
                 },
             },
         },
         MuiTab: {
             styleOverrides: {
                 root: {
-                    fontSize: '1rem', // Tăng lên rõ ràng
+                    fontSize: '1.3rem',
                     fontWeight: 600,
-                    minHeight: 48,
+                    minHeight: 52,
+                    padding: '12px 20px',
                 },
             },
         },
         MuiTableCell: {
             styleOverrides: {
                 root: {
-                    fontSize: '1rem', // Tăng lên 16px
-                    padding: '12px 16px',
+                    fontSize: '1.3rem', // 15.6px
+                    padding: '14px 16px',
                 },
                 head: {
-                    fontSize: '1rem',
+                    fontSize: '1.4rem', // 16.8px
                     fontWeight: 600,
+                    backgroundColor: '#f5f5f5',
                 },
             },
         },
         MuiChip: {
             styleOverrides: {
                 root: {
-                    fontSize: '0.9rem',
-                    height: '28px',
+                    fontSize: '1.2rem', // 14.4px
+                    height: '30px',
+                    borderRadius: '6px',
                 },
                 sizeSmall: {
-                    fontSize: '0.85rem',
-                    height: '24px',
+                    fontSize: '1.1rem',
+                    height: '26px',
+                },
+            },
+        },
+        MuiDataGrid: {
+            styleOverrides: {
+                root: {
+                    fontSize: '1.3rem', // 15.6px
+                    border: 'none',
+                    '& .MuiDataGrid-cell': {
+                        fontSize: '1.3rem',
+                        padding: '12px 16px',
+                    },
+                    '& .MuiDataGrid-columnHeader': {
+                        fontSize: '1.4rem',
+                        fontWeight: 600,
+                        backgroundColor: '#fafafa',
+                    },
+                    '& .MuiDataGrid-columnHeaderTitle': {
+                        fontWeight: 600,
+                    },
                 },
             },
         },

@@ -95,7 +95,7 @@ function Plant({ isOpen, onToggle }) {
                     ) : plants.length > 0 ? (
                         plants.map((plant, index) => (
                             <Box key={plant.id || index} sx={{ mb: 0.5 }}>
-                                <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
+                                <Typography sx={{ fontSize: '1.3rem', color: '#666' }}>
                                     ✓ {plant.name}
                                 </Typography>
                             </Box>

@@ -107,15 +107,17 @@ function AssetList() {
         {
             field: 'asset_code',
             headerName: 'Mã thiết bị',
-            width: 120,
+            width: 130,
+            flex: 0.8,
             fontWeight: 'bold'
         },
         {
             field: 'name',
             headerName: 'Tên thiết bị',
-            width: 200,
+            width: 220,
+            flex: 1.5,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontWeight: 'medium', fontSize: '1.2rem' }}>
+                <Typography variant="body2" sx={{ fontWeight: 'medium', fontSize: '1.3rem' }}>
                     {params.value}
                 </Typography>
             )
@@ -123,42 +125,45 @@ function AssetList() {
         {
             field: 'subCategory',
             headerName: 'Nhóm thiết bị',
-            width: 150,
+            width: 160,
+            flex: 1,
             renderCell: (params) => (
                 <Chip
                     label={params.row.SubCategory?.Category?.name || 'Chưa phân loại'}
                     color="primary"
                     size="small"
                     variant="outlined"
-                    sx={{ fontSize: '1.2rem' }}
+                    sx={{ fontSize: '1.3rem' }}
                 />
             )
         },
         {
             field: 'department',
             headerName: 'Phòng ban',
-            width: 120,
+            width: 140,
+            flex: 0.9,
             renderCell: (params) => (
                 <Chip
                     label={params.row.Department?.name || 'Chưa có'}
                     color="secondary"
                     size="small"
                     variant="outlined"
-                    sx={{ fontSize: '1.2rem' }}
+                    sx={{ fontSize: '1.3rem' }}
                 />
             )
         },
         {
             field: 'area',
             headerName: 'Vị trí',
-            width: 150,
+            width: 160,
+            flex: 1,
             renderCell: (params) => (
                 <Box>
-                    <Typography variant="body2" sx={{ fontSize: '1.1rem', fontWeight: 'medium' }}>
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem', fontWeight: 'medium' }}>
                         {params.row.Area?.name || 'Chưa có'}
                     </Typography>
                     {params.row.Area?.Plant?.name && (
-                        <Typography variant="caption" sx={{ fontSize: '1rem', color: '#666' }}>
+                        <Typography variant="caption" sx={{ fontSize: '1.1rem', color: '#666' }}>
                             {params.row.Area.Plant.name}
                         </Typography>
                     )}
@@ -168,7 +173,8 @@ function AssetList() {
         {
             field: 'status',
             headerName: 'Trạng thái',
-            width: 120,
+            width: 140,
+            flex: 0.9,
             renderCell: (params) => {
                 const status = params.value;
                 const getStatusProps = (status) => {
@@ -202,9 +208,9 @@ function AssetList() {
                         size="small"
                         variant={statusProps.variant}
                         sx={{ 
-                            fontSize: '1.1rem',
+                            fontSize: '1.2rem',
                             fontWeight: 'medium',
-                            minWidth: '100px'
+                            minWidth: '110px'
                         }}
                     />
                 );
@@ -214,8 +220,9 @@ function AssetList() {
             field: 'creator',
             headerName: 'Người tạo',
             width: 150,
+            flex: 0.9,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
+                <Typography variant="body2" sx={{ fontSize: '1.3rem' }}>
                     {params.row.Creator?.name || 'Không xác định'}
                 </Typography>
             )
@@ -223,9 +230,10 @@ function AssetList() {
         {
             field: 'created_at',
             headerName: 'Ngày tạo',
-            width: 120,
+            width: 130,
+            flex: 0.8,
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
+                <Typography variant="body2" sx={{ fontSize: '1.3rem' }}>
                     {new Date(params.value).toLocaleDateString('vi-VN')}
                 </Typography>
             )
@@ -233,7 +241,8 @@ function AssetList() {
         {
             field: 'actions',
             headerName: 'Thao tác',
-            width: 350,
+            width: 360,
+            flex: 2,
             sortable: false,
             renderCell: (params) => (
                 <Box sx={{ display: 'flex', gap: 1 }}>
@@ -243,7 +252,7 @@ function AssetList() {
                         color="info"
                         startIcon={<VisibilityIcon />}
                         onClick={() => handleViewDetail(params.row.id)}
-                        sx={{ fontSize: '1.1rem' }}
+                        sx={{ fontSize: '1.2rem', px: 1.5, py: 0.5 }}
                     >
                         Xem
                     </Button>
@@ -254,7 +263,7 @@ function AssetList() {
                             color="primary"
                             startIcon={<EditIcon />}
                             onClick={() => handleEdit(params.row)}
-                            sx={{ fontSize: '1.1rem' }}
+                            sx={{ fontSize: '1.2rem', px: 1.5, py: 0.5 }}
                         >
                             Sửa
                         </Button>
@@ -266,7 +275,7 @@ function AssetList() {
                             color="error"
                             startIcon={<DeleteIcon />}
                             onClick={() => handleDeleteClick(params.row)}
-                            sx={{ fontSize: '1.1rem' }}
+                            sx={{ fontSize: '1.2rem', px: 1.5, py: 0.5 }}
                         >
                             Xóa
                         </Button>
@@ -284,7 +293,7 @@ function AssetList() {
     }
 
     return (
-        <Box sx={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column', p: 2 }}>
             {/* Header with Excel buttons */}
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <ExcelImportExport onImportSuccess={handleImportSuccess} />
@@ -305,18 +314,24 @@ function AssetList() {
                             paginationModel: { pageSize: 25, page: 0 },
                         },
                     }}
+                    getRowHeight={() => 'auto'}
                     sx={{
                         '& .MuiDataGrid-cell': {
-                            fontSize: '1.2rem',
+                            fontSize: '1.3rem',
                             display: 'flex',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            py: 1
                         },
                         '& .MuiDataGrid-columnHeaders': {
-                            fontSize: '1.2rem',
-                            fontWeight: 'bold'
+                            fontSize: '1.4rem',
+                            fontWeight: 'bold',
+                            backgroundColor: '#f5f5f5'
                         },
                         '& .MuiDataGrid-row': {
-                            minHeight: '60px !important'
+                            minHeight: '70px !important'
+                        },
+                        '& .MuiDataGrid-footerContainer': {
+                            fontSize: '1.3rem'
                         }
                     }}
                 />

@@ -106,32 +106,32 @@ function Handovers() {
     };
 
     return (
-        <Box sx={{ p: 3, position: 'relative', minHeight: '100vh' }}>
-            <Paper sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ mb: 3 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        Lệnh bàn giao thiết bị
-                    </Typography>
-                    <Typography color="text.secondary">
-                        Ghi nhận bộ phận bàn giao, bộ phận tiếp nhận và danh sách hạng mục bàn giao kèm tình trạng.
-                    </Typography>
-                </Box>
+        <Box sx={{ p: 3, bgcolor: '#f5f6fa', position: 'relative', minHeight: '100vh' }}>
+            <Paper elevation={0} sx={{ mb: 2, p: 2, bgcolor: '#fff', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: '1.8rem', mb: 0.5 }}>
+                    Lệnh bàn giao thiết bị
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+                    Ghi nhận bộ phận bàn giao, bộ phận tiếp nhận và danh sách hạng mục bàn giao kèm tình trạng.
+                </Typography>
+            </Paper>
 
-                {success && (
-                    <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
-                        {success}
-                    </Alert>
-                )}
+            {success && (
+                <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+                    {success}
+                </Alert>
+            )}
 
-                <Table size="small">
+            <Paper variant="outlined" sx={{ p: 2 }}>
+                <Table size="small" sx={{ '& .MuiTableCell-root': { fontSize: '1.2rem' } }}>
                     <TableHead>
-                        <TableRow>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Bộ phận bàn giao</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Bộ phận tiếp nhận</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Thiết bị</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Lý do</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Trạng thái</TableCell>
-                            <TableCell></TableCell>
+                        <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                            <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Bộ phận bàn giao</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Bộ phận tiếp nhận</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Thiết bị</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Lý do</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Trạng thái</TableCell>
+                            <TableCell sx={{ borderBottom: '2px solid #e0e0e0' }}></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -143,12 +143,12 @@ function Handovers() {
                             </TableRow>
                         )}
                         {list.map((h) => (
-                            <TableRow key={h.id} hover>
+                            <TableRow key={h.id} hover sx={{ '& .MuiTableCell-root': { borderBottom: '1px solid #f0f0f0' } }}>
                                 <TableCell>{h.fromDept}</TableCell>
                                 <TableCell>{h.toDept}</TableCell>
                                 <TableCell>
-                                    <Typography sx={{ fontWeight: 500 }}>{h.asset_name || 'N/A'}</Typography>
-                                    <Typography variant="caption" color="text.secondary">
+                                    <Typography sx={{ fontWeight: 500, fontSize: '1.2rem' }}>{h.asset_name || 'N/A'}</Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
                                         {h.asset_code}
                                     </Typography>
                                 </TableCell>

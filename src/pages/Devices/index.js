@@ -3,16 +3,23 @@ import SubSidebar from '../../component/LayoutComponent/SubSidebar';
 import AddDeviceButton from '../../component/AssetsComponent/AddDeviceBtn';
 import {
     Box,
-    Grid
+    Grid,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 
-function Devices() { 
+function Devices() {
+    const theme = useTheme();
+    const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
+    
     return (
         <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
-            {/* SubSidebar - 25% width */}
-            <Box sx={{ width: '300px', minWidth: '300px' }}>
-                <SubSidebar />
-            </Box>
+            {/* SubSidebar - hidden on small screens */}
+            {isLargeScreen && (
+                <Box sx={{ width: '300px', minWidth: '300px' }}>
+                    <SubSidebar />
+                </Box>
+            )}
             
             {/* Main Content - 75% width */}
             <Box sx={{ 

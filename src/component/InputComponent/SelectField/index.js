@@ -103,7 +103,7 @@ function SelectField({
             <MenuItem 
                 {...props} 
                 key={option[valueKey]}
-                sx={{ fontSize: '1.2rem' }}
+                sx={{ fontSize: '1.3rem', py: 1.5 }}
             >
                 {option[labelKey]}
             </MenuItem>
@@ -135,10 +135,11 @@ function SelectField({
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="body2" sx={{
-                fontSize: '1.2rem',
+                fontSize: '1.3rem',
                 fontWeight: 'medium',
                 color: '#333',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                mb: 0.5
             }}>
                 {label}{required && <span style={{ color: '#f44336' }}> *</span>}:
             </Typography>
@@ -164,7 +165,7 @@ function SelectField({
                             disabled={disabled}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
-                                    fontSize: '1.2rem',
+                                    fontSize: '1.3rem',
                                     backgroundColor: disabled ? '#f5f5f5' : '#fff',
                                     '& .MuiOutlinedInput-notchedOutline': {
                                         borderColor: error ? '#f44336' : '#ddd',
@@ -177,8 +178,8 @@ function SelectField({
                                     },
                                 },
                                 '& .MuiInputBase-input': {
-                                    fontSize: '1.2rem',
-                                    padding: '10px 14px',
+                                    fontSize: '1.3rem',
+                                    padding: '12px 14px',
                                 }
                             }}
                         />

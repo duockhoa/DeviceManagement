@@ -12,7 +12,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 function DefaultLayout({ children }) {
     const dispatch = useDispatch();
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('md')); // Changed from 'sm' to 'md' (< 900px)
     const isOpen = useSelector((state) => state.sidebar.isOpen);
     const handleSidebarClose = () => {
         if (isMobile) {

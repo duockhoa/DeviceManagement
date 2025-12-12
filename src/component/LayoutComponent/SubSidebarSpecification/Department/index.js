@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
     Box,
     ListItemButton,
@@ -14,24 +13,10 @@ import {
     Business,
     Add
 } from '@mui/icons-material';
-import { fetchDepartments } from '../../../../redux/slice/departmentSlice';
 
 function Department({ isOpen, onToggle }) {
-    const dispatch = useDispatch();
-    
     // Lấy dữ liệu departments từ Redux store
-    const { departments, loading, error } = useSelector(state => state.departments);
-    
-    // Fetch departments khi component mount
-    useEffect(() => {
-        dispatch(fetchDepartments());
-    }, [dispatch]);
-    
-    // Handle click nút Add
-    const handleAddClick = (event) => {
-        event.stopPropagation();
-        alert('Chức năng thêm phòng ban đang được phát triển');
-    };
+    const departments = useSelector(state => state.departments?.departments || []);
 
     return (
         <Box>
@@ -52,20 +37,6 @@ function Department({ isOpen, onToggle }) {
                         sx: { fontSize: '1.4rem', fontWeight: 'medium' } 
                     }}
                 />
-                <ListItemIcon 
-                    sx={{ 
-                        minWidth: '30px',
-                        minHeight: '30px',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
-                        '&:hover': {
-                            backgroundColor: 'rgba(142, 36, 170, 0.1)',
-                        }
-                    }}
-                    onClick={handleAddClick}
-                >
-                    <Add sx={{ fontSize: '1.8rem', color: '#8e24aa', margin: 'auto' }} />
-                </ListItemIcon>
                 {isOpen ? 
                     <ExpandLess sx={{ fontSize: '2rem' }} /> : 
                     <ExpandMore sx={{ fontSize: '2rem' }} />
@@ -74,33 +45,13 @@ function Department({ isOpen, onToggle }) {
             
             <Collapse in={isOpen} timeout="auto" unmountOnExit>
                 <Box sx={{ backgroundColor: '#f8f9fa', px: 2, py: 1 }}>
-                    {loading ? (
-                        <Box sx={{ mb: 0.5 }}>
+                    {departments.map((department, index) => (
+                        <Box key={index} sx={{ mb: 0.5 }}>
                             <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
-                                Loading...
+                                ✓ {department.name}
                             </Typography>
                         </Box>
-                    ) : error ? (
-                        <Box sx={{ mb: 0.5 }}>
-                            <Typography sx={{ fontSize: '1.4rem', color: '#d32f2f' }}>
-                                Error: {error}
-                            </Typography>
-                        </Box>
-                    ) : departments && departments.length > 0 ? (
-                        departments.map((department, index) => (
-                            <Box key={department.id || index} sx={{ mb: 0.5 }}>
-                                <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
-                                    ✓ {department.name}
-                                </Typography>
-                            </Box>
-                        ))
-                    ) : (
-                        <Box sx={{ mb: 0.5 }}>
-                            <Typography sx={{ fontSize: '1.4rem', color: '#666' }}>
-                                Không có phòng ban
-                            </Typography>
-                        </Box>
-                    )}
+                    ))}
                 </Box>
             </Collapse>
         </Box>

@@ -2,16 +2,23 @@ import CalibrationList from '../../component/CalibrationComponent/CalibrationLis
 import SubSidebarCalibration from '../../component/LayoutComponent/SubSidebarCalibration';
 import AddCalibrationButton from '../../component/CalibrationComponent/AddCalibrationBtn';
 import {
-    Box
+    Box,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 
 function Calibration() {
+    const theme = useTheme();
+    const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
+    
     return (
         <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
-            {/* SubSidebar - 25% width */}
-            <Box sx={{ width: '300px', minWidth: '300px' }}>
-                <SubSidebarCalibration />
-            </Box>
+            {/* SubSidebar - hidden on small screens */}
+            {isLargeScreen && (
+                <Box sx={{ width: '300px', minWidth: '300px' }}>
+                    <SubSidebarCalibration />
+                </Box>
+            )}
 
             {/* Main Content - 75% width */}
             <Box sx={{

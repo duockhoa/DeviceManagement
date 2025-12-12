@@ -224,49 +224,57 @@ function MaintenanceResult() {
     }
 
     return (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 3, bgcolor: '#f5f6fa', minHeight: '100vh' }}>
             {/* Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
-                <AssignmentTurnedInIcon sx={{ fontSize: '2rem', color: 'primary.main' }} />
-                <Typography variant="h5" sx={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
-                    Kết quả bảo trì
-                </Typography>
-                <Chip 
-                    label={`${workOrders.length} công việc`}
-                    color="primary"
-                    sx={{ fontSize: '1.2rem' }}
-                />
-            </Box>
-
-            <Typography variant="body2" sx={{ mb: 3, fontSize: '1.1rem', color: '#666' }}>
-                Hiển thị tất cả công việc bảo trì đang thực hiện, chờ phê duyệt và đã hoàn thành
-            </Typography>
+            <Paper elevation={0} sx={{ mb: 2, p: 2, bgcolor: '#fff', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <AssignmentTurnedInIcon sx={{ fontSize: '2rem', color: 'primary.main' }} />
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h5" sx={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
+                            Kết quả bảo trì
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '1.1rem', color: 'text.secondary' }}>
+                            Hiển thị tất cả công việc bảo trì đang thực hiện, chờ phê duyệt và đã hoàn thành
+                        </Typography>
+                    </Box>
+                    <Chip 
+                        label={`${workOrders.length} công việc`}
+                        color="primary"
+                        sx={{ fontSize: '1.2rem' }}
+                    />
+                </Box>
+            </Paper>
 
             {error && (
-                <Alert severity="error" sx={{ mb: 3, fontSize: '1.2rem' }}>
+                <Alert severity="error" sx={{ mb: 2, fontSize: '1.2rem' }}>
                     {error}
                 </Alert>
             )}
 
             {/* Data Grid */}
-            <Paper sx={{ height: 'calc(100vh - 200px)', width: '100%' }}>
-                <DataGrid
-                    rows={workOrders}
-                    columns={columns}
-                    pageSize={25}
-                    rowsPerPageOptions={[10, 25, 50, 100]}
-                    disableSelectionOnClick
-                    sx={{
-                        '& .MuiDataGrid-cell': {
-                            fontSize: '1.2rem'
-                        },
-                        '& .MuiDataGrid-columnHeaders': {
-                            fontSize: '1.2rem',
-                            fontWeight: 'bold',
-                            backgroundColor: '#f5f5f5'
-                        }
-                    }}
-                />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+                <Box sx={{ height: 'calc(100vh - 280px)', width: '100%' }}>
+                    <DataGrid
+                        rows={workOrders}
+                        columns={columns}
+                        pageSize={25}
+                        rowsPerPageOptions={[10, 25, 50, 100]}
+                        disableSelectionOnClick
+                        sx={{
+                            border: 'none',
+                            '& .MuiDataGrid-cell': {
+                                fontSize: '1.2rem',
+                                borderBottom: '1px solid #f0f0f0'
+                            },
+                            '& .MuiDataGrid-columnHeaders': {
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold',
+                                backgroundColor: '#f8f9fa',
+                                borderBottom: '2px solid #e0e0e0'
+                            }
+                        }}
+                    />
+                </Box>
             </Paper>
         </Box>
     );

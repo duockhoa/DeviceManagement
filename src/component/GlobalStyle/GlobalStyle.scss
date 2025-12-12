@@ -9,7 +9,7 @@
 }
 
 html {
-    font-size: 62.5%;
+    font-size: 75%; /* 1rem = 12px - Tăng để text dễ đọc hơn */
 }
 
 * {
@@ -19,9 +19,10 @@ html {
 }
 
 body {
-    font-size: 1.6rem;
-    line-height: 1.5;
+    font-size: 1.4rem; /* 16.8px */
+    line-height: 1.65;
     text-rendering: optimizeLegibility;
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 input:-webkit-autofill {

@@ -217,21 +217,22 @@ export default function WorkRequests() {
                 </Typography>
             </Paper>
 
-            <Paper variant="outlined" sx={{ p: 2 }}>
+            <Paper variant="outlined" sx={{ p: 2, overflow: 'auto' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <Typography variant="subtitle1" fontWeight="bold">
                         Danh sách yêu cầu
                     </Typography>
                 </Box>
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: '50px 140px 160px 140px 110px 140px 130px 140px 140px 140px 140px 180px', fontWeight: 'bold', fontSize: '1.2rem', px: 1, py: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                    {columns.map((c) => (
-                        <span key={c} style={{ textAlign: 'center' }}>{c}</span>
-                    ))}
-                </Box>
+                <Box sx={{ minWidth: 1400, overflowX: 'auto' }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '40px 120px 140px 100px 100px 110px 110px 140px 140px 120px 120px 160px', fontWeight: 'bold', fontSize: '1.1rem', px: 1, py: 1, bgcolor: '#f8f9fa', borderRadius: 1, borderBottom: '2px solid #e0e0e0' }}>
+                        {columns.map((c) => (
+                            <span key={c} style={{ textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c}</span>
+                        ))}
+                    </Box>
 
                 {items.length === 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
                         Chưa có yêu cầu.
                     </Typography>
                 )}
@@ -241,30 +242,30 @@ export default function WorkRequests() {
                         key={it.id}
                         sx={{
                             display: 'grid',
-                            gridTemplateColumns: '50px 140px 160px 140px 110px 140px 130px 140px 140px 140px 140px 180px',
+                            gridTemplateColumns: '40px 120px 140px 100px 100px 110px 110px 140px 140px 120px 120px 160px',
                             alignItems: 'center',
                             px: 1,
-                            py: 1,
-                            borderBottom: '1px solid #eee',
-                            bgcolor: idx % 2 === 0 ? '#fff' : '#fafafa'
+                            py: 1.5,
+                            borderBottom: '1px solid #f0f0f0',
+                            '&:hover': { bgcolor: '#f8f9fa' }
                         }}
                     >
-                        <Typography variant="body2" textAlign="center">{idx + 1}</Typography>
-                        <Typography variant="body2" fontWeight="bold" textAlign="center">{it.request_code}</Typography>
-                        <Typography variant="body2" textAlign="center">{it.asset?.asset_code || ''}</Typography>
-                        <Typography variant="body2" textAlign="center">{typeMeta[it.type] || it.type}</Typography>
+                        <Typography variant="body2" textAlign="center" fontSize="1.1rem">{idx + 1}</Typography>
+                        <Typography variant="body2" fontWeight="bold" textAlign="center" fontSize="1.1rem" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.request_code}</Typography>
+                        <Typography variant="body2" textAlign="center" fontSize="1.1rem" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.asset?.asset_code || ''}</Typography>
+                        <Typography variant="body2" textAlign="center" fontSize="1.1rem" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{typeMeta[it.type] || it.type}</Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <Chip size="small" label={priorityMeta[it.priority]?.label || it.priority} color={priorityMeta[it.priority]?.color || 'default'} />
+                            <Chip size="small" label={priorityMeta[it.priority]?.label || it.priority} color={priorityMeta[it.priority]?.color || 'default'} sx={{ fontSize: '1rem', minWidth: 70 }} />
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <Chip size="small" label={statusMeta[it.status]?.label || it.status} color={statusMeta[it.status]?.color || 'default'} />
+                            <Chip size="small" label={statusMeta[it.status]?.label || it.status} color={statusMeta[it.status]?.color || 'default'} sx={{ fontSize: '1rem', minWidth: 85 }} />
                         </Box>
-                        <Typography variant="body2" textAlign="center">{it.due_date ? new Date(it.due_date).toLocaleDateString() : '--'}</Typography>
-                        <Typography variant="body2" textAlign="center">{it.createdAt ? new Date(it.createdAt).toLocaleString('vi-VN') : '--'}</Typography>
-                        <Typography variant="body2" textAlign="center">{it.status === 'closed' && it.updatedAt ? new Date(it.updatedAt).toLocaleString('vi-VN') : '--'}</Typography>
-                        <Typography variant="body2" textAlign="center">{it.requester?.name || ''}</Typography>
-                        <Typography variant="body2" textAlign="center">{it.technician?.name || '--'}</Typography>
-                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <Typography variant="body2" textAlign="center" fontSize="1.1rem">{it.due_date ? new Date(it.due_date).toLocaleDateString('vi-VN') : '--'}</Typography>
+                        <Typography variant="body2" textAlign="center" fontSize="1rem" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.createdAt ? new Date(it.createdAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--'}</Typography>
+                        <Typography variant="body2" textAlign="center" fontSize="1rem" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.status === 'closed' && it.updatedAt ? new Date(it.updatedAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--'}</Typography>
+                        <Typography variant="body2" textAlign="center" fontSize="1.1rem" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.requester?.name || ''}</Typography>
+                        <Typography variant="body2" textAlign="center" fontSize="1.1rem" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.technician?.name || '--'}</Typography>
+                        <Stack direction="row" spacing={1} justifyContent="center">
                             {isOpsView && (
                                 <>
                                     <Button size="small" variant="outlined" onClick={() => openDetailDialog(it.id)}>Xem</Button>
@@ -291,6 +292,7 @@ export default function WorkRequests() {
                         </Stack>
                     </Box>
                 ))}
+                </Box>
             </Paper>
 
             <Dialog open={openCreate} onClose={() => setOpenCreate(false)} maxWidth="sm" fullWidth>

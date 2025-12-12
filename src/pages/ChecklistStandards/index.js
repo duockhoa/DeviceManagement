@@ -17,16 +17,17 @@ import {
     IconButton,
     Stack,
     Checkbox,
+    Menu,
     MenuItem,
-    Chip,
-    Alert
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import * as XLSX from 'xlsx';
 import checklistStandardService from '../../services/checklistStandardService';
 import SubSidebarSpecification from '../../component/LayoutComponent/SubSidebarSpecification';
@@ -40,38 +41,20 @@ const emptyItem = () => ({
     required: false
 });
 
-const MAINTENANCE_TYPES = [
-    { value: 'all', label: 'Tất cả', color: 'default' },
-    { value: 'cleaning', label: 'Vệ sinh', color: 'info' },
-    { value: 'inspection', label: 'Kiểm tra', color: 'primary' },
-    { value: 'maintenance', label: 'Bảo trì', color: 'warning' },
-    { value: 'corrective', label: 'Sửa chữa', color: 'error' }
-];
-
 function ChecklistStandards() {
     const [standards, setStandards] = useState([]);
     const [open, setOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [maintenanceType, setMaintenanceType] = useState('all');
     const [items, setItems] = useState([emptyItem()]);
     const [importMessage, setImportMessage] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [anchorEl, setAnchorEl] = useState(null);
     const fileInputRef = useRef(null);
 
     const load = async () => {
-        try {
-            setLoading(true);
-            setError('');
-            const data = await checklistStandardService.list();
-            setStandards(data);
-        } catch (err) {
-            setError('Lỗi khi tải dữ liệu: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
+        const data = await checklistStandardService.list();
+        setStandards(data);
     };
 
     useEffect(() => {
@@ -82,50 +65,30 @@ function ChecklistStandards() {
         setEditingId(null);
         setName('');
         setDescription('');
-        setMaintenanceType('all');
         setItems([emptyItem()]);
     };
 
     const handleSave = async () => {
-        if (!name.trim()) {
-            setError('Vui lòng nhập tên checklist');
-            return;
+        if (!name.trim()) return;
+        const payload = {
+            name,
+            description,
+            items: items.map(({ id, ...rest }) => rest)
+        };
+        if (editingId) {
+            await checklistStandardService.update(editingId, payload);
+        } else {
+            await checklistStandardService.create(payload);
         }
-        if (items.length === 0 || !items.some(i => i.task?.trim())) {
-            setError('Vui lòng thêm ít nhất 1 hạng mục');
-            return;
-        }
-
-        try {
-            setLoading(true);
-            setError('');
-            const payload = {
-                name,
-                description,
-                maintenance_type: maintenanceType,
-                items: items.filter(i => i.task?.trim()).map(({ id, ...rest }) => rest)
-            };
-            
-            if (editingId) {
-                await checklistStandardService.update(editingId, payload);
-            } else {
-                await checklistStandardService.create(payload);
-            }
-            resetForm();
-            setOpen(false);
-            load();
-        } catch (err) {
-            setError('Lỗi khi lưu: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
+        resetForm();
+        setOpen(false);
+        load();
     };
 
     const handleEdit = (std) => {
         setEditingId(std.id);
         setName(std.name || '');
         setDescription(std.description || '');
-        setMaintenanceType(std.maintenance_type || 'all');
         setItems(
             (std.items || []).map((it, idx) => ({
                 id: Date.now() + idx,
@@ -137,24 +100,6 @@ function ChecklistStandards() {
             }))
         );
         setOpen(true);
-    };
-
-    const handleSeedDefaults = async () => {
-        if (!window.confirm('Tạo 4 mẫu checklist mặc định?\n(Vệ sinh, Kiểm tra, Bảo trì, Sửa chữa)')) {
-            return;
-        }
-        try {
-            setLoading(true);
-            setError('');
-            await checklistStandardService.seedDefaults();
-            setImportMessage('✅ Đã tạo 4 mẫu checklist mặc định thành công!');
-            setTimeout(() => setImportMessage(''), 5000);
-            load();
-        } catch (err) {
-            setError('Lỗi khi tạo mẫu mặc định: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
     };
 
     const addItem = () => {
@@ -169,19 +114,68 @@ function ChecklistStandards() {
         setItems((prev) => prev.filter((it) => it.id !== id));
     };
 
+    const handleMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleDownloadTemplate = () => {
+        const wb = XLSX.utils.book_new();
+        const sample = [
+            {
+                'Tên checklist': 'Checklist mẫu 1',
+                'Mô tả': 'Mô tả checklist 1',
+                'Nội dung': 'Kiểm tra nguồn',
+                'Hạng mục': 'Điện áp',
+                'Tiêu chuẩn OK': '220V ±10%',
+                'Phương pháp': 'Dùng đồng hồ',
+                'Bắt buộc': 1
+            },
+            {
+                'Tên checklist': 'Checklist mẫu 1',
+                'Mô tả': 'Mô tả checklist 1',
+                'Nội dung': 'Kiểm tra vệ sinh',
+                'Hạng mục': 'Bụi bẩn',
+                'Tiêu chuẩn OK': 'Sạch sẽ',
+                'Phương pháp': 'Quan sát',
+                'Bắt buộc': 0
+            },
+            {
+                'Tên checklist': 'Checklist mẫu 2',
+                'Mô tả': 'Mô tả checklist 2',
+                'Nội dung': 'Bôi trơn',
+                'Hạng mục': 'Vòng bi',
+                'Tiêu chuẩn OK': 'Đầy đủ dầu mỡ',
+                'Phương pháp': 'Quan sát',
+                'Bắt buộc': 1
+            }
+        ];
+        const ws = XLSX.utils.json_to_sheet(sample);
+        XLSX.utils.book_append_sheet(wb, ws, 'Checklist');
+        XLSX.writeFile(wb, 'mau-checklist.xlsx');
+        handleMenuClose();
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+        handleMenuClose();
+    };
+
+    const theme = useTheme();
+    const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
+    
     return (
         <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
-            <Box sx={{ width: '300px', minWidth: '300px' }}>
-                <SubSidebarSpecification />
-            </Box>
+            {isLargeScreen && (
+                <Box sx={{ width: '300px', minWidth: '300px' }}>
+                    <SubSidebarSpecification />
+                </Box>
+            )}
 
             <Box sx={{ flex: 1, p: 2, backgroundColor: '#f6f8fb' }}>
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-                        {error}
-                    </Alert>
-                )}
-
                 <Paper sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box>
                         <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Tiêu chuẩn checklist</Typography>
@@ -191,62 +185,27 @@ function ChecklistStandards() {
                     </Box>
                     <Stack direction="row" spacing={1}>
                         <Button
-                            variant="outlined"
-                            color="secondary"
-                            startIcon={<RefreshIcon />}
-                            onClick={handleSeedDefaults}
-                            disabled={loading}
+                            variant="contained"
+                            color="success"
+                            startIcon={<FileDownloadIcon />}
+                            onClick={handleMenuOpen}
                         >
-                            Tạo mẫu mặc định
+                            Excel
                         </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={<DownloadIcon />}
-                            onClick={() => {
-                                const wb = XLSX.utils.book_new();
-                                const sample = [
-                                    {
-                                        'Tên checklist': 'Checklist mẫu 1',
-                                        'Mô tả': 'Mô tả checklist 1',
-                                        'Nội dung': 'Kiểm tra nguồn',
-                                        'Hạng mục': 'Điện áp',
-                                        'Tiêu chuẩn OK': '220V ±10%',
-                                        'Phương pháp': 'Dùng đồng hồ',
-                                        'Bắt buộc': 1
-                                    },
-                                    {
-                                        'Tên checklist': 'Checklist mẫu 1',
-                                        'Mô tả': 'Mô tả checklist 1',
-                                        'Nội dung': 'Kiểm tra vệ sinh',
-                                        'Hạng mục': 'Bụi bẩn',
-                                        'Tiêu chuẩn OK': 'Sạch sẽ',
-                                        'Phương pháp': 'Quan sát',
-                                        'Bắt buộc': 0
-                                    },
-                                    {
-                                        'Tên checklist': 'Checklist mẫu 2',
-                                        'Mô tả': 'Mô tả checklist 2',
-                                        'Nội dung': 'Bôi trơn',
-                                        'Hạng mục': 'Vòng bi',
-                                        'Tiêu chuẩn OK': 'Đầy đủ dầu mỡ',
-                                        'Phương pháp': 'Quan sát',
-                                        'Bắt buộc': 1
-                                    }
-                                ];
-                                const ws = XLSX.utils.json_to_sheet(sample);
-                                XLSX.utils.book_append_sheet(wb, ws, 'Checklist');
-                                XLSX.writeFile(wb, 'mau-checklist.xlsx');
-                            }}
+                        <Menu 
+                            anchorEl={anchorEl} 
+                            open={Boolean(anchorEl)} 
+                            onClose={handleMenuClose}
                         >
-                            Tải mẫu Excel
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={<UploadIcon />}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            Import Excel
-                        </Button>
+                            <MenuItem onClick={handleDownloadTemplate}>
+                                <DownloadIcon fontSize="small" sx={{ mr: 1 }} />
+                                Tải mẫu Excel
+                            </MenuItem>
+                            <MenuItem onClick={handleImportClick}>
+                                <UploadIcon fontSize="small" sx={{ mr: 1 }} />
+                                Import Excel
+                            </MenuItem>
+                        </Menu>
                         <Button
                             variant="contained"
                             startIcon={<AddIcon />}
@@ -273,56 +232,27 @@ function ChecklistStandards() {
                         <TableHead>
                             <TableRow>
                                 <TableCell>Tên checklist</TableCell>
-                                <TableCell>Loại bảo trì</TableCell>
                                 <TableCell>Mô tả</TableCell>
                                 <TableCell>Số hạng mục</TableCell>
                                 <TableCell align="right">Thao tác</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {standards.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center">
-                                        <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-                                            {loading ? 'Đang tải...' : 'Chưa có checklist nào. Nhấn "Tạo mẫu mặc định" để bắt đầu.'}
-                                        </Typography>
+                            {standards.map((std) => (
+                                <TableRow key={std.id} hover>
+                                    <TableCell>{std.name}</TableCell>
+                                    <TableCell>{std.description}</TableCell>
+                                    <TableCell>{std.items?.length || 0}</TableCell>
+                                    <TableCell align="right">
+                                        <IconButton size="small" onClick={() => handleEdit(std)}>
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton size="small" onClick={async () => { await checklistStandardService.remove(std.id); load(); }}>
+                                            <DeleteIcon fontSize="small" sx={{ color: 'error.main' }} />
+                                        </IconButton>
                                     </TableCell>
                                 </TableRow>
-                            ) : (
-                                standards.map((std) => {
-                                    const typeInfo = MAINTENANCE_TYPES.find(t => t.value === std.maintenance_type) || MAINTENANCE_TYPES[0];
-                                    return (
-                                        <TableRow key={std.id} hover>
-                                            <TableCell>{std.name}</TableCell>
-                                            <TableCell>
-                                                <Chip 
-                                                    label={typeInfo.label} 
-                                                    color={typeInfo.color}
-                                                    size="small"
-                                                />
-                                            </TableCell>
-                                            <TableCell>{std.description}</TableCell>
-                                            <TableCell>{std.items?.length || 0}</TableCell>
-                                            <TableCell align="right">
-                                                <IconButton size="small" onClick={() => handleEdit(std)}>
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton 
-                                                    size="small" 
-                                                    onClick={async () => { 
-                                                        if (window.confirm('Xóa checklist này?')) {
-                                                            await checklistStandardService.remove(std.id); 
-                                                            load(); 
-                                                        }
-                                                    }}
-                                                >
-                                                    <DeleteIcon fontSize="small" sx={{ color: 'error.main' }} />
-                                                </IconButton>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })
-                            )}
+                            ))}
                         </TableBody>
                     </Table>
                 </Paper>
@@ -337,22 +267,7 @@ function ChecklistStandards() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             fullWidth
-                            required
                         />
-                        <TextField
-                            select
-                            label="Loại bảo trì áp dụng"
-                            value={maintenanceType}
-                            onChange={(e) => setMaintenanceType(e.target.value)}
-                            fullWidth
-                            required
-                        >
-                            {MAINTENANCE_TYPES.map(type => (
-                                <MenuItem key={type.value} value={type.value}>
-                                    {type.label}
-                                </MenuItem>
-                            ))}
-                        </TextField>
                         <TextField
                             label="Mô tả"
                             value={description}

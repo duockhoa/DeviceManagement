@@ -93,24 +93,29 @@ function HandoversFollowUp() {
     };
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
-                Theo dõi sau bàn giao
-            </Typography>
+        <Box sx={{ p: 3, bgcolor: '#f5f6fa', minHeight: '100vh' }}>
+            <Paper elevation={0} sx={{ mb: 2, p: 2, bgcolor: '#fff', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: '1.8rem' }}>
+                    Theo dõi sau bàn giao
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+                    Theo dõi và đánh giá tình trạng thiết bị sau khi bàn giao
+                </Typography>
+            </Paper>
             
             <Grid container spacing={3}>
                 <Grid item xs={12} md={5}>
-                    <Paper sx={{ p: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.4rem', mb: 2 }}>
                             Danh sách đã tiếp nhận
                         </Typography>
-                        <Table size="small">
+                        <Table size="small" sx={{ '& .MuiTableCell-root': { fontSize: '1.2rem' } }}>
                             <TableHead>
-                                <TableRow>
-                                    <TableCell>Bộ phận bàn giao</TableCell>
-                                    <TableCell>Bộ phận tiếp nhận</TableCell>
-                                    <TableCell>Lý do</TableCell>
-                                    <TableCell>Trạng thái</TableCell>
+                                <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                                    <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Bộ phận bàn giao</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Bộ phận tiếp nhận</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Lý do</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', borderBottom: '2px solid #e0e0e0' }}>Trạng thái</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -124,7 +129,8 @@ function HandoversFollowUp() {
                                             onClick={() => handleSelect(h)}
                                             sx={{ 
                                                 cursor: 'pointer',
-                                                backgroundColor: selected?.id === h.id ? 'action.selected' : 'inherit'
+                                                backgroundColor: selected?.id === h.id ? 'action.selected' : 'inherit',
+                                                '& .MuiTableCell-root': { borderBottom: '1px solid #f0f0f0' }
                                             }}
                                         >
                                             <TableCell>{h.fromDept}</TableCell>
@@ -158,7 +164,8 @@ function HandoversFollowUp() {
                                                     sx={{ 
                                                         cursor: 'pointer',
                                                         backgroundColor: selected?.id === h.id ? 'action.selected' : 'inherit',
-                                                        opacity: 0.7
+                                                        opacity: 0.7,
+                                                        '& .MuiTableCell-root': { borderBottom: '1px solid #f0f0f0' }
                                                     }}
                                                 >
                                                     <TableCell>{h.fromDept}</TableCell>
@@ -182,8 +189,8 @@ function HandoversFollowUp() {
                 </Grid>
                 
                 <Grid item xs={12} md={7}>
-                    <Paper sx={{ p: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.4rem', mb: 2 }}>
                             Cập nhật thông tin theo dõi
                         </Typography>
                         {selected ? (

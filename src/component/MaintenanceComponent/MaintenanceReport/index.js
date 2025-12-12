@@ -125,13 +125,18 @@ function MaintenanceReport() {
     }
 
     return (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 3, bgcolor: '#f5f6fa', minHeight: '100vh' }}>
             {/* Header */}
-            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                    <AssignmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                    Báo cáo tổng hợp bảo trì
-                </Typography>
+            <Paper elevation={0} sx={{ mb: 2, p: 2, bgcolor: '#fff', borderRadius: 1, border: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: '1.8rem' }}>
+                        <AssignmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                        Báo cáo tổng hợp bảo trì
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+                        Thống kê và phân tích kết quả bảo trì thiết bị
+                    </Typography>
+                </Box>
                 
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <FormControl sx={{ minWidth: 120 }}>
@@ -176,7 +181,7 @@ function MaintenanceReport() {
                         </Select>
                     </FormControl>
                 </Box>
-            </Box>
+            </Paper>
 
             {summaryData && (
                 <>
