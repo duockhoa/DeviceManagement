@@ -47,7 +47,7 @@ import { createMaintenanceRecord } from '../../../redux/slice/maintenanceSlice';
 import { fetchAssets } from '../../../redux/slice/assetsSlice';
 import { fetchUsers } from '../../../redux/slice/usersSlice';
 import { getActiveConsumableCategories } from '../../../services/consumableCategoriesService';
-import { getAssetConsumables } from '../../../services/assetsService';
+import { getAssetConsumables, getAssetByDkCode } from '../../../services/assetsService';
 import { getMechanicalElectricalTechniciansService } from '../../../services/usersService';
 import checklistStandardService from '../../../services/checklistStandardService';
 import InputField from '../../InputComponent/InputField';
