@@ -170,6 +170,9 @@ function AddMaintenanceForm({ handleClose, onReload }) {
     const [successMessage, setSuccessMessage] = useState('');
     // State cho tài liệu đính kèm
     const [attachedFiles, setAttachedFiles] = useState([]);
+    const [dkLookup, setDkLookup] = useState('');
+    const [dkLookupError, setDkLookupError] = useState(null);
+    const [dkLookupLoading, setDkLookupLoading] = useState(false);
 
     useEffect(() => {
         // Fetch assets if not already loaded
@@ -217,6 +220,40 @@ function AddMaintenanceForm({ handleClose, onReload }) {
         };
         loadStandards();
     }, [dispatch, assets, users]);
+
+    // Debounced dk_code lookup (optional, does not override selection on error)
+    useEffect(() => {
+        const trimmed = dkLookup.trim().toUpperCase();
+        if (!trimmed) {
+            setDkLookupError(null);
+            setDkLookupLoading(false);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            setDkLookupLoading(true);
+            setDkLookupError(null);
+            try {
+                const asset = await getAssetByDkCode(trimmed);
+                if (asset) {
+                    setSelectedAssetInfo(asset);
+                    setFormData((prev) => ({ ...prev, asset_id: asset.id }));
+                }
+            } catch (error) {
+                const status = error?.response?.status;
+                if (status === 401 || status === 403) {
+                    setDkLookupError('Bạn không có quyền tra cứu DK');
+                } else if (status === 404) {
+                    setDkLookupError('Không tìm thấy thiết bị với Mã DK này');
+                } else {
+                    setDkLookupError('Lỗi tra cứu DK, thử lại sau');
+                }
+            } finally {
+                setDkLookupLoading(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [dkLookup]);
 
     useEffect(() => {
         if (formData.asset_id && assets && assets.length > 0) {
@@ -741,6 +778,17 @@ function AddMaintenanceForm({ handleClose, onReload }) {
                                 labelKey="displayLabel"
                                 error={!!formErrors.asset_id}
                                 helperText={formErrors.asset_id}
+                            />
+                        </Grid2>
+                        <Grid2 xs={12} md={3}>
+                            <TextField
+                                fullWidth
+                                size="small"
+                                label="Tra cứu nhanh Mã DK"
+                                value={dkLookup}
+                                onChange={(e) => setDkLookup(e.target.value)}
+                                helperText={dkLookupError || (dkLookupLoading ? 'Đang tra cứu...' : 'Nhập Mã DK để tự động chọn thiết bị')}
+                                error={!!dkLookupError}
                             />
                         </Grid2>
 
