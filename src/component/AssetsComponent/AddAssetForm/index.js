@@ -68,6 +68,7 @@ function AddAssetForm({ handleClose }) {
     // Form state cho thông tin chung
     const [formData, setFormData] = useState({
         asset_code: '',
+        dk_code: '',
         name: '',
         category_id: '',
         team_id: '',
@@ -513,6 +514,16 @@ const rows = [
                                     valueKey="id"
                                     labelKey="name"
                                     width='150px'
+                                />
+                            </Grid2>
+
+                            <Grid2 lg={1.5}>
+                                <InputField
+                                    label="Mã DK (tùy chọn)"
+                                    name="dk_code"
+                                    value={formData.dk_code}
+                                    onChange={handleInputChange}
+                                    placeholder="Nhập mã DK"
                                 />
                             </Grid2>
 

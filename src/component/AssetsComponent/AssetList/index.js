@@ -112,6 +112,13 @@ function AssetList() {
             fontWeight: 'bold'
         },
         {
+            field: 'dk_code',
+            headerName: 'Mã DK',
+            width: 130,
+            flex: 0.8,
+            valueGetter: (params) => params.row.dk_code || '—'
+        },
+        {
             field: 'name',
             headerName: 'Tên thiết bị',
             width: 220,

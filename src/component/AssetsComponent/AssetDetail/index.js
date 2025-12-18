@@ -165,6 +165,9 @@ function AssetDetail() {
                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.2rem' }}>
                             Mã thiết bị: {asset.asset_code}
                         </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.2rem' }}>
+                            Mã DK: {asset.dk_code || '—'}
+                        </Typography>
                     </Box>
                     <Chip 
                         label={getStatusLabel(asset.status)} 

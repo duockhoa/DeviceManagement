@@ -75,6 +75,7 @@ function EditAssetForm({ handleClose, assetData }) {
     // Form state - khởi tạo từ assetData với mapping đúng
     const [formData, setFormData] = useState({
         asset_code: assetData?.asset_code || '',
+        dk_code: assetData?.dk_code || '',
         name: assetData?.name || '',
         category_id: assetData?.SubCategory?.category_id || '',
         team_id: assetData?.team_id || assetData?.Department?.name || '',
@@ -556,6 +557,16 @@ const rows = [
                                     valueKey="id"
                                     labelKey="name"
                                     width='150px'
+                                />
+                            </Grid2>
+
+                            <Grid2 lg={1.5}>
+                                <InputField
+                                    label="Mã DK (tùy chọn)"
+                                    name="dk_code"
+                                    value={formData.dk_code}
+                                    onChange={handleInputChange}
+                                    placeholder="Nhập mã DK"
                                 />
                             </Grid2>
 
