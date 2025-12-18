@@ -18,9 +18,7 @@ import {
     Stack,
     Checkbox,
     Menu,
-    MenuItem,
-    useMediaQuery,
-    useTheme
+    MenuItem
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -30,7 +28,6 @@ import DownloadIcon from '@mui/icons-material/Download';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import * as XLSX from 'xlsx';
 import checklistStandardService from '../../services/checklistStandardService';
-import SubSidebarSpecification from '../../component/LayoutComponent/SubSidebarSpecification';
 
 const emptyItem = () => ({
     id: Date.now(),
@@ -164,17 +161,8 @@ function ChecklistStandards() {
         handleMenuClose();
     };
 
-    const theme = useTheme();
-    const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
-    
     return (
         <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
-            {isLargeScreen && (
-                <Box sx={{ width: '300px', minWidth: '300px' }}>
-                    <SubSidebarSpecification />
-                </Box>
-            )}
-
             <Box sx={{ flex: 1, p: 2, backgroundColor: '#f6f8fb' }}>
                 <Paper sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box>

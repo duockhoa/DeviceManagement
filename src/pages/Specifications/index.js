@@ -1,23 +1,9 @@
-import {
-    Box,
-    useMediaQuery,
-    useTheme
-} from '@mui/material';
+import { Box } from '@mui/material';
 import SubCategoriesList from '../../component/SubCategories/SubCategoriesList';
-import SubSidebarSpecification from '../../component/LayoutComponent/SubSidebarSpecification';
 
 function Specifications() {
-    const theme = useTheme();
-    const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
-    
     return (
         <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
-            {isLargeScreen && (
-                <Box sx={{ width: '300px', minWidth: '300px' }}>
-                    <SubSidebarSpecification />
-                </Box>
-            )}
-            
             {/* Main Content */}
             <Box sx={{ 
                 flex: 1, 
