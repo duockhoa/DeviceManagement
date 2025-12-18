@@ -313,7 +313,10 @@ function AssetList() {
                     columns={columns}
                     loading={loading}
                     error={error}
-                    disableSelectionOnClick
+                    disableRowSelectionOnClick
+                    hideFooterSelectedRowCount
+                    isRowSelectable={() => false}
+                    rowSelectionModel={[]}
                     pagination
                     pageSizeOptions={[10, 25, 50, 100]}
                     initialState={{
@@ -323,11 +326,21 @@ function AssetList() {
                     }}
                     getRowHeight={() => 'auto'}
                     sx={{
+                        backgroundColor: '#fff',
+                        '& .MuiDataGrid-virtualScroller': {
+                            backgroundColor: '#fff !important'
+                        },
+                        '& .MuiDataGrid-virtualScrollerRenderZone': {
+                            backgroundColor: '#fff !important'
+                        },
                         '& .MuiDataGrid-cell': {
                             fontSize: '1.3rem',
                             display: 'flex',
                             alignItems: 'center',
                             py: 1
+                        },
+                        '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
+                            outline: 'none'
                         },
                         '& .MuiDataGrid-columnHeaders': {
                             fontSize: '1.4rem',
@@ -335,7 +348,22 @@ function AssetList() {
                             backgroundColor: '#f5f5f5'
                         },
                         '& .MuiDataGrid-row': {
-                            minHeight: '70px !important'
+                            minHeight: '70px !important',
+                            backgroundColor: '#fff',
+                            borderBottom: '1px solid #f0f0f0'
+                        },
+                        '& .MuiDataGrid-row.Mui-selected, & .MuiDataGrid-row.Mui-selected:hover': {
+                            backgroundColor: 'transparent !important'
+                        },
+                        '& .MuiDataGrid-row:hover': {
+                            backgroundColor: 'transparent'
+                        },
+                        '& .MuiDataGrid-row--borderBottom': {
+                            borderBottom: '1px solid #f0f0f0 !important',
+                            backgroundColor: '#fff'
+                        },
+                        '& .MuiDataGrid-columnSeparator': {
+                            visibility: 'hidden'
                         },
                         '& .MuiDataGrid-footerContainer': {
                             fontSize: '1.3rem'
