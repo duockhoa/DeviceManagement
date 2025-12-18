@@ -120,6 +120,7 @@ function AddMaintenanceForm({ handleClose, onReload }) {
     const [openStandardDialog, setOpenStandardDialog] = useState(false);
     const [selectedStandards, setSelectedStandards] = useState([]);
     const [selectedStandardId, setSelectedStandardId] = useState('');
+    const [selectedAssetInfo, setSelectedAssetInfo] = useState(null);
 
     // State cho checklist bảo trì
     const [maintenanceChecklist, setMaintenanceChecklist] = useState([
@@ -167,7 +168,6 @@ function AddMaintenanceForm({ handleClose, onReload }) {
     const [tabValue, setTabValue] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
-    
     // State cho tài liệu đính kèm
     const [attachedFiles, setAttachedFiles] = useState([]);
 
@@ -217,6 +217,25 @@ function AddMaintenanceForm({ handleClose, onReload }) {
         };
         loadStandards();
     }, [dispatch, assets, users]);
+
+    useEffect(() => {
+        if (formData.asset_id && assets && assets.length > 0) {
+            const asset = assets.find((a) => a.id === formData.asset_id);
+            setSelectedAssetInfo(asset || null);
+        } else {
+            setSelectedAssetInfo(null);
+        }
+    }, [formData.asset_id, assets]);
+
+    // Khi chọn thiết bị (theo Mã DK), tự động nạp thông tin hiển thị readonly
+    useEffect(() => {
+        if (formData.asset_id && assets && assets.length > 0) {
+            const asset = assets.find((a) => a.id === formData.asset_id);
+            setSelectedAssetInfo(asset || null);
+        } else {
+            setSelectedAssetInfo(null);
+        }
+    }, [formData.asset_id, assets]);
 
     // Auto-check default task khi chọn loại bảo trì
     useEffect(() => {
@@ -707,15 +726,19 @@ function AddMaintenanceForm({ handleClose, onReload }) {
                         {/* Hàng 2: Thiết bị và phân loại */}
                         <Grid2 xs={12} md={5}>
                             <SelectField
-                                label="Thiết bị cần bảo trì"
+                                label="Thiết bị cần bảo trì (chọn theo Mã DK)"
                                 name="asset_id"
                                 value={formData.asset_id}
                                 onChange={handleInputChange2}
-                                options={assets}
+                                options={assets.map((a) => ({
+                                    ...a,
+                                    displayLabel: `${a.dk_code || a.asset_code || 'N/A'} - ${a.name}`,
+                                    displayValue: a.id
+                                }))}
                                 required
-                                placeholder="Chọn thiết bị từ danh sách"
-                                valueKey="id"
-                                labelKey="name"
+                                placeholder="Nhập Mã DK hoặc tên để tìm"
+                                valueKey="displayValue"
+                                labelKey="displayLabel"
                                 error={!!formErrors.asset_id}
                                 helperText={formErrors.asset_id}
                             />
@@ -748,6 +771,81 @@ function AddMaintenanceForm({ handleClose, onReload }) {
                                 labelKey="label"
                             />
                         </Grid2>
+
+                        {selectedAssetInfo && (
+                            <Grid2 xs={12}>
+                                <Box sx={{ mt: 1, p: 2, border: '1px dashed #ccc', borderRadius: 1, backgroundColor: '#fafafa' }}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1.5, fontSize: '1.4rem', fontWeight: 'bold' }}>
+                                        Thông tin thiết bị (readonly)
+                                    </Typography>
+                                    <Grid2 container spacing={2}>
+                                        <Grid2 xs={12} md={2}>
+                                            <InputField
+                                                label="Mã DK"
+                                                name="dk_code"
+                                                value={selectedAssetInfo.dk_code || '—'}
+                                                onChange={() => {}}
+                                                disabled
+                                            />
+                                        </Grid2>
+                                        <Grid2 xs={12} md={2}>
+                                            <InputField
+                                                label="Mã thiết bị hệ thống"
+                                                name="asset_code"
+                                                value={selectedAssetInfo.asset_code || '—'}
+                                                onChange={() => {}}
+                                                disabled
+                                            />
+                                        </Grid2>
+                                        <Grid2 xs={12} md={3}>
+                                            <InputField
+                                                label="Tên thiết bị"
+                                                name="asset_name"
+                                                value={selectedAssetInfo.name || '—'}
+                                                onChange={() => {}}
+                                                disabled
+                                            />
+                                        </Grid2>
+                                        <Grid2 xs={12} md={3}>
+                                            <InputField
+                                                label="Khu vực / vị trí"
+                                                name="area"
+                                                value={selectedAssetInfo.Area?.name || selectedAssetInfo.area || '—'}
+                                                onChange={() => {}}
+                                                disabled
+                                            />
+                                        </Grid2>
+                                        <Grid2 xs={12} md={2}>
+                                            <InputField
+                                                label="Bộ phận / line"
+                                                name="department"
+                                                value={selectedAssetInfo.Department?.name || selectedAssetInfo.team_id || '—'}
+                                                onChange={() => {}}
+                                                disabled
+                                            />
+                                        </Grid2>
+                                        <Grid2 xs={12} md={2}>
+                                            <InputField
+                                                label="Loại thiết bị"
+                                                name="sub_category"
+                                                value={selectedAssetInfo.SubCategory?.name || '—'}
+                                                onChange={() => {}}
+                                                disabled
+                                            />
+                                        </Grid2>
+                                        <Grid2 xs={12} md={2}>
+                                            <InputField
+                                                label="Chu kỳ bảo trì mặc định"
+                                                name="maintenance_cycle"
+                                                value={selectedAssetInfo.maintenance_cycle || 'Không có'}
+                                                onChange={() => {}}
+                                                disabled
+                                            />
+                                        </Grid2>
+                                    </Grid2>
+                                </Box>
+                            </Grid2>
+                        )}
 
                         <Grid2 xs={12} md={2}>
                             <SelectField

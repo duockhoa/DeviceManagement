@@ -33,6 +33,16 @@ export const getAssetByCode = async (assetCode) => {
   }
 };
 
+export const getAssetByDkCode = async (dkCode) => {
+  try {
+    const response = await axios.get(`/assets/by-dk/${dkCode}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching asset by DK code:", error);
+    throw error;
+  }
+};
+
 // GET /api/assets/by-area/:areaId - Lấy assets theo area
 export const getAssetsByArea = async (areaId) => {
   try {
