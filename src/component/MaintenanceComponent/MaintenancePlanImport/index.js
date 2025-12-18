@@ -13,6 +13,9 @@ import {
     ListItemText,
     Stack,
     LinearProgress,
+    TextField,
+    InputAdornment,
+    IconButton,
     Menu,
     MenuItem
 } from '@mui/material';
@@ -22,6 +25,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import axios from '../../../services/customize-axios';
 
 // Import/Export Excel cho Kế hoạch bảo trì
@@ -33,6 +38,10 @@ export default function MaintenancePlanImport({ onApproved }) {
     const [rows, setRows] = useState([]);
     const [approveResult, setApproveResult] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
+    const [dkCodeInput, setDkCodeInput] = useState('');
+    const [lookup, setLookup] = useState(null);
+    const [lookupLoading, setLookupLoading] = useState(false);
+    const [lookupError, setLookupError] = useState(null);
 
     const handleMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -73,6 +82,26 @@ export default function MaintenancePlanImport({ onApproved }) {
         setOpen(true);
         handleMenuClose();
         e.target.value = '';
+    };
+
+    const handleLookup = async () => {
+        const trimmed = dkCodeInput.trim().toUpperCase();
+        if (!trimmed) {
+            setLookup(null);
+            setLookupError(null);
+            return;
+        }
+        setLookupLoading(true);
+        setLookupError(null);
+        try {
+            const res = await axios.get(`/assets/by-dk/${trimmed}`);
+            setLookup(res.data?.data || null);
+        } catch (error) {
+            setLookup(null);
+            setLookupError(error.response?.data?.message || 'Không tìm thấy thiết bị');
+        } finally {
+            setLookupLoading(false);
+        }
     };
 
     const handleImport = async () => {
@@ -156,6 +185,43 @@ export default function MaintenancePlanImport({ onApproved }) {
             <Dialog open={open} onClose={() => !loading && setOpen(false)} maxWidth="md" fullWidth>
                 <DialogTitle>Import kế hoạch bảo trì</DialogTitle>
                 <DialogContent dividers>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
+                        <Typography variant="subtitle2" fontWeight="bold">Tra cứu Mã DK</Typography>
+                        <TextField
+                            label="Mã DK"
+                            size="small"
+                            value={dkCodeInput}
+                            onChange={(e) => setDkCodeInput(e.target.value.toUpperCase())}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        {dkCodeInput && (
+                                            <IconButton size="small" onClick={() => { setDkCodeInput(''); setLookup(null); setLookupError(null); }}>
+                                                <ClearIcon fontSize="small" />
+                                            </IconButton>
+                                        )}
+                                        <IconButton size="small" onClick={handleLookup} disabled={lookupLoading}>
+                                            <SearchIcon fontSize="small" />
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
+                        {lookupLoading && <LinearProgress />}
+                        {lookupError && (
+                            <Alert severity="warning">{lookupError}</Alert>
+                        )}
+                        {lookup && (
+                            <Box sx={{ p: 1.5, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#fafafa', display: 'grid', gap: 0.5 }}>
+                                <Typography variant="body2"><strong>Thiết bị:</strong> {lookup.name} ({lookup.asset_code}{lookup.dk_code ? ` / ${lookup.dk_code}` : ''})</Typography>
+                                <Typography variant="body2"><strong>Area / Plant:</strong> {lookup.Area?.name || '—'} {lookup.Area?.Plant ? `- ${lookup.Area.Plant.name}` : ''}</Typography>
+                                <Typography variant="body2"><strong>Category:</strong> {lookup.SubCategory?.Category?.name || '—'} / {lookup.SubCategory?.name || '—'}</Typography>
+                                <Typography variant="body2"><strong>Model / Serial:</strong> {lookup.GeneralInfo?.model || '—'} / {lookup.GeneralInfo?.serial_number || '—'}</Typography>
+                                <Typography variant="body2"><strong>Trạng thái:</strong> {lookup.status}</Typography>
+                            </Box>
+                        )}
+                    </Box>
+
                     {loading && (
                         <Box sx={{ mb: 2 }}>
                             <LinearProgress />
