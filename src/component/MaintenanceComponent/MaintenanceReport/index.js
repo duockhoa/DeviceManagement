@@ -69,18 +69,18 @@ function MaintenanceReport() {
             // Lấy báo cáo tổng hợp với tháng/năm được chọn
             console.log('📊 Calling API: /maintenance/reports/summary');
             const summaryRes = await customAxios.get(`/maintenance/reports/summary?period=${period}&month=${selectedMonth}&year=${selectedYear}`);
-            console.log('✅ Summary response:', summaryRes.data);
+            console.log('Summary response:', summaryRes.data);
             setSummaryData(summaryRes.data.data);
 
             // Lấy báo cáo theo tháng
             console.log('📈 Calling API: /maintenance/reports/monthly');
             const monthlyRes = await customAxios.get('/maintenance/reports/monthly');
-            console.log('✅ Monthly response:', monthlyRes.data);
+            console.log('Monthly response:', monthlyRes.data);
             setMonthlyData(monthlyRes.data.data);
         } catch (error) {
-            console.error('❌ Error fetching report data:', error);
-            console.error('❌ Error response:', error.response?.data);
-            console.error('❌ Error status:', error.response?.status);
+            console.error('Error fetching report data:', error);
+            console.error('Error response:', error.response?.data);
+            console.error('Error status:', error.response?.status);
         } finally {
             setLoading(false);
         }

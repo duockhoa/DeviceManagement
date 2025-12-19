@@ -93,8 +93,8 @@ export const updateMaintenanceRecord = createAsyncThunk(
 // Xóa maintenance
 export const deleteMaintenanceRecord = createAsyncThunk(
     'maintenance/deleteMaintenanceRecord',
-    async (id) => {
-        const response = await deleteMaintenance(id);
+    async ({ id, reason }) => {
+        const response = await deleteMaintenance(id, reason);
         if (response && response.success) {
             return response;
         } else {

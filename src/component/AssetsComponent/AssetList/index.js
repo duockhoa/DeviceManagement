@@ -40,6 +40,7 @@ function AssetList() {
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [assetToDelete, setAssetToDelete] = useState(null);
+    const visibleAssets = Array.isArray(assets) ? assets.filter((asset) => asset.status !== 'inactive') : [];
 
     useEffect(() => {
         dispatch(fetchAssets());
@@ -309,7 +310,7 @@ function AssetList() {
             {/* DataGrid */}
             <Box sx={{ flexGrow: 1 }}>
                 <DataGrid
-                    rows={assets}
+                    rows={visibleAssets}
                     columns={columns}
                     loading={loading}
                     error={error}

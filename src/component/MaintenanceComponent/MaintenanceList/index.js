@@ -46,9 +46,9 @@ const MaintenanceList = forwardRef((props, ref) => {
             try {
                 console.log('🔄 Reloading all maintenance...');
                 await dispatch(fetchMaintenance()).unwrap();
-                console.log('✅ All maintenance reloaded');
+                console.log('All maintenance reloaded');
             } catch (error) {
-                console.error('❌ Error reloading maintenance:', error);
+                console.error('Error reloading maintenance:', error);
             }
         }
     }));
@@ -60,25 +60,34 @@ const MaintenanceList = forwardRef((props, ref) => {
     }, [dispatch]);
 
     const handleDelete = async (id) => {
-        if (window.confirm('Bạn có chắc muốn xóa lịch bảo trì này?')) {
-            try {
-                await dispatch(deleteMaintenanceRecord(id)).unwrap();
-                
-                // Refresh maintenance list
-                await dispatch(fetchMaintenance()).unwrap();
-                
-                setNotification({
-                    open: true,
-                    message: 'Xóa lịch bảo trì thành công!',
-                    severity: 'success'
-                });
-            } catch (error) {
-                setNotification({
-                    open: true,
-                    message: error || 'Không thể xóa lịch bảo trì. Vui lòng thử lại.',
-                    severity: 'error'
-                });
-            }
+        if (!window.confirm('Bạn có chắc muốn xóa lịch bảo trì này?')) return;
+        const reason = window.prompt('Nhập lý do xóa (bắt buộc):') || '';
+        if (!reason.trim()) {
+            setNotification({
+                open: true,
+                message: 'Cần nhập lý do để xóa lịch bảo trì.',
+                severity: 'warning'
+            });
+            return;
+        }
+
+        try {
+            await dispatch(deleteMaintenanceRecord({ id, reason })).unwrap();
+
+            // Refresh maintenance list
+            await dispatch(fetchMaintenance()).unwrap();
+
+            setNotification({
+                open: true,
+                message: 'Xóa lịch bảo trì thành công!',
+                severity: 'success'
+            });
+        } catch (error) {
+            setNotification({
+                open: true,
+                message: error || 'Không thể xóa lịch bảo trì. Vui lòng thử lại.',
+                severity: 'error'
+            });
         }
     };
 
@@ -360,6 +369,7 @@ const MaintenanceList = forwardRef((props, ref) => {
             </Paper>
 
             <DataGrid
+                autoHeight
                 rows={maintenance}
                 columns={columns}
                 pageSize={10}
@@ -367,7 +377,6 @@ const MaintenanceList = forwardRef((props, ref) => {
                 disableSelectionOnClick
                 sx={{
                     width: '100%',
-                    flex: 1,
                     minHeight: 400,
                     border: 'none',
                     '& .MuiDataGrid-cell': {

@@ -77,10 +77,10 @@ export const updateMaintenance = async (id, data) => {
   }
 };
 
-// DELETE /api/maintenance/:id - Xóa maintenance
-export const deleteMaintenance = async (id) => {
+// DELETE /api/maintenance/:id - Xóa maintenance (soft delete, yêu cầu reason)
+export const deleteMaintenance = async (id, reason) => {
   try {
-    const response = await axios.delete(`/maintenance/${id}`);
+    const response = await axios.delete(`/maintenance/${id}`, { data: { reason } });
     return response.data; // Trả về toàn bộ response data thay vì response.data.data
   } catch (error) {
     console.error("Error deleting maintenance:", error);

@@ -20,6 +20,9 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import incidentsService from '../../services/incidentsService';
 import Loading from '../../component/Loading';
 import ActionButtons from '../../component/common/ActionButtons';
+import StatusTimeline from '../../components/common/StatusTimeline';
+import ActionZone from '../../components/common/ActionZone';
+import { INCIDENT_FLOW, NEXT_ROLE_LABEL } from '../../constants/flowMaps';
 
 const severityConfig = {
     critical: { label: 'Khẩn cấp', color: 'error' },
@@ -153,6 +156,7 @@ function IncidentDetail() {
 
     const severity = severityConfig[incident.severity] || { label: incident.severity, color: 'default' };
     const status = statusConfig[incident.status] || { label: incident.status, color: 'default' };
+    const nextRoleLabel = NEXT_ROLE_LABEL.Incident[incident.status] || '—';
 
     const handleAssess = async () => {
         try {
@@ -279,6 +283,26 @@ function IncidentDetail() {
                 </Stack>
             </Paper>
 
+            <Paper sx={{ p: 2, mb: 2 }}>
+                <StatusTimeline statuses={INCIDENT_FLOW} current={incident.status} />
+            </Paper>
+
+            <ActionZone
+                title="Thao tác"
+                current_status_label={status.label}
+                next_role_label={nextRoleLabel}
+            >
+                <ActionButtons
+                    allowed_actions={actionKeys}
+                    handlers={actionHandlers}
+                    labels={{
+                        update: 'Duyệt & tạo bảo trì',
+                        complete: 'Hoàn tất xử lý',
+                        close: 'Đóng sự cố'
+                    }}
+                />
+            </ActionZone>
+
             <Grid container spacing={3}>
                 <Grid item xs={12} md={8}>
                     <Paper sx={{ p: 3, mb: 3 }}>
@@ -367,6 +391,7 @@ function IncidentDetail() {
                                             label="Đánh giá thực tế"
                                             value={assessment.assessment_notes}
                                             onChange={(e) => setAssessment(prev => ({ ...prev, assessment_notes: e.target.value }))}
+                                            disabled={isClosed}
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
@@ -377,6 +402,7 @@ function IncidentDetail() {
                                             label="Phương án xử lý"
                                             value={assessment.solution_plan}
                                             onChange={(e) => setAssessment(prev => ({ ...prev, solution_plan: e.target.value }))}
+                                            disabled={isClosed}
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
@@ -387,10 +413,11 @@ function IncidentDetail() {
                                             label="Tình trạng & cách thức xử lý"
                                             value={assessment.handover_notes}
                                             onChange={(e) => setAssessment(prev => ({ ...prev, handover_notes: e.target.value }))}
+                                            disabled={isClosed}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                                        <Button variant="contained" onClick={handleAssess} disabled={submitting}>
+                                        <Button variant="contained" onClick={handleAssess} disabled={submitting || isClosed}>
                                             {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
                                         </Button>
                                     </Grid>
@@ -416,7 +443,7 @@ function IncidentDetail() {
                                             label="Tình trạng thực tế"
                                             value={actualStatus}
                                             onChange={(e) => setActualStatus(e.target.value)}
-                                            disabled={actualLocked}
+                                            disabled={actualLocked || isClosed}
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
@@ -427,12 +454,12 @@ function IncidentDetail() {
                                             label="Cách thức xử lý"
                                             value={actualAction}
                                             onChange={(e) => setActualAction(e.target.value)}
-                                            disabled={actualLocked}
+                                            disabled={actualLocked || isClosed}
                                         />
                                     </Grid>
                                     {!actualLocked && (
                                         <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                                            <Button variant="contained" onClick={handleSaveActual} disabled={savingActual}>
+                                            <Button variant="contained" onClick={handleSaveActual} disabled={savingActual || isClosed}>
                                                 {savingActual ? 'Đang lưu...' : 'Lưu thông tin'}
                                             </Button>
                                             <ActionButtons

@@ -237,9 +237,9 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                     } else if (Array.isArray(maintenanceData.spare_parts)) {
                         parsedSpareParts = maintenanceData.spare_parts;
                     }
-                    console.log('✅ Parsed spare_parts:', parsedSpareParts);
+                    console.log('Parsed spare_parts:', parsedSpareParts);
                 } catch (error) {
-                    console.error('❌ Error parsing spare_parts:', error);
+                    console.error('Error parsing spare_parts:', error);
                     parsedSpareParts = [];
                 }
             }
@@ -942,7 +942,7 @@ function EditMaintenanceForm({ handleClose, maintenanceData, onSuccess }) {
                                             onChange={handleInputChange2}
                                             multiline
                                             rows={3}
-                                            placeholder="⚠️ Thiết bị bảo hộ an toàn:&#10;- Găng tay cách điện&#10;- Kính bảo hộ&#10;- Giày an toàn..."
+                                            placeholder="Thiết bị bảo hộ an toàn:&#10;- Găng tay cách điện&#10;- Kính bảo hộ&#10;- Giày an toàn..."
                                             fullWidth
                                         />
                                     </Grid2>

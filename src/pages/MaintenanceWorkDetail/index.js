@@ -47,6 +47,9 @@ import {
     decideWorkOrder
 } from '../../services/maintenanceWorkService';
 import ActionButtons from '../../component/common/ActionButtons';
+import StatusTimeline from '../../components/common/StatusTimeline';
+import ActionZone from '../../components/common/ActionZone';
+import { WORKORDER_FLOW, NEXT_ROLE_LABEL } from '../../constants/flowMaps';
 
 function TabPanel({ children, value, index }) {
     return (
@@ -106,6 +109,43 @@ function MaintenanceWorkDetail() {
     const [taskWorkReport, setTaskWorkReport] = useState('');
     const [uploadingImage, setUploadingImage] = useState(false);
 
+    // Tính tiến độ và thống kê công việc, memo để tránh tính lại
+    const progressStats = useMemo(() => {
+        const completedChecklistItems = workOrder?.checklists?.filter((c) => c.is_completed).length || 0;
+        const totalChecklistItems = workOrder?.checklists?.length || 0;
+        const isChecklistCompleted = totalChecklistItems > 0 && completedChecklistItems === totalChecklistItems ? 1 : 0;
+
+        const completedWorkTasks = workOrder?.workTasks?.filter((t) => t.status === 'completed').length || 0;
+        const totalWorkTasks = workOrder?.workTasks?.length || 0;
+
+        const totalJobs = (totalChecklistItems > 0 ? 1 : 0) + totalWorkTasks;
+        const completedJobs = isChecklistCompleted + completedWorkTasks;
+        const overallProgress = totalJobs > 0 ? Math.round((completedJobs / totalJobs) * 100) : 0;
+        const checklistProgress = totalChecklistItems > 0 ? Math.round((completedChecklistItems / totalChecklistItems) * 100) : 100;
+
+        return {
+            totalJobs,
+            completedJobs,
+            overallProgress,
+            checklistProgress,
+            completedChecklistItems,
+            totalChecklistItems,
+            completedWorkTasks,
+            totalWorkTasks
+        };
+    }, [workOrder]);
+
+    const {
+        totalJobs,
+        completedJobs,
+        overallProgress,
+        checklistProgress,
+        completedChecklistItems,
+        totalChecklistItems,
+        completedWorkTasks,
+        totalWorkTasks
+    } = progressStats;
+
     const actionKeys = useMemo(() => {
         const transitions = workOrder?.allowed_actions || [];
         const mapped = transitions.map((action) => {
@@ -123,6 +163,14 @@ function MaintenanceWorkDetail() {
         () => (workOrder?.allowed_actions || []).includes('awaiting_approval'),
         [workOrder]
     );
+    const canSendForApproval = useMemo(() => actionKeys.includes('complete'), [actionKeys]);
+    const showCompletionReminder = useMemo(
+        () => canSendForApproval && overallProgress === 100 && workOrder?.status === 'in_progress',
+        [canSendForApproval, overallProgress, workOrder]
+    );
+
+    const nextRoleLabel = useMemo(() => NEXT_ROLE_LABEL.WorkOrder[workOrder?.status] || '—', [workOrder]);
+    const isReadOnly = useMemo(() => ['completed', 'closed'].includes(workOrder?.status), [workOrder]);
 
     const handleForbidden = (err) => {
         if (err?.response?.status === 403) {
@@ -237,17 +285,20 @@ function MaintenanceWorkDetail() {
     };
 
     const handleCompleteWork = async () => {
-        if (window.confirm('Bạn có chắc muốn hoàn thành công việc này?')) {
-            try {
-                await completeWork(id, {
-                    final_notes: workOrder.notes
-                });
-                loadWorkOrder();
-                alert('Đã hoàn thành công việc. Chờ trưởng bộ phận duyệt.');
-            } catch (err) {
-                if (!handleForbidden(err)) {
-                    alert(err.response?.data?.message || 'Lỗi khi hoàn thành công việc');
-                }
+        if (overallProgress < 100) {
+            alert('Cần hoàn thành tất cả công việc trước khi gửi duyệt');
+            return;
+        }
+        if (!window.confirm('Gửi hoàn thành lệnh bảo trì để chờ duyệt?')) return;
+        try {
+            await completeWork(id, {
+                final_notes: workOrder.notes
+            });
+            loadWorkOrder();
+            alert('Lệnh bảo trì đã được gửi duyệt. Đang chờ Trưởng bộ phận phê duyệt.');
+        } catch (err) {
+            if (!handleForbidden(err)) {
+                alert(err.response?.data?.message || 'Lỗi khi hoàn thành công việc');
             }
         }
     };
@@ -424,25 +475,6 @@ function MaintenanceWorkDetail() {
         );
     }
 
-    // Tính tiến độ tự động
-    // Công thức: (1 nếu checklist hoàn thành + Số công việc hoàn thành) / (1 + Tổng công việc)
-    // Checklist được tính như 1 công việc lớn
-    const completedChecklistItems = workOrder.checklists?.filter(c => c.is_completed).length || 0;
-    const totalChecklistItems = workOrder.checklists?.length || 0;
-    const isChecklistCompleted = totalChecklistItems > 0 && completedChecklistItems === totalChecklistItems ? 1 : 0;
-    
-    // Work tasks
-    const completedWorkTasks = workOrder.workTasks?.filter(t => t.status === 'completed').length || 0;
-    const totalWorkTasks = workOrder.workTasks?.length || 0;
-    
-    // Tổng công việc: 1 (checklist) + số work tasks
-    const totalJobs = (totalChecklistItems > 0 ? 1 : 0) + totalWorkTasks;
-    const completedJobs = isChecklistCompleted + completedWorkTasks;
-    const overallProgress = totalJobs > 0 ? Math.round((completedJobs / totalJobs) * 100) : 0;
-    
-    // Tiến độ checklist riêng (để hiển thị trong tab Checklist)
-    const checklistProgress = totalChecklistItems > 0 ? Math.round((completedChecklistItems / totalChecklistItems) * 100) : 100;
-
     return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3, backgroundColor: '#f5f5f5' }}>
             {/* Header */}
@@ -473,37 +505,55 @@ function MaintenanceWorkDetail() {
                             sx={{ fontSize: '1.2rem' }}
                         />
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        {canSaveProgress && (
-                            <Button 
-                                variant="outlined" 
-                                startIcon={<ImageIcon />}
-                                onClick={() => {
-                                    setSaveProgressNotes(workOrder.notes || '');
-                                    setSaveProgressDialogOpen(true);
-                                }}
-                            >
-                                Lưu tiến độ
-                            </Button>
-                        )}
-                        <ActionButtons
-                            allowed_actions={actionKeys}
-                            handlers={{
-                                start: handleStartMaintenance,
-                                complete: handleCompleteWork,
-                                approve: () => handleDecideWork(true),
-                                reject: () => handleDecideWork(false)
-                            }}
-                            labels={{
-                                start: 'Bắt đầu',
-                                complete: 'Báo cáo hoàn thành',
-                                approve: 'Duyệt',
-                                reject: 'Yêu cầu sửa lại'
-                            }}
-                        />
-                    </Box>
+                    <Box />
                 </Box>
             </Paper>
+
+            <Paper sx={{ p: 2, mb: 2 }}>
+                <StatusTimeline statuses={WORKORDER_FLOW} current={workOrder.status} />
+            </Paper>
+
+            <ActionZone
+                title="Thao tác"
+                current_status_label={getStatusLabel(workOrder.status)}
+                next_role_label={nextRoleLabel}
+            >
+                <ActionButtons
+                    allowed_actions={actionKeys}
+                    handlers={{
+                        start: handleStartMaintenance,
+                        complete: handleCompleteWork,
+                        approve: () => handleDecideWork(true),
+                        reject: () => handleDecideWork(false)
+                    }}
+                    labels={{
+                        start: 'Bắt đầu',
+                        complete: 'Gửi hoàn thành lệnh',
+                        approve: 'Duyệt',
+                        reject: 'Yêu cầu sửa lại'
+                    }}
+                />
+                {showCompletionReminder && (
+                    <Box sx={{ width: '100%' }}>
+                        <Alert severity="warning" sx={{ mt: 1 }}>
+                            Tất cả công việc đã hoàn thành<br />
+                            Lệnh bảo trì chưa được gửi duyệt
+                        </Alert>
+                    </Box>
+                )}
+                {canSaveProgress && (
+                                <Button 
+                                    variant="outlined" 
+                                    startIcon={<ImageIcon />}
+                                    onClick={() => {
+                                        setSaveProgressNotes(workOrder.notes || '');
+                                        setSaveProgressDialogOpen(true);
+                                    }}
+                                >
+                                    Lưu tiến độ
+                                </Button>
+                )}
+            </ActionZone>
 
             {/* Main Content */}
             <Grid container spacing={2} sx={{ flexGrow: 1 }}>
@@ -724,7 +774,7 @@ function MaintenanceWorkDetail() {
                                                                 handleActualValueChange(item.id, e.target.value, item.is_completed, item.notes);
                                                             }}
                                                             placeholder="Nhập số liệu..."
-                                                            disabled={workOrder.status === 'completed'}
+                                                            disabled={isReadOnly}
                                                         />
                                                     </td>
                                                     <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
@@ -733,7 +783,7 @@ function MaintenanceWorkDetail() {
                                                             onChange={() => handleChecklistToggle(item.id, item.is_completed, item.notes)}
                                                             icon={<RadioButtonUncheckedIcon />}
                                                             checkedIcon={<CheckCircleIcon color="success" />}
-                                                            disabled={workOrder.status === 'completed'}
+                                                            disabled={isReadOnly}
                                                         />
                                                     </td>
                                                 </tr>
@@ -868,7 +918,7 @@ function MaintenanceWorkDetail() {
                                                                     variant="contained"
                                                                     color="primary"
                                                                     onClick={() => handleStartTask(task)}
-                                                                    disabled={workOrder.status === 'completed'}
+                                                                    disabled={isReadOnly}
                                                                     fullWidth
                                                                 >
                                                                     Bắt đầu
@@ -880,7 +930,7 @@ function MaintenanceWorkDetail() {
                                                                     variant="contained"
                                                                     color="success"
                                                                     onClick={() => handleCompleteTask(task)}
-                                                                    disabled={workOrder.status === 'completed'}
+                                                                    disabled={isReadOnly}
                                                                     fullWidth
                                                                 >
                                                                     Xong
@@ -955,23 +1005,9 @@ function MaintenanceWorkDetail() {
                                 <Typography variant="h6" sx={{ mb: 2 }}>
                                     Các thao tác
                                 </Typography>
-                                <ActionButtons
-                                    allowed_actions={actionKeys}
-                                    handlers={{
-                                        start: handleStartMaintenance,
-                                        complete: handleCompleteWork,
-                                        approve: () => handleDecideWork(true),
-                                        reject: () => handleDecideWork(false)
-                                    }}
-                                    labels={{
-                                        start: 'Bắt đầu bảo trì',
-                                        complete: 'Báo cáo hoàn thành',
-                                        approve: 'Duyệt',
-                                        reject: 'Yêu cầu sửa lại'
-                                    }}
-                                    size="large"
-                                    spacing={2}
-                                />
+                                <Alert severity="info" sx={{ mb: 1 }}>
+                                    Thao tác chính nằm ở ActionZone cố định phía trên. Việc hoàn thành checklist không tự gửi duyệt lệnh.
+                                </Alert>
                                 {canSaveProgress && (
                                     <Button 
                                         variant="outlined"

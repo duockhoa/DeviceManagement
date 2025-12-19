@@ -27,6 +27,9 @@ import { fetchAssets } from '../../redux/slice/assetsSlice';
 import { getAllAreas } from '../../services/areasService';
 import { getMechanicalElectricalTechniciansService } from '../../services/usersService';
 import ActionButtons from '../../component/common/ActionButtons';
+import StatusTimeline from '../../components/common/StatusTimeline';
+import ActionZone from '../../components/common/ActionZone';
+import { WORKREQUEST_FLOW, NEXT_ROLE_LABEL } from '../../constants/flowMaps';
 
 const priorityMeta = {
     low: { label: 'Thấp', color: 'default' },
@@ -75,6 +78,7 @@ export default function WorkRequests() {
     const [isUnlinked, setIsUnlinked] = useState(false);
     const [areas, setAreas] = useState([]);
     const [technicians, setTechnicians] = useState([]);
+    const [viewFilter, setViewFilter] = useState('all');
     const user = useSelector((state) => state.user.userInfo);
     const users = useSelector((state) => state.users.users);
     const assets = useSelector((state) => state.assets.assets);
@@ -91,6 +95,18 @@ export default function WorkRequests() {
         });
         return Array.from(new Set(mapped.filter(Boolean)));
     }, [detail]);
+
+    const nextRoleLabel = useMemo(() => NEXT_ROLE_LABEL.WorkRequest[detail?.status] || '—', [detail]);
+    const filteredItems = useMemo(() => {
+        const statusBuckets = {
+            tech: ['pending', 'in_progress'],
+            manager: ['awaiting_approval'],
+            qa: ['resolved', 'completed']
+        };
+        if (viewFilter === 'all') return items;
+        const targets = statusBuckets[viewFilter] || [];
+        return items.filter((it) => targets.includes(it.status));
+    }, [items, viewFilter]);
 
     const handleForbidden = (err) => {
         if (err?.response?.status === 403) {
@@ -247,6 +263,12 @@ export default function WorkRequests() {
                     <Typography variant="subtitle1" fontWeight="bold">
                         Danh sách yêu cầu
                     </Typography>
+                    <Stack direction="row" spacing={1}>
+                        <Button variant={viewFilter === 'all' ? 'contained' : 'outlined'} size="small" onClick={() => setViewFilter('all')}>Tất cả</Button>
+                        <Button variant={viewFilter === 'tech' ? 'contained' : 'outlined'} size="small" onClick={() => setViewFilter('tech')}>Technician</Button>
+                        <Button variant={viewFilter === 'manager' ? 'contained' : 'outlined'} size="small" onClick={() => setViewFilter('manager')}>Manager</Button>
+                        <Button variant={viewFilter === 'qa' ? 'contained' : 'outlined'} size="small" onClick={() => setViewFilter('qa')}>QA</Button>
+                    </Stack>
                 </Box>
 
                 <Box sx={{ minWidth: 1400, overflowX: 'auto' }}>
@@ -256,13 +278,13 @@ export default function WorkRequests() {
                         ))}
                     </Box>
 
-                {items.length === 0 && (
+                {filteredItems.length === 0 && (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
                         Chưa có yêu cầu.
                     </Typography>
                 )}
 
-                {items.map((it, idx) => (
+                {filteredItems.map((it, idx) => (
                     <Box
                         key={it.id}
                         sx={{
@@ -421,6 +443,30 @@ export default function WorkRequests() {
                                     sx={{ fontWeight: 'bold' }}
                                 />
                             </Stack>
+
+                            <Box sx={{ my: 2 }}>
+                                <StatusTimeline statuses={WORKREQUEST_FLOW} current={detail.status} />
+                            </Box>
+
+                            <ActionZone
+                                title="Thao tác"
+                                current_status_label={statusMeta[detail.status]?.label || detail.status}
+                                next_role_label={nextRoleLabel}
+                            >
+                                <ActionButtons
+                                    allowed_actions={detailActions}
+                                    handlers={{
+                                        start: () => handleTransition('assigned'),
+                                        update: () => handleTransition('in_progress'),
+                                        complete: () => handleTransition('closed')
+                                    }}
+                                    labels={{
+                                        start: 'Phân công',
+                                        update: 'Bắt đầu xử lý',
+                                        complete: 'Đóng yêu cầu'
+                                    }}
+                                />
+                            </ActionZone>
 
                             <Grid container spacing={2} sx={{ mt: 2 }}>
                                 <Grid item xs={12} md={6}>

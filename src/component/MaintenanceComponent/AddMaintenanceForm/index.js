@@ -190,10 +190,10 @@ function AddMaintenanceForm({ handleClose, onReload }) {
             try {
                 console.log('🔄 Loading mechanical electrical staff...');
                 const staff = await getMechanicalElectricalTechniciansService();
-                console.log('✅ Loaded staff:', staff);
+                console.log('Loaded staff:', staff);
                 setMechanicalStaff(staff || []);
             } catch (error) {
-                console.error('❌ Error loading mechanical staff:', error);
+                console.error('Error loading mechanical staff:', error);
             }
         };
         loadMechanicalStaff();
