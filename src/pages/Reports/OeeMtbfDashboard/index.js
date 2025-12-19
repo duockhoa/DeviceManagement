@@ -14,6 +14,15 @@ import {
     Alert,
     CircularProgress
 } from '@mui/material';
+import {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip
+} from 'recharts';
 import dayjs from 'dayjs';
 import { getAllAssets } from '../../../services/assetsService';
 import { getMtbfReport, getOeeReport } from '../../../services/reportsService';
@@ -70,6 +79,8 @@ function OeeMtbfDashboard() {
     const [error, setError] = useState(null);
     const [oeeData, setOeeData] = useState(null);
     const [mtbfData, setMtbfData] = useState(null);
+    const [deviceSeries, setDeviceSeries] = useState([]);
+    const [loadingSeries, setLoadingSeries] = useState(false);
 
     const defaultFrom = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
     const defaultTo = dayjs().format('YYYY-MM-DD');
@@ -113,6 +124,7 @@ function OeeMtbfDashboard() {
             ]);
             setOeeData(oeeRes || null);
             setMtbfData(mtbfRes || null);
+            fetchDeviceSeries(params);
         } catch (err) {
             setError(err?.toString?.() || 'Không thể tải báo cáo');
             setOeeData(null);
@@ -147,6 +159,42 @@ function OeeMtbfDashboard() {
         handleApply();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const fetchDeviceSeries = async (baseParams) => {
+        setLoadingSeries(true);
+        try {
+            if (!assets || assets.length === 0) {
+                setDeviceSeries([]);
+                return;
+            }
+            const normalizedCode = (filters.dk_code || '').trim().toUpperCase();
+            const candidateAssets = (assets || []).filter((a) => {
+                if (filters.asset_id) return String(a.id) === String(filters.asset_id);
+                if (normalizedCode) return (a.dk_code || a.asset_code || '').toUpperCase().includes(normalizedCode);
+                return true;
+            });
+
+            const limitedAssets = candidateAssets.slice(0, 10);
+            const paramsForSeries = { ...baseParams };
+            delete paramsForSeries.asset_id;
+
+            const rows = await Promise.all(
+                limitedAssets.map(async (asset) => {
+                    const res = await getOeeReport({ ...paramsForSeries, asset_id: asset.id });
+                    const availability = res?.availability != null ? Number((res.availability * 100).toFixed(2)) : null;
+                    return {
+                        name: asset.dk_code || asset.asset_code || asset.name || `Asset ${asset.id}`,
+                        availability
+                    };
+                })
+            );
+            setDeviceSeries(rows);
+        } catch (err) {
+            setDeviceSeries([]);
+        } finally {
+            setLoadingSeries(false);
+        }
+    };
 
     return (
         <Box sx={{ p: 3 }}>
@@ -329,6 +377,34 @@ function OeeMtbfDashboard() {
                             </Card>
                         </Grid>
                     </Grid>
+                </Paper>
+            </Box>
+
+            <Box sx={{ mt: 2 }}>
+                <Paper sx={{ p: 2 }}>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            Biểu đồ Availability theo thiết bị (top 10 theo bộ lọc)
+                        </Typography>
+                        {loadingSeries ? <CircularProgress size={20} /> : null}
+                    </Stack>
+                    {(!deviceSeries || deviceSeries.length === 0) && !loadingSeries ? (
+                        <Alert severity="info">Không có dữ liệu thiết bị để hiển thị.</Alert>
+                    ) : null}
+                    <Box sx={{ height: 280 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={deviceSeries} margin={{ top: 16, right: 24, left: 0, bottom: 8 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" interval={0} angle={-15} textAnchor="end" height={70} />
+                                <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                                <Tooltip formatter={(v) => `${v ?? 'N/A'}%`} labelFormatter={(l) => `Thiết bị: ${l}`} />
+                                <Line type="monotone" dataKey="availability" stroke="#1976d2" strokeWidth={2} dot={{ r: 3 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </Box>
+                    <Typography variant="caption" sx={{ color: '#757575', display: 'block', mt: 1 }}>
+                        Dữ liệu tính theo bộ lọc hiện tại. Giới hạn hiển thị 10 thiết bị đầu tiên.
+                    </Typography>
                 </Paper>
             </Box>
         </Box>

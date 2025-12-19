@@ -28,6 +28,7 @@ import {
 import incidentsService from '../../services/incidentsService';
 import { getAllAssets } from '../../services/assetsService';
 import { getAllMaintenance } from '../../services/maintenanceService';
+import { getOeeReport } from '../../services/reportsService';
 const severityConfig = {
     critical: { label: 'Khẩn cấp', color: '#d32f2f', weight: 4 },
     high: { label: 'Cao', color: '#f57c00', weight: 3 },
@@ -74,6 +75,9 @@ function DashBoard() {
     const [incidentLoading, setIncidentLoading] = useState(false);
     const [summaryLoading, setSummaryLoading] = useState(false);
     const [summaryError, setSummaryError] = useState(null);
+    const [oeeStat, setOeeStat] = useState({ data: null, loading: false, error: null });
+
+    const plannedDailyHours = 24; // giả định 24h/day cho biểu đồ đường (ước tính từ downtime sự cố)
 
     useEffect(() => {
         const loadIncidents = async () => {
@@ -118,6 +122,22 @@ function DashBoard() {
         loadSummary();
     }, []);
 
+    useEffect(() => {
+        const loadOee = async () => {
+            setOeeStat((prev) => ({ ...prev, loading: true, error: null }));
+            try {
+                const to = new Date();
+                const from = new Date();
+                from.setDate(to.getDate() - 30);
+                const res = await getOeeReport({ from: from.toISOString(), to: to.toISOString(), planned_hours: 160 });
+                setOeeStat({ data: res || null, loading: false, error: null });
+            } catch (error) {
+                setOeeStat({ data: null, loading: false, error: error?.response?.data?.message || error.message });
+            }
+        };
+        loadOee();
+    }, []);
+
     const statusCounts = useMemo(() => {
         const counts = {};
         (incidentStats.byStatus || []).forEach((item) => {
@@ -137,6 +157,27 @@ function DashBoard() {
         });
         return counts;
     }, [incidentStats]);
+
+    // Biểu đồ đường OEE (Availability ước tính từ downtime sự cố theo ngày, plannedDailyHours cố định)
+    const oeeLineData = useMemo(() => {
+        if (!incidentList || !incidentList.length) return [];
+        const map = new Map();
+        incidentList.forEach((inc) => {
+            const d = inc.reported_date ? new Date(inc.reported_date) : null;
+            if (!d || Number.isNaN(d.getTime())) return;
+            const key = d.toISOString().slice(0, 10);
+            const prev = map.get(key) || 0;
+            const dt = inc.downtime_hours != null ? Number(inc.downtime_hours) : 0;
+            map.set(key, prev + (Number.isFinite(dt) ? dt : 0));
+        });
+        const keys = Array.from(map.keys()).sort();
+        return keys.map((k) => {
+            const downtime = map.get(k) || 0;
+            const planned = plannedDailyHours;
+            const availability = planned > 0 ? Math.max(0, Math.min(1, (planned - downtime) / planned)) : null;
+            return { date: k, downtime, availability: availability != null ? Number(availability.toFixed(3)) : null };
+        });
+    }, [incidentList]);
 
     const openIncidentCount = useMemo(() => {
         const openStatuses = ['reported', 'investigating', 'in_progress'];
@@ -237,6 +278,29 @@ function DashBoard() {
             {/* Cards thống kê tổng quan */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ height: '100%', background: 'linear-gradient(135deg, #0D47A1 0%, #42a5f5 100%)' }}>
+                        <CardContent sx={{ color: 'white' }}>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                                <Box>
+                                    <Typography variant="h4" fontWeight="bold">
+                                        {oeeStat.loading ? '...' : (oeeStat.data?.availability != null ? `${(oeeStat.data.availability * 100).toFixed(1)}%` : 'N/A')}
+                                    </Typography>
+                                    <Typography variant="body2">OEE (Availability)</Typography>
+                                    <Typography variant="caption" display="block">
+                                        {oeeStat.error ? `Lỗi: ${oeeStat.error}` : `Downtime: ${oeeStat.data?.downtime_hours != null ? oeeStat.data.downtime_hours.toFixed(2) : '—'}h`}
+                                    </Typography>
+                                    <Typography variant="caption" display="block">
+                                        {oeeStat.data?.status || '—'}{oeeStat.data?.source ? ` • ${oeeStat.data.source}` : ''}
+                                    </Typography>
+                                </Box>
+                                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
+                                    <TrendingUpIcon fontSize="large" />
+                                </Avatar>
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
                     <Card sx={{ height: '100%', background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)' }}>
                         <CardContent sx={{ color: 'white' }}>
                             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -326,6 +390,29 @@ function DashBoard() {
                                     <Tooltip />
                                     <Bar dataKey="count" fill="#1976d2" radius={[4, 4, 0, 0]} />
                                 </BarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Biểu đồ đường - OEE (Availability ước tính theo downtime sự cố) */}
+                <Grid item xs={12} md={6}>
+                    <Card sx={{ height: 400 }}>
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                                OEE (Availability) theo ngày
+                            </Typography>
+                            <Typography variant="body2" sx={{ mb: 1 }}>
+                                Nguồn: downtime sự cố; planned_hours/ngày giả định {plannedDailyHours}h. Nếu thiếu dữ liệu downtime, đường sẽ phẳng ở 100%.
+                            </Typography>
+                            <ResponsiveContainer width="100%" height={280}>
+                                <LineChart data={oeeLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                                    <YAxis domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
+                                    <Tooltip formatter={(v, n) => (n === 'availability' ? `${(v * 100).toFixed(2)}%` : v)} />
+                                    <Line type="monotone" dataKey="availability" stroke="#0D47A1" strokeWidth={2} dot={false} isAnimationActive={false} />
+                                </LineChart>
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
