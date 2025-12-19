@@ -33,6 +33,7 @@ import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SecurityIcon from '@mui/icons-material/Security';
 import SpeedIcon from '@mui/icons-material/Speed';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -394,6 +395,27 @@ export default function Sidebar() {
                                             sx: location.pathname === '/reports/oee-mtbf' ? activeTextStyle : commonTextStyle
                                         }}
                                         primary={isOpen ? 'Dashboard OEE/MTBF' : ''}
+                                    />
+                                </ListItemButton>
+                            )}
+
+                            {/* OEE Import Phase 1 */}
+                            {hasPermission('maintenance.report') && (
+                                <ListItemButton
+                                    sx={{
+                                        pl: 4,
+                                        ...(location.pathname === '/reports/oee-import' ? activeStyle : subItemHoverStyle)
+                                    }}
+                                    onClick={() => switchActiveSidebar('/reports/oee-import')}
+                                >
+                                    <ListItemIcon>
+                                        <UploadFileIcon sx={location.pathname === '/reports/oee-import' ? activeIconStyle : commonIconStyle} />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primaryTypographyProps={{
+                                            sx: location.pathname === '/reports/oee-import' ? activeTextStyle : commonTextStyle
+                                        }}
+                                        primary={isOpen ? 'OEE Import (CSV)' : ''}
                                     />
                                 </ListItemButton>
                             )}

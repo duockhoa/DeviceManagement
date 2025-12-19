@@ -26,6 +26,7 @@ import HandoversFollowUp from '../pages/HandoversFollowUp';
 import AccessControlPage from '../pages/AccessControl';
 import RBACManagement from '../pages/RBACManagement';
 import OeeMtbfDashboard from '../pages/Reports/OeeMtbfDashboard';
+import OeeImportPage from '../pages/Reports/OeeImport';
 const publicRoutes = [
     {
         path: '/',
@@ -116,6 +117,10 @@ const publicRoutes = [
     {
         path: '/reports/oee-mtbf',
         component: OeeMtbfDashboard,
+    },
+    {
+        path: '/reports/oee-import',
+        component: OeeImportPage,
     },
     {
         path: '*',
