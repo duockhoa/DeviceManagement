@@ -193,3 +193,16 @@ export const saveMaintenanceProgress = async (maintenanceId, data) => {
         throw error;
     }
 };
+
+export const decideWorkOrder = async (maintenanceId, { approved, rejection_reason }) => {
+    try {
+        const response = await customAxios.post(
+            `/maintenance-work/${maintenanceId}/approve`,
+            { approved, rejection_reason }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error approving/rejecting work order:', error);
+        throw error;
+    }
+};

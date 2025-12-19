@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import {
     Box,
     Paper,
@@ -20,6 +19,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import incidentsService from '../../services/incidentsService';
 import Loading from '../../component/Loading';
+import ActionButtons from '../../component/common/ActionButtons';
 
 const severityConfig = {
     critical: { label: 'Khẩn cấp', color: 'error' },
@@ -39,7 +39,6 @@ const statusConfig = {
 function IncidentDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const user = useSelector((state) => state.user.userInfo);
     const [incident, setIncident] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -55,9 +54,10 @@ function IncidentDetail() {
     const [actualAction, setActualAction] = useState('');
     const [savingActual, setSavingActual] = useState(false);
     const [actualLocked, setActualLocked] = useState(false);
-
-    const isManager = Boolean(user?.position?.includes('GĐ') || user?.position?.includes('TP') || user?.role === 'manager');
-    const canAssess = Boolean(user?.id);
+    const [rootCause, setRootCause] = useState('');
+    const [resolutionNotes, setResolutionNotes] = useState('');
+    const [preventionMeasures, setPreventionMeasures] = useState('');
+    const [downtimeHours, setDowntimeHours] = useState('');
 
     useEffect(() => {
         const loadIncident = async () => {
@@ -75,6 +75,10 @@ function IncidentDetail() {
                 setActualStatus(data.handover_notes || '');
                 setActualAction(data.solution || '');
                 setActualLocked(Boolean(data.solution || data.handover_notes));
+                setRootCause(data.root_cause || '');
+                setResolutionNotes(data.solution || '');
+                setPreventionMeasures(data.prevention_measures || '');
+                setDowntimeHours(data.downtime_hours || '');
             } catch (err) {
                 setError('Không thể tải chi tiết sự cố. Vui lòng thử lại.');
                 console.error(err);
@@ -87,6 +91,35 @@ function IncidentDetail() {
             loadIncident();
         }
     }, [id]);
+
+    const actionKeys = useMemo(() => {
+        const transitions = incident?.allowed_actions || [];
+        const mapped = transitions.map((action) => {
+            switch (action) {
+                case 'investigating':
+                    return 'start';
+                case 'in_progress':
+                    return 'update';
+                case 'resolved':
+                    return 'complete';
+                case 'closed':
+                    return 'close';
+                default:
+                    return null;
+            }
+        });
+        return Array.from(new Set(mapped.filter(Boolean)));
+    }, [incident]);
+
+    const isClosed = incident?.status === 'closed';
+
+    const handleForbidden = (err) => {
+        if (err?.response?.status === 403) {
+            alert('Bạn không có quyền thực hiện hành động này');
+            return true;
+        }
+        return false;
+    };
 
     const attachmentList = useMemo(() => {
         if (!incident?.images) return [];
@@ -132,7 +165,9 @@ function IncidentDetail() {
             setActualAction(data.solution || '');
             alert('Đã gửi đánh giá sự cố');
         } catch (err) {
-            alert(err || 'Không thể gửi đánh giá');
+            if (!handleForbidden(err)) {
+                alert(err || 'Không thể gửi đánh giá');
+            }
         } finally {
             setSubmitting(false);
         }
@@ -150,7 +185,9 @@ function IncidentDetail() {
             setActualLocked(true);
             alert('Đã lưu tình trạng thực tế & cách thức xử lý');
         } catch (err) {
-            alert(err || 'Không thể lưu');
+            if (!handleForbidden(err)) {
+                alert(err || 'Không thể lưu');
+            }
         } finally {
             setSavingActual(false);
         }
@@ -171,10 +208,51 @@ function IncidentDetail() {
                 setIncident(data);
             }
         } catch (err) {
-            alert(err || 'Không thể duyệt phương án');
+            if (!handleForbidden(err)) {
+                alert(err || 'Không thể duyệt phương án');
+            }
         } finally {
             setApproveLoading(false);
         }
+    };
+
+    const handleResolve = async () => {
+        try {
+            await incidentsService.resolveIncident(id, {
+                root_cause: rootCause,
+                solution: resolutionNotes,
+                prevention_measures: preventionMeasures,
+                downtime_hours: downtimeHours || null
+            });
+            const data = await incidentsService.getIncidentById(id);
+            setIncident(data);
+            alert('Đã cập nhật kết quả và chuyển trạng thái resolved');
+        } catch (err) {
+            if (!handleForbidden(err)) {
+                alert(err || 'Không thể hoàn tất xử lý');
+            }
+        }
+    };
+
+    const handleClose = async () => {
+        if (!window.confirm('Đóng sự cố này?')) return;
+        try {
+            await incidentsService.closeIncident(id);
+            const data = await incidentsService.getIncidentById(id);
+            setIncident(data);
+            alert('Đã đóng sự cố');
+        } catch (err) {
+            if (!handleForbidden(err)) {
+                alert(err || 'Không thể đóng sự cố');
+            }
+        }
+    };
+
+    const actionHandlers = {
+        start: handleAssess,
+        update: handleApprove,
+        complete: handleResolve,
+        close: handleClose
     };
 
     return (
@@ -272,7 +350,7 @@ function IncidentDetail() {
                     )}
 
                     {/* Đánh giá & phương án */}
-                    {canAssess && !assessmentSent && (
+                    {actionKeys.includes('start') && !assessmentSent && (
                         <Paper sx={{ p: 0, mt: 3, overflow: 'hidden', boxShadow: 3 }}>
                             <Box sx={{ background: '#1976d2', color: '#fff', px: 3, py: 2 }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
@@ -315,16 +393,6 @@ function IncidentDetail() {
                                         <Button variant="contained" onClick={handleAssess} disabled={submitting}>
                                             {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
                                         </Button>
-                                        {isManager && (
-                                            <Button
-                                                variant="contained"
-                                                color="success"
-                                                onClick={handleApprove}
-                                                disabled={approveLoading}
-                                            >
-                                                {approveLoading ? 'Đang duyệt...' : 'Duyệt & tạo bảo trì'}
-                                            </Button>
-                                        )}
                                     </Grid>
                                 </Grid>
                             </Box>
@@ -367,34 +435,89 @@ function IncidentDetail() {
                                             <Button variant="contained" onClick={handleSaveActual} disabled={savingActual}>
                                                 {savingActual ? 'Đang lưu...' : 'Lưu thông tin'}
                                             </Button>
-                                            {isManager && (
-                                                <Button
-                                                    variant="contained"
-                                                    color="success"
-                                                    onClick={handleApprove}
-                                                    disabled={approveLoading}
-                                                >
-                                                    {approveLoading ? 'Đang duyệt...' : 'Duyệt & tạo bảo trì'}
-                                                </Button>
-                                            )}
+                                            <ActionButtons
+                                                allowed_actions={actionKeys}
+                                                handlers={actionHandlers}
+                                                labels={{ update: 'Duyệt & tạo bảo trì' }}
+                                            />
                                         </Grid>
                                     )}
-                                    {actualLocked && isManager && (
+                                    {actualLocked && (
                                         <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                                            <Button
-                                                variant="contained"
-                                                color="success"
-                                                onClick={handleApprove}
-                                                disabled={approveLoading}
-                                            >
-                                                {approveLoading ? 'Đang duyệt...' : 'Duyệt & tạo bảo trì'}
-                                            </Button>
+                                            <ActionButtons
+                                                allowed_actions={actionKeys}
+                                                handlers={actionHandlers}
+                                                labels={{ update: 'Duyệt & tạo bảo trì' }}
+                                            />
                                         </Grid>
                                     )}
                                 </Grid>
                             </Box>
                         </Paper>
                     )}
+
+                    <Paper sx={{ p: 0, mt: 3, overflow: 'hidden', boxShadow: 3 }}>
+                        <Box sx={{ background: '#1976d2', color: '#fff', px: 3, py: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                                Hoàn tất & đóng sự cố
+                            </Typography>
+                        </Box>
+                        <Box sx={{ p: 3 }}>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        label="Nguyên nhân gốc"
+                                        value={rootCause}
+                                        onChange={(e) => setRootCause(e.target.value)}
+                                        disabled={isClosed}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        minRows={3}
+                                        label="Giải pháp/biện pháp khắc phục"
+                                        value={resolutionNotes}
+                                        onChange={(e) => setResolutionNotes(e.target.value)}
+                                        disabled={isClosed}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        minRows={3}
+                                        label="Biện pháp phòng ngừa"
+                                        value={preventionMeasures}
+                                        onChange={(e) => setPreventionMeasures(e.target.value)}
+                                        disabled={isClosed}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Thời gian dừng máy (giờ)"
+                                        value={downtimeHours}
+                                        onChange={(e) => setDowntimeHours(e.target.value)}
+                                        disabled={isClosed}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <ActionButtons
+                                        allowed_actions={actionKeys}
+                                        handlers={actionHandlers}
+                                        labels={{
+                                            complete: 'Hoàn tất xử lý',
+                                            close: 'Đóng sự cố'
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    </Paper>
                 </Grid>
 
                 <Grid item xs={12} md={4}>

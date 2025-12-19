@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -43,8 +43,10 @@ import {
     startWorkTask,
     completeWorkTask,
     startMaintenance,
-    saveMaintenanceProgress
+    saveMaintenanceProgress,
+    decideWorkOrder
 } from '../../services/maintenanceWorkService';
+import ActionButtons from '../../component/common/ActionButtons';
 
 function TabPanel({ children, value, index }) {
     return (
@@ -103,6 +105,32 @@ function MaintenanceWorkDetail() {
     const [taskImageAfter, setTaskImageAfter] = useState('');
     const [taskWorkReport, setTaskWorkReport] = useState('');
     const [uploadingImage, setUploadingImage] = useState(false);
+
+    const actionKeys = useMemo(() => {
+        const transitions = workOrder?.allowed_actions || [];
+        const mapped = transitions.map((action) => {
+            if (action === 'in_progress') {
+                return workOrder?.status === 'awaiting_approval' ? 'reject' : 'start';
+            }
+            if (action === 'awaiting_approval') return 'complete';
+            if (action === 'completed') return 'approve';
+            return null;
+        });
+        return Array.from(new Set(mapped.filter(Boolean)));
+    }, [workOrder]);
+
+    const canSaveProgress = useMemo(
+        () => (workOrder?.allowed_actions || []).includes('awaiting_approval'),
+        [workOrder]
+    );
+
+    const handleForbidden = (err) => {
+        if (err?.response?.status === 403) {
+            alert('Bạn không có quyền thực hiện hành động này');
+            return true;
+        }
+        return false;
+    };
 
     useEffect(() => {
         loadWorkOrder();
@@ -172,7 +200,9 @@ function MaintenanceWorkDetail() {
                 loadWorkOrder();
                 alert('Đã bắt đầu lệnh bảo trì!');
             } catch (err) {
-                alert('Lỗi khi bắt đầu lệnh bảo trì: ' + (err.response?.data?.message || err.message));
+                if (!handleForbidden(err)) {
+                    alert('Lỗi khi bắt đầu lệnh bảo trì: ' + (err.response?.data?.message || err.message));
+                }
             }
         }
     };
@@ -185,7 +215,9 @@ function MaintenanceWorkDetail() {
             loadWorkOrder();
             alert('Đã lưu tiến độ công việc!');
         } catch (err) {
-            alert('Lỗi khi lưu tiến độ: ' + (err.response?.data?.message || err.message));
+            if (!handleForbidden(err)) {
+                alert('Lỗi khi lưu tiến độ: ' + (err.response?.data?.message || err.message));
+            }
         }
     };
 
@@ -213,7 +245,22 @@ function MaintenanceWorkDetail() {
                 loadWorkOrder();
                 alert('Đã hoàn thành công việc. Chờ trưởng bộ phận duyệt.');
             } catch (err) {
-                alert(err.response?.data?.message || 'Lỗi khi hoàn thành công việc');
+                if (!handleForbidden(err)) {
+                    alert(err.response?.data?.message || 'Lỗi khi hoàn thành công việc');
+                }
+            }
+        }
+    };
+
+    const handleDecideWork = async (approved) => {
+        try {
+            const rejection_reason = approved ? undefined : window.prompt('Lý do từ chối/đòi sửa lại?') || '';
+            await decideWorkOrder(id, { approved, rejection_reason });
+            await loadWorkOrder();
+            alert(approved ? 'Đã duyệt công việc' : 'Đã yêu cầu sửa lại');
+        } catch (err) {
+            if (!handleForbidden(err)) {
+                alert(err.response?.data?.message || 'Lỗi khi duyệt công việc');
             }
         }
     };
@@ -426,36 +473,34 @@ function MaintenanceWorkDetail() {
                             sx={{ fontSize: '1.2rem' }}
                         />
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button 
-                            variant="contained" 
-                            color="primary"
-                            startIcon={<AddIcon />}
-                            onClick={handleStartMaintenance}
-                            disabled={workOrder.status !== 'pending' && workOrder.status !== 'awaiting_approval'}
-                        >
-                            Bắt đầu
-                        </Button>
-                        <Button 
-                            variant="outlined" 
-                            startIcon={<ImageIcon />}
-                            onClick={() => {
-                                setSaveProgressNotes(workOrder.notes || '');
-                                setSaveProgressDialogOpen(true);
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        {canSaveProgress && (
+                            <Button 
+                                variant="outlined" 
+                                startIcon={<ImageIcon />}
+                                onClick={() => {
+                                    setSaveProgressNotes(workOrder.notes || '');
+                                    setSaveProgressDialogOpen(true);
+                                }}
+                            >
+                                Lưu tiến độ
+                            </Button>
+                        )}
+                        <ActionButtons
+                            allowed_actions={actionKeys}
+                            handlers={{
+                                start: handleStartMaintenance,
+                                complete: handleCompleteWork,
+                                approve: () => handleDecideWork(true),
+                                reject: () => handleDecideWork(false)
                             }}
-                            disabled={workOrder.status !== 'in_progress'}
-                        >
-                            Lưu tiến độ
-                        </Button>
-                        <Button 
-                            variant="contained" 
-                            color="success"
-                            startIcon={<CheckCircleIcon />}
-                            onClick={handleCompleteWork}
-                            disabled={workOrder.status === 'completed' || checklistProgress < 100}
-                        >
-                            Báo cáo hoàn thành
-                        </Button>
+                            labels={{
+                                start: 'Bắt đầu',
+                                complete: 'Báo cáo hoàn thành',
+                                approve: 'Duyệt',
+                                reject: 'Yêu cầu sửa lại'
+                            }}
+                        />
                     </Box>
                 </Box>
             </Paper>
@@ -910,41 +955,37 @@ function MaintenanceWorkDetail() {
                                 <Typography variant="h6" sx={{ mb: 2 }}>
                                     Các thao tác
                                 </Typography>
-                                <Button 
-                                    variant="contained" 
-                                    size="large"
-                                    color="primary"
-                                    startIcon={<AddIcon />}
-                                    onClick={handleStartMaintenance}
-                                    disabled={workOrder.status !== 'pending' && workOrder.status !== 'awaiting_approval'}
-                                    sx={{ justifyContent: 'flex-start', py: 2 }}
-                                >
-                                    Bắt đầu bảo trì
-                                </Button>
-                                <Button 
-                                    variant="outlined"
-                                    size="large"
-                                    startIcon={<SaveIcon />}
-                                    onClick={() => {
-                                        setSaveProgressNotes(workOrder.notes || '');
-                                        setSaveProgressDialogOpen(true);
+                                <ActionButtons
+                                    allowed_actions={actionKeys}
+                                    handlers={{
+                                        start: handleStartMaintenance,
+                                        complete: handleCompleteWork,
+                                        approve: () => handleDecideWork(true),
+                                        reject: () => handleDecideWork(false)
                                     }}
-                                    disabled={workOrder.status !== 'in_progress'}
-                                    sx={{ justifyContent: 'flex-start', py: 2 }}
-                                >
-                                    Lưu tiến độ công việc
-                                </Button>
-                                <Button 
-                                    variant="contained" 
+                                    labels={{
+                                        start: 'Bắt đầu bảo trì',
+                                        complete: 'Báo cáo hoàn thành',
+                                        approve: 'Duyệt',
+                                        reject: 'Yêu cầu sửa lại'
+                                    }}
                                     size="large"
-                                    color="success"
-                                    startIcon={<CheckCircleIcon />}
-                                    onClick={handleCompleteWork}
-                                    disabled={workOrder.status === 'completed' || overallProgress < 100}
-                                    sx={{ justifyContent: 'flex-start', py: 2 }}
-                                >
-                                    Báo cáo hoàn thành
-                                </Button>
+                                    spacing={2}
+                                />
+                                {canSaveProgress && (
+                                    <Button 
+                                        variant="outlined"
+                                        size="large"
+                                        startIcon={<SaveIcon />}
+                                        onClick={() => {
+                                            setSaveProgressNotes(workOrder.notes || '');
+                                            setSaveProgressDialogOpen(true);
+                                        }}
+                                        sx={{ justifyContent: 'flex-start', py: 2 }}
+                                    >
+                                        Lưu tiến độ công việc
+                                    </Button>
+                                )}
                                 {overallProgress < 100 && (
                                     <Alert severity="warning" sx={{ mt: 2 }}>
                                         Vui lòng hoàn thành tất cả công việc ({overallProgress}% hoàn thành) trước khi báo cáo hoàn thành.

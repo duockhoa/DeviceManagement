@@ -26,6 +26,7 @@ import { fetchUsers } from '../../redux/slice/usersSlice';
 import { fetchAssets } from '../../redux/slice/assetsSlice';
 import { getAllAreas } from '../../services/areasService';
 import { getMechanicalElectricalTechniciansService } from '../../services/usersService';
+import ActionButtons from '../../component/common/ActionButtons';
 
 const priorityMeta = {
     low: { label: 'Thấp', color: 'default' },
@@ -78,9 +79,26 @@ export default function WorkRequests() {
     const users = useSelector((state) => state.users.users);
     const assets = useSelector((state) => state.assets.assets);
     const dispatch = useDispatch();
-    const isAdmin = user?.employee_code === '0947';
     const location = useLocation();
     const isOpsView = location.pathname.includes('/work-requests/ops');
+    const detailActions = useMemo(() => {
+        const transitions = detail?.allowed_actions || [];
+        const mapped = transitions.map((action) => {
+            if (action === 'assigned') return 'start';
+            if (action === 'in_progress') return 'update';
+            if (action === 'closed') return 'complete';
+            return null;
+        });
+        return Array.from(new Set(mapped.filter(Boolean)));
+    }, [detail]);
+
+    const handleForbidden = (err) => {
+        if (err?.response?.status === 403) {
+            alert('Bạn không có quyền thực hiện hành động này');
+            return true;
+        }
+        return false;
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -174,6 +192,11 @@ export default function WorkRequests() {
         []
     );
 
+    const transitionOptions = useMemo(() => {
+        if (!detail?.allowed_actions?.length) return statusOptions;
+        return statusOptions.filter((s) => detail.allowed_actions.includes(s.value));
+    }, [detail, statusOptions]);
+
     const openDetailDialog = async (id) => {
         try {
             const res = await axios.get(`/work-requests/${id}`);
@@ -187,19 +210,21 @@ export default function WorkRequests() {
         }
     };
 
-    const handleUpdate = async () => {
+    const handleTransition = async (targetStatus) => {
         if (!detail) return;
         try {
             await axios.patch(`/work-requests/${detail.id}`, {
                 technician_id: assignTech || null,
-                status: progressStatus || detail.status
+                status: targetStatus || progressStatus || detail.status
             });
             await loadData();
             const refreshed = await axios.get(`/work-requests/${detail.id}`);
             setDetail(refreshed.data.data);
             alert('Đã cập nhật yêu cầu');
         } catch (error) {
-            alert('Không cập nhật được: ' + (error.response?.data?.message || error.message));
+            if (!handleForbidden(error)) {
+                alert('Không cập nhật được: ' + (error.response?.data?.message || error.message));
+            }
         }
     };
 
@@ -269,24 +294,24 @@ export default function WorkRequests() {
                             {isOpsView && (
                                 <>
                                     <Button size="small" variant="outlined" onClick={() => openDetailDialog(it.id)}>Xem</Button>
-                                    {isAdmin && (
-                                        <Button
-                                            size="small"
-                                            color="error"
-                                            variant="outlined"
-                                            onClick={async () => {
-                                                if (!window.confirm('Xóa yêu cầu này?')) return;
-                                                try {
-                                                    await axios.delete(`/work-requests/${it.id}`);
-                                                    loadData();
-                                                } catch (error) {
+                                    <Button
+                                        size="small"
+                                        color="error"
+                                        variant="outlined"
+                                        onClick={async () => {
+                                            if (!window.confirm('Xóa yêu cầu này?')) return;
+                                            try {
+                                                await axios.delete(`/work-requests/${it.id}`);
+                                                loadData();
+                                            } catch (error) {
+                                                if (!handleForbidden(error)) {
                                                     alert('Không xóa được: ' + (error.response?.data?.message || error.message));
                                                 }
-                                            }}
-                                        >
-                                            Xóa
-                                        </Button>
-                                    )}
+                                            }
+                                        }}
+                                    >
+                                        Xóa
+                                    </Button>
                                 </>
                             )}
                         </Stack>
@@ -428,9 +453,9 @@ export default function WorkRequests() {
                                     size="small"
                                     value={progressStatus}
                                     onChange={(e) => setProgressStatus(e.target.value)}
-                                    disabled={!isAdmin}
+                                    disabled={!detailActions.length}
                                 >
-                                    {statusOptions.map((s) => (
+                                    {transitionOptions.map((s) => (
                                         <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
                                     ))}
                                 </TextField>
@@ -440,30 +465,44 @@ export default function WorkRequests() {
                                     isOptionEqualToValue={(opt, val) => opt.id === val.id}
                                     value={technicians.find((u) => u.id === assignTech) || null}
                                     onChange={(_, v) => setAssignTech(v?.id || '')}
-                                    renderInput={(params) => <TextField {...params} label="Kỹ thuật viên (cơ điện)" size="small" disabled={!isAdmin} />}
-                                    disabled={!isAdmin}
+                                    renderInput={(params) => <TextField {...params} label="Kỹ thuật viên (cơ điện)" size="small" disabled={!detailActions.length} />}
+                                    disabled={!detailActions.length}
                                 />
-                                {isAdmin && (
-                                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                                        <Button variant="contained" onClick={handleUpdate}>Cập nhật</Button>
-                                        <Button variant="outlined" onClick={async () => {
-                                            try {
-                                                const res = await axios.post(`/work-requests/${detail.id}/create-maintenance`);
-                                                alert(`Đã tạo lịch bảo trì: ${res.data.code}`);
-                                            } catch (error) {
+                                <Stack direction="row" spacing={1} flexWrap="wrap">
+                                    <ActionButtons
+                                        allowed_actions={detailActions}
+                                        handlers={{
+                                            start: () => handleTransition('assigned'),
+                                            update: () => handleTransition('in_progress'),
+                                            complete: () => handleTransition('closed')
+                                        }}
+                                        labels={{
+                                            start: 'Phân công',
+                                            update: 'Bắt đầu xử lý',
+                                            complete: 'Đóng yêu cầu'
+                                        }}
+                                    />
+                                    <Button variant="outlined" onClick={async () => {
+                                        try {
+                                            const res = await axios.post(`/work-requests/${detail.id}/create-maintenance`);
+                                            alert(`Đã tạo lịch bảo trì: ${res.data.code}`);
+                                        } catch (error) {
+                                            if (!handleForbidden(error)) {
                                                 alert('Không tạo được lịch: ' + (error.response?.data?.message || error.message));
                                             }
-                                        }}>Tạo lịch bảo trì</Button>
-                                        <Button variant="outlined" onClick={async () => {
-                                            try {
-                                                const res = await axios.post(`/work-requests/${detail.id}/create-incident-maintenance`);
-                                                alert(`Đã tạo sự cố: ${res.data.incident_code} và lệnh bảo trì: ${res.data.maintenance_code}`);
-                                            } catch (error) {
+                                        }
+                                    }}>Tạo lịch bảo trì</Button>
+                                    <Button variant="outlined" onClick={async () => {
+                                        try {
+                                            const res = await axios.post(`/work-requests/${detail.id}/create-incident-maintenance`);
+                                            alert(`Đã tạo sự cố: ${res.data.incident_code} và lệnh bảo trì: ${res.data.maintenance_code}`);
+                                        } catch (error) {
+                                            if (!handleForbidden(error)) {
                                                 alert('Không tạo được sự cố/bảo trì: ' + (error.response?.data?.message || error.message));
                                             }
-                                        }}>Tạo sự cố</Button>
-                                    </Stack>
-                                )}
+                                        }
+                                    }}>Tạo sự cố</Button>
+                                </Stack>
                             </Stack>
 
                             <Divider sx={{ my: 2 }} />
