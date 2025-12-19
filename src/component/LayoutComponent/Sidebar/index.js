@@ -32,6 +32,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SecurityIcon from '@mui/icons-material/Security';
+import SpeedIcon from '@mui/icons-material/Speed';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -375,6 +376,27 @@ export default function Sidebar() {
                                     primary={isOpen ? 'Báo cáo tổng hợp' : ''}
                                 />
                             </ListItemButton>
+
+                            {/* Dashboard OEE/MTBF - read-only, theo quyền report */}
+                            {hasPermission('maintenance.report') && (
+                                <ListItemButton
+                                    sx={{
+                                        pl: 4,
+                                        ...(location.pathname === '/reports/oee-mtbf' ? activeStyle : subItemHoverStyle)
+                                    }}
+                                    onClick={() => switchActiveSidebar('/reports/oee-mtbf')}
+                                >
+                                    <ListItemIcon>
+                                        <SpeedIcon sx={location.pathname === '/reports/oee-mtbf' ? activeIconStyle : commonIconStyle} />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primaryTypographyProps={{
+                                            sx: location.pathname === '/reports/oee-mtbf' ? activeTextStyle : commonTextStyle
+                                        }}
+                                        primary={isOpen ? 'Dashboard OEE/MTBF' : ''}
+                                    />
+                                </ListItemButton>
+                            )}
                         </List>
                     </Collapse>
                 </div>
