@@ -22,7 +22,9 @@ import {
     Button,
     CircularProgress,
     Alert,
-    Dialog
+    Dialog,
+    TextField,
+    Tooltip
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
@@ -31,11 +33,14 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import TuneIcon from '@mui/icons-material/Tune';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import SaveIcon from '@mui/icons-material/Save';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAssetById } from '../../../redux/slice/assetsSlice';
 import { fetchMaintenanceByAsset } from '../../../redux/slice/maintenanceSlice';
 import Loading from '../../Loading';
 import EditAssetForm from '../EditAssetForm';
+import { updateAsset } from '../../../services/assetsService';
 
 function TabPanel({ children, value, index, ...other }) {
     return (
@@ -62,6 +67,8 @@ function AssetDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [dkCodeInput, setDkCodeInput] = useState('');
+    const [savingDkCode, setSavingDkCode] = useState(false);
 
     useEffect(() => {
         const loadAssetData = async () => {
@@ -69,6 +76,7 @@ function AssetDetail() {
                 setLoading(true);
                 const assetData = await dispatch(fetchAssetById(id)).unwrap();
                 setAsset(assetData);
+                setDkCodeInput(assetData.dk_code || '');
 
                 // Load maintenance history
                 const maintenanceData = await dispatch(fetchMaintenanceByAsset(id)).unwrap();
@@ -94,12 +102,50 @@ function AssetDetail() {
         setEditDialogOpen(true);
     };
 
+    const handleCopyAssetCode = async () => {
+        if (!asset?.asset_code) return;
+        try {
+            await navigator.clipboard.writeText(asset.asset_code);
+        } catch (err) {
+            console.error('Copy failed', err);
+        }
+    };
+
+    const handleSaveDkCode = async () => {
+        if (!asset) return;
+        try {
+            setSavingDkCode(true);
+            await updateAsset(asset.id, { dk_code: dkCodeInput || null });
+            const refreshed = await dispatch(fetchAssetById(asset.id)).unwrap();
+            setAsset(refreshed);
+            setDkCodeInput(refreshed.dk_code || '');
+        } catch (err) {
+            console.error('Error saving dk_code', err);
+            alert('Lưu mã DK thất bại: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setSavingDkCode(false);
+        }
+    };
+
+    const handleGoSpec = () => {
+        if (!asset) return;
+        navigate('/specifications', { state: { assetId: asset.id, assetCode: asset.asset_code, fromAssetDetail: true, target: 'spec' } });
+    };
+
+    const handleGoConsumable = () => {
+        if (!asset) return;
+        navigate('/consumables', { state: { assetId: asset.id, assetCode: asset.asset_code, fromAssetDetail: true, target: 'consumable' } });
+    };
+
     const handleCloseEdit = () => {
         setEditDialogOpen(false);
         // Reload asset data sau khi đóng dialog
         if (id) {
             dispatch(fetchAssetById(id)).unwrap()
-                .then(data => setAsset(data))
+                .then(data => {
+                    setAsset(data);
+                    setDkCodeInput(data.dk_code || '');
+                })
                 .catch(err => console.error('Error reloading asset:', err));
         }
     };
@@ -154,7 +200,7 @@ function AssetDetail() {
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3, backgroundColor: '#f5f5f5' }}>
             {/* Header */}
             <Paper sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                     <IconButton onClick={handleBack}>
                         <ArrowBackIcon />
                     </IconButton>
@@ -162,12 +208,34 @@ function AssetDetail() {
                         <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: '1.8rem' }}>
                             {asset.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.2rem' }}>
-                            Mã thiết bị: {asset.asset_code}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.2rem' }}>
-                            Mã DK: {asset.dk_code || '—'}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.2rem' }}>
+                                asset_code: {asset.asset_code}
+                            </Typography>
+                            <Tooltip title="Copy asset_code">
+                                <IconButton size="small" onClick={handleCopyAssetCode}>
+                                    <ContentCopyIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                            <TextField
+                                size="small"
+                                label="dk_code"
+                                value={dkCodeInput}
+                                onChange={(e) => setDkCodeInput(e.target.value)}
+                                placeholder="Nhập mã DK (có thể trùng)"
+                            />
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<SaveIcon />}
+                                onClick={handleSaveDkCode}
+                                disabled={savingDkCode}
+                            >
+                                Lưu DK
+                            </Button>
+                        </Box>
                     </Box>
                     <Chip 
                         label={getStatusLabel(asset.status)} 
@@ -175,13 +243,19 @@ function AssetDetail() {
                         size="small"
                     />
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     <Button 
                         startIcon={<EditIcon />} 
                         variant="outlined"
                         onClick={handleEdit}
                     >
                         Chỉnh sửa
+                    </Button>
+                    <Button variant="contained" color="primary" onClick={handleGoSpec}>
+                        ➕ Thêm Thông Số Kỹ Thuật
+                    </Button>
+                    <Button variant="contained" color="secondary" onClick={handleGoConsumable}>
+                        ➕ Thêm Vật Tư Tiêu Hao
                     </Button>
                 </Box>
             </Paper>

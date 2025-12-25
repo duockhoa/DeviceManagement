@@ -1,5 +1,49 @@
 import axios from "./customize-axios";
 
+// Template download helpers
+export const downloadTemplateAsset = async () => {
+  const response = await axios.get('/assets/export/template', { responseType: 'blob' });
+  return response.data;
+};
+
+export const downloadTemplateSpec = async () => {
+  const response = await axios.get('/assets/export/template/spec', { responseType: 'blob' });
+  return response.data;
+};
+
+export const downloadTemplateConsumable = async () => {
+  const response = await axios.get('/assets/export/template/consumable', { responseType: 'blob' });
+  return response.data;
+};
+
+// Import helpers
+export const importAssetsExcel = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await axios.post('/assets/import/excel', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};
+
+export const importSpecsExcel = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await axios.post('/assets/import/specifications', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};
+
+export const importConsumablesExcel = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await axios.post('/assets/import/consumables', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};
+
 // GET /api/assets - Lấy tất cả assets
 export const getAllAssets = async () => {
   try {

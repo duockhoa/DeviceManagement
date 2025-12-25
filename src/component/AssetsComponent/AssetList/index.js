@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchAssets, fetchAssetById } from "../../../redux/slice/assetsSlice";
+import { fetchAssets, fetchAssetById, searchAssetsThunk } from "../../../redux/slice/assetsSlice";
 import usePermissions from "../../../hooks/usePermissions";
 import {
     Box,
@@ -15,13 +15,17 @@ import {
     DialogContent,
     DialogContentText,
     DialogActions,
-    Button
+    Button,
+    TextField,
+    InputAdornment,
+    Alert
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import DevicesIcon from '@mui/icons-material/Devices';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import Loading from '../../Loading';
 import EditAssetForm from '../EditAssetForm';
 import ExcelImportExport from '../ExcelImportExport';
@@ -31,6 +35,7 @@ function AssetList() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const assets = useSelector((state) => state.assets.assets);
+    const searchResults = useSelector((state) => state.assets.searchResults);
     const loading = useSelector((state) => state.assets.loading);
     const error = useSelector((state) => state.assets.error);
     const user = useSelector((state) => state.user.userInfo);
@@ -40,11 +45,24 @@ function AssetList() {
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [assetToDelete, setAssetToDelete] = useState(null);
-    const visibleAssets = Array.isArray(assets) ? assets.filter((asset) => asset.status !== 'inactive') : [];
+    const [searchTerm, setSearchTerm] = useState('');
+    const visibleAssetsSource = searchTerm ? searchResults : assets;
+    const visibleAssets = Array.isArray(visibleAssetsSource) ? visibleAssetsSource.filter((asset) => asset.status !== 'inactive') : [];
 
     useEffect(() => {
         dispatch(fetchAssets());
     }, [dispatch]);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            if (searchTerm && searchTerm.trim().length > 0) {
+                dispatch(searchAssetsThunk({ query: searchTerm.trim() }));
+            } else {
+                dispatch(fetchAssets());
+            }
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchTerm, dispatch]);
 
     const handleViewDetail = (id) => {
         navigate(`/devices/${id}`);
@@ -302,10 +320,28 @@ function AssetList() {
 
     return (
         <Box sx={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column', p: 2 }}>
-            {/* Header with Excel buttons */}
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+            {/* Header with search & Excel buttons */}
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                <TextField
+                    size="small"
+                    placeholder="Tìm theo asset_code / dk_code / tên"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon fontSize="small" />
+                            </InputAdornment>
+                        )
+                    }}
+                    sx={{ minWidth: 320 }}
+                />
                 <ExcelImportExport onImportSuccess={handleImportSuccess} />
             </Box>
+
+            <Alert severity="info" sx={{ mb: 2 }}>
+                Quy trình: Import/Tạo thiết bị (asset_code tự sinh, dk_code có thể trùng) → Import thông số theo asset_code → Import vật tư theo asset_code.
+            </Alert>
 
             {/* DataGrid */}
             <Box sx={{ flexGrow: 1 }}>
