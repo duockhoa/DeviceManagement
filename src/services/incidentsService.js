@@ -1,10 +1,16 @@
+/**
+ * Incident Service - Action-based State Machine API
+ * Sử dụng state machine workflow thay vì direct status updates
+ */
 import customizeAxios from './customize-axios';
 
 const incidentsService = {
-    getAllIncidents: async () => {
+    // ==================== READ OPERATIONS ====================
+    
+    getAllIncidents: async (filters = {}) => {
         try {
-            const response = await customizeAxios.get('/incidents');
-            return response.data;
+            const response = await customizeAxios.get('/incidents', { params: filters });
+            return response.data.data || response.data; // Extract data array
         } catch (error) {
             console.error('Error fetching incidents:', error);
             throw error.response?.data?.message || 'Không thể tải danh sách sự cố';
@@ -14,6 +20,7 @@ const incidentsService = {
     getIncidentById: async (id) => {
         try {
             const response = await customizeAxios.get(`/incidents/${id}`);
+            // Response bao gồm nextActions array cho UI
             return response.data;
         } catch (error) {
             console.error('Error fetching incident:', error);
@@ -31,19 +38,48 @@ const incidentsService = {
         }
     },
 
-    updateIncident: async (id, incidentData) => {
+    // ==================== ACTION-BASED WORKFLOW ====================
+    
+    /**
+     * Phân loại sự cố (reported → triaged)
+     * Role: MANAGER, QA
+     */
+    triageIncident: async (id, data = {}) => {
         try {
-            const response = await customizeAxios.put(`/incidents/${id}`, incidentData);
+            const response = await customizeAxios.post(`/incidents/${id}/triage`, data);
             return response.data;
         } catch (error) {
-            console.error('Error updating incident:', error);
-            throw error.response?.data?.message || 'Không thể cập nhật sự cố';
+            console.error('Error triaging incident:', error);
+            throw error.response?.data?.message || 'Không thể phân loại sự cố';
         }
     },
 
+    /**
+     * Cô lập thiết bị (triaged → out_of_service)
+     * Role: MANAGER
+     * Required for critical incidents
+     */
+    isolateIncident: async (id, notes = '') => {
+        try {
+            const response = await customizeAxios.post(`/incidents/${id}/isolate`, { 
+                isolation_notes: notes 
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error isolating incident:', error);
+            throw error.response?.data?.message || 'Không thể cô lập thiết bị';
+        }
+    },
+
+    /**
+     * Phân công kỹ thuật viên (triaged|out_of_service → assigned)
+     * Role: MANAGER
+     */
     assignIncident: async (id, assignedTo) => {
         try {
-            const response = await customizeAxios.put(`/incidents/${id}/assign`, { assigned_to: assignedTo });
+            const response = await customizeAxios.post(`/incidents/${id}/assign`, { 
+                assigned_to: assignedTo 
+            });
             return response.data;
         } catch (error) {
             console.error('Error assigning incident:', error);
@@ -51,9 +87,13 @@ const incidentsService = {
         }
     },
 
+    /**
+     * Bắt đầu xử lý (assigned → in_progress)
+     * Role: TECHNICIAN
+     */
     startIncident: async (id) => {
         try {
-            const response = await customizeAxios.put(`/incidents/${id}/start`);
+            const response = await customizeAxios.post(`/incidents/${id}/start`);
             return response.data;
         } catch (error) {
             console.error('Error starting incident:', error);
@@ -61,23 +101,85 @@ const incidentsService = {
         }
     },
 
-    resolveIncident: async (id, resolveData) => {
+    /**
+     * Gửi kiểm tra sau sửa chữa (in_progress → post_fix_check)
+     * Role: TECHNICIAN
+     */
+    submitPostFix: async (id, data) => {
         try {
-            const response = await customizeAxios.put(`/incidents/${id}/resolve`, resolveData);
+            const response = await customizeAxios.post(`/incidents/${id}/submit-post-fix`, {
+                actions_taken: data.actions_taken,
+                root_cause: data.root_cause,
+                solution: data.solution,
+                downtime_minutes: data.downtime_minutes
+            });
             return response.data;
         } catch (error) {
-            console.error('Error resolving incident:', error);
-            throw error.response?.data?.message || 'Không thể giải quyết sự cố';
+            console.error('Error submitting post-fix check:', error);
+            throw error.response?.data?.message || 'Không thể gửi kiểm tra';
         }
     },
 
+    /**
+     * Kiểm tra sau sửa chữa (post_fix_check → resolved|in_progress)
+     * Role: QA, ENGINEERING
+     * result: 'pass' | 'fail'
+     */
+    postFixCheck: async (id, result, notes = '') => {
+        try {
+            const response = await customizeAxios.post(`/incidents/${id}/post-fix-check`, {
+                post_fix_result: result,
+                post_fix_notes: notes
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error performing post-fix check:', error);
+            throw error.response?.data?.message || 'Không thể thực hiện kiểm tra';
+        }
+    },
+
+    /**
+     * Đóng sự cố (resolved → closed)
+     * Role: MANAGER, QA
+     */
     closeIncident: async (id) => {
         try {
-            const response = await customizeAxios.put(`/incidents/${id}/close`);
+            const response = await customizeAxios.post(`/incidents/${id}/close`);
             return response.data;
         } catch (error) {
             console.error('Error closing incident:', error);
             throw error.response?.data?.message || 'Không thể đóng sự cố';
+        }
+    },
+
+    /**
+     * Hủy sự cố (reported → cancelled)
+     * Role: MANAGER
+     */
+    cancelIncident: async (id, reason) => {
+        try {
+            const response = await customizeAxios.post(`/incidents/${id}/cancel`, {
+                cancel_reason: reason
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error cancelling incident:', error);
+            throw error.response?.data?.message || 'Không thể hủy sự cố';
+        }
+    },
+
+    // ==================== LEGACY SUPPORT ====================
+    
+    /**
+     * @deprecated Use action-based methods instead
+     */
+    updateIncident: async (id, incidentData) => {
+        try {
+            const response = await customizeAxios.put(`/incidents/${id}`, incidentData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating incident:', error);
+            throw error.response?.data?.message || 'Không thể cập nhật sự cố';
         }
     },
 
@@ -91,6 +193,11 @@ const incidentsService = {
         }
     },
 
+    // ==================== COMPATIBILITY METHODS ====================
+    
+    /**
+     * Get my incidents - wrapper for getAllIncidents with user filter
+     */
     getMyIncidents: async () => {
         try {
             const response = await customizeAxios.get('/incidents/my-incidents');
@@ -101,6 +208,10 @@ const incidentsService = {
         }
     },
 
+    /**
+     * Get incident statistics - use reportsService.getDashboardSummary instead
+     * @deprecated Use reportsService.getDashboardSummary
+     */
     getIncidentStatistics: async (startDate, endDate) => {
         try {
             const params = {};
@@ -114,16 +225,26 @@ const incidentsService = {
         }
     },
 
+    /**
+     * Assess incident - maps to triageIncident
+     * @deprecated Use triageIncident instead
+     */
     assessIncident: async (id, payload) => {
         try {
-            const response = await customizeAxios.put(`/incidents/${id}/assess`, payload);
-            return response.data;
+            // Map to triageIncident with appropriate data
+            return await incidentsService.triageIncident(id, {
+                priority: payload.priority,
+                notes: payload.assessment_notes
+            });
         } catch (error) {
             console.error('Error assessing incident:', error);
             throw error.response?.data?.message || 'Không thể gửi đánh giá sự cố';
         }
     },
 
+    /**
+     * Approve solution - specific workflow action
+     */
     approveSolution: async (id) => {
         try {
             const response = await customizeAxios.post(`/incidents/${id}/approve-solution`);
