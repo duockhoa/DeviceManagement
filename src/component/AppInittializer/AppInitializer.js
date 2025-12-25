@@ -4,6 +4,9 @@ import { fetchAssets } from '../../redux/slice/assetsSlice';
 import { fetchDepartments } from '../../redux/slice/departmentSlice';
 import { fetchAssetCategories } from '../../redux/slice/assetCategoriesSlice';
 import { fetchAssetSubCategories } from '../../redux/slice/assetSubCategoriesSlice';
+import { fetchPlants } from '../../redux/slice/plantSlice';
+import { fetchAreas } from '../../redux/slice/areaSlice';
+import { fetchUsers } from '../../redux/slice/usersSlice';
 
 const AppInitializer = ({ children }) => {
     const dispatch = useDispatch();
@@ -18,6 +21,9 @@ const AppInitializer = ({ children }) => {
                     dispatch(fetchDepartments()),
                     dispatch(fetchAssetCategories()),
                     dispatch(fetchAssetSubCategories()),
+                    dispatch(fetchPlants()),
+                    dispatch(fetchAreas()),
+                    dispatch(fetchUsers()),
                 ]);
                 console.log('App initialized successfully');
             } catch (error) {

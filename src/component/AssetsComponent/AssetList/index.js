@@ -339,10 +339,6 @@ function AssetList() {
                 <ExcelImportExport onImportSuccess={handleImportSuccess} />
             </Box>
 
-            <Alert severity="info" sx={{ mb: 2 }}>
-                Quy trình: Import/Tạo thiết bị (asset_code tự sinh, dk_code có thể trùng) → Import thông số theo asset_code → Import vật tư theo asset_code.
-            </Alert>
-
             {/* DataGrid */}
             <Box sx={{ flexGrow: 1 }}>
                 <DataGrid

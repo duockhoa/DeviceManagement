@@ -9,6 +9,7 @@
         "@fontsource/roboto": "^5.1.1",
         "@hookform/resolvers": "^3.3.2",
         "@mui/icons-material": "^5.15.0",
+        "@mui/lab": "^5.0.0-alpha.173",
         "@mui/material": "^5.17.1",
         "@mui/styles": "^5.17.1",
         "@mui/system": "^5.17.1",

@@ -25,7 +25,9 @@ import {
     Alert,
     LinearProgress,
     Tabs,
-    Tab
+    Tab,
+    Snackbar,
+    Alert as MuiAlert
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -46,9 +48,17 @@ import {
     saveMaintenanceProgress,
     decideWorkOrder
 } from '../../services/maintenanceWorkService';
-import ActionButtons from '../../component/common/ActionButtons';
+import { scheduleMaintenance, submitAcceptance, acceptMaintenance, rejectAcceptance, closeMaintenance, cancelMaintenance } from '../../services/maintenanceService';
+import ActionToolbar from '../../components/common/ActionToolbar';
+import ActionDialog from '../../components/common/ActionDialog';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 import StatusTimeline from '../../components/common/StatusTimeline';
 import ActionZone from '../../components/common/ActionZone';
+import ScheduleMaintenanceDialog from '../../components/maintenance/ScheduleMaintenanceDialog';
+import SubmitAcceptanceDialog from '../../components/maintenance/SubmitAcceptanceDialog';
+import AcceptanceDialog from '../../components/maintenance/AcceptanceDialog';
+import CancelMaintenanceDialog from '../../components/maintenance/CancelMaintenanceDialog';
+import SystemStatusStepper from '../../components/common/SystemStatusStepper';
 import { WORKORDER_FLOW, NEXT_ROLE_LABEL } from '../../constants/flowMaps';
 
 function TabPanel({ children, value, index }) {
@@ -146,24 +156,135 @@ function MaintenanceWorkDetail() {
         totalWorkTasks
     } = progressStats;
 
-    const actionKeys = useMemo(() => {
-        const transitions = workOrder?.allowed_actions || [];
-        const mapped = transitions.map((action) => {
-            if (action === 'in_progress') {
-                return workOrder?.status === 'awaiting_approval' ? 'reject' : 'start';
-            }
-            if (action === 'awaiting_approval') return 'complete';
-            if (action === 'completed') return 'approve';
-            return null;
+    // Dialog states for new action system
+    const [dialogOpen, setDialogOpen] = useState({
+        schedule: false,
+        start: false,
+        submit_acceptance: false,
+        accept: false,
+        reject_acceptance: false,
+        close: false,
+        cancel: false
+    });
+    
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
+    
+    // Universal dialog handlers
+    const handleActionClick = (action) => {
+        setDialogOpen(prev => ({ ...prev, [action]: true }));
+    };
+    
+    const handleDialogClose = (action) => {
+        setDialogOpen(prev => ({ ...prev, [action]: false }));
+    };
+    
+    const handleActionSuccess = async (message) => {
+        try {
+            await loadWorkOrder();
+            setSnackbar({
+                open: true,
+                message: message,
+                severity: 'success'
+            });
+        } catch (err) {
+            console.error('Error reloading work order:', err);
+        }
+    };
+    
+    const handleActionError = (error) => {
+        const message = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra';
+        setSnackbar({
+            open: true,
+            message: message,
+            severity: 'error'
         });
-        return Array.from(new Set(mapped.filter(Boolean)));
-    }, [workOrder]);
+    };
+    
+    // New action handlers
+    const handleScheduleSubmit = async (formData) => {
+        try {
+            await scheduleMaintenance(id, formData);
+            handleDialogClose('schedule');
+            await handleActionSuccess('📅 Đã lập lịch bảo trì');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleStartSubmit = async () => {
+        try {
+            await startMaintenance(id);
+            handleDialogClose('start');
+            await handleActionSuccess('▶️ Đã bắt đầu bảo trì');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleSubmitAcceptanceSubmit = async (formData) => {
+        try {
+            await submitAcceptance(id, formData);
+            handleDialogClose('submit_acceptance');
+            await handleActionSuccess('📋 Đã gửi nghiệm thu');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleAcceptanceSubmit = async (formData) => {
+        try {
+            if (formData.action === 'accept') {
+                await acceptMaintenance(id);
+                handleDialogClose('accept');
+                await handleActionSuccess('✅ Nghiệm thu đạt');
+            } else {
+                await rejectAcceptance(id, { rejection_reason: formData.rejection_reason });
+                handleDialogClose('reject_acceptance');
+                await handleActionSuccess('❌ Yêu cầu làm lại');
+            }
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+
+    const handleCloseSubmit = async () => {
+        try {
+            await closeMaintenance(id);
+            handleDialogClose('close');
+            await handleActionSuccess('✔️ Đã đóng lệnh bảo trì');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+
+    const handleCancelSubmit = async (formData) => {
+        try {
+            await cancelMaintenance(id, formData.cancel_reason);
+            handleDialogClose('cancel');
+            await handleActionSuccess('❌ Đã hủy lệnh bảo trì');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
 
     const canSaveProgress = useMemo(
         () => (workOrder?.allowed_actions || []).includes('awaiting_approval'),
         [workOrder]
     );
-    const canSendForApproval = useMemo(() => actionKeys.includes('complete'), [actionKeys]);
+    const canSendForApproval = useMemo(
+        () => (workOrder?.allowed_actions || []).includes('complete'), 
+        [workOrder]
+    );
     const showCompletionReminder = useMemo(
         () => canSendForApproval && overallProgress === 100 && workOrder?.status === 'in_progress',
         [canSendForApproval, overallProgress, workOrder]
@@ -518,20 +639,10 @@ function MaintenanceWorkDetail() {
                 current_status_label={getStatusLabel(workOrder.status)}
                 next_role_label={nextRoleLabel}
             >
-                <ActionButtons
-                    allowed_actions={actionKeys}
-                    handlers={{
-                        start: handleStartMaintenance,
-                        complete: handleCompleteWork,
-                        approve: () => handleDecideWork(true),
-                        reject: () => handleDecideWork(false)
-                    }}
-                    labels={{
-                        start: 'Bắt đầu',
-                        complete: 'Gửi hoàn thành lệnh',
-                        approve: 'Duyệt',
-                        reject: 'Yêu cầu sửa lại'
-                    }}
+                <ActionToolbar
+                    entity="maintenance"
+                    record={workOrder}
+                    onActionClick={handleActionClick}
                 />
                 {showCompletionReminder && (
                     <Box sx={{ width: '100%' }}>
@@ -642,6 +753,15 @@ function MaintenanceWorkDetail() {
                                     <Typography variant="body1" sx={{ fontSize: '1.2rem' }}>
                                         {workOrder.description}
                                     </Typography>
+                                </Box>
+                            )}
+                            
+                            {workOrder.system_status && (
+                                <Box sx={{ mt: 3 }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1.1rem', mb: 1 }}>
+                                        Trạng thái hệ thống (SAP PM):
+                                    </Typography>
+                                    <SystemStatusStepper systemStatus={workOrder.system_status} />
                                 </Box>
                             )}
                         </CardContent>
@@ -1424,6 +1544,89 @@ function MaintenanceWorkDetail() {
                     </Button>
                 </DialogActions>
             </Dialog>
+            
+            {/* New Action Dialogs */}
+            <ActionDialog
+                open={dialogOpen.schedule}
+                onClose={() => handleDialogClose('schedule')}
+                title="Lập lịch bảo trì"
+                icon="📅"
+                onSubmit={handleScheduleSubmit}
+            >
+                <ScheduleMaintenanceDialog onSubmit={handleScheduleSubmit} />
+            </ActionDialog>
+            
+            <ConfirmDialog
+                open={dialogOpen.start}
+                onClose={() => handleDialogClose('start')}
+                onConfirm={handleStartSubmit}
+                title="Bắt đầu bảo trì"
+                message="Xác nhận bắt đầu thực hiện bảo trì?"
+                severity="info"
+            />
+            
+            <ActionDialog
+                open={dialogOpen.submit_acceptance}
+                onClose={() => handleDialogClose('submit_acceptance')}
+                title="Gửi nghiệm thu"
+                icon="📋"
+                onSubmit={handleSubmitAcceptanceSubmit}
+            >
+                <SubmitAcceptanceDialog maintenance={workOrder} onSubmit={handleSubmitAcceptanceSubmit} />
+            </ActionDialog>
+            
+            <ActionDialog
+                open={dialogOpen.accept || dialogOpen.reject_acceptance}
+                onClose={() => {
+                    handleDialogClose('accept');
+                    handleDialogClose('reject_acceptance');
+                }}
+                title="Nghiệm thu"
+                icon="✓"
+                onSubmit={handleAcceptanceSubmit}
+            >
+                <AcceptanceDialog maintenance={workOrder} onSubmit={handleAcceptanceSubmit} />
+            </ActionDialog>
+            
+            <ConfirmDialog
+                open={dialogOpen.close}
+                onClose={() => handleDialogClose('close')}
+                onConfirm={handleCloseSubmit}
+                title="Đóng lệnh bảo trì"
+                message="Xác nhận đóng lệnh bảo trì này?"
+                severity="success"
+                confirmText="Xác nhận đóng"
+            />
+            
+            <ActionDialog
+                open={dialogOpen.cancel}
+                onClose={() => handleDialogClose('cancel')}
+                title="Hủy lệnh bảo trì"
+                icon="❌"
+                onSubmit={handleCancelSubmit}
+                confirmText="Xác nhận hủy"
+                isDestructive
+            >
+                <CancelMaintenanceDialog onSubmit={handleCancelSubmit} />
+            </ActionDialog>
+            
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <MuiAlert
+                    severity={snackbar.severity}
+                    onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                    sx={{ width: '100%' }}
+                    elevation={6}
+                    variant="filled"
+                >
+                    {snackbar.message}
+                </MuiAlert>
+            </Snackbar>
         </Box>
     );
 }

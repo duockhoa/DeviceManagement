@@ -47,29 +47,29 @@ function AssetCategoryForm({ handleClose }) {
     return (
         <Box sx={{ p: 2, pt: 0 }}>
             <Typography variant="h6" sx={{ textAlign: 'center', fontWeight: 'bold', p: 2, fontSize: "1.8rem", color: theme.palette.primary.main }}>
-                THÊM LOẠI THIẾT BỊ
+                THÊM NHÓM THIẾT BỊ
             </Typography>
             {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
             <Grid2 sx={{ p: 2 }} container spacing={2}>
                 <Grid2 xs={12}>
                     <InputField
-                        label="Mã loại"
+                        label="Mã nhóm"
                         name="code"
                         value={formData.code}
                         onChange={onChange}
                         required
-                        placeholder="Nhập mã loại thiết bị"
+                        placeholder="Nhập mã nhóm thiết bị (VD: MEC, ELEC)"
                         minLabelWidth="80px"
                     />
                 </Grid2>
                 <Grid2 xs={12}>
                     <InputField
-                        label="Tên loại"
+                        label="Tên nhóm"
                         name="name"
                         value={formData.name}
                         onChange={onChange}
                         required
-                        placeholder="Nhập tên loại thiết bị"
+                        placeholder="Nhập tên nhóm thiết bị (VD: Cơ khí, Điện)"
                         minLabelWidth="80px"
                     />
                 </Grid2>

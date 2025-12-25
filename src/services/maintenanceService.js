@@ -106,11 +106,7 @@ const maintenanceService = {
      */
     submitAcceptance: async (id, data) => {
         try {
-            const response = await customizeAxios.post(`/maintenance/${id}/submit-acceptance`, {
-                notes: data.notes,
-                actual_duration: data.actual_duration,
-                cost: data.cost
-            });
+            const response = await customizeAxios.post(`/maintenance/${id}/submit-acceptance`, data);
             return response.data;
         } catch (error) {
             console.error('Error submitting acceptance:', error);
@@ -138,11 +134,9 @@ const maintenanceService = {
      * Nghiệm thu không đạt (awaiting_acceptance → in_progress)
      * Role: QA, ENGINEERING
      */
-    rejectAcceptance: async (id, notes) => {
+    rejectAcceptance: async (id, data) => {
         try {
-            const response = await customizeAxios.post(`/maintenance/${id}/reject-acceptance`, {
-                rejection_notes: notes
-            });
+            const response = await customizeAxios.post(`/maintenance/${id}/reject-acceptance`, data);
             return response.data;
         } catch (error) {
             console.error('Error rejecting acceptance:', error);

@@ -59,11 +59,9 @@ const incidentsService = {
      * Role: MANAGER
      * Required for critical incidents
      */
-    isolateIncident: async (id, notes = '') => {
+    isolateIncident: async (id, data = {}) => {
         try {
-            const response = await customizeAxios.post(`/incidents/${id}/isolate`, { 
-                isolation_notes: notes 
-            });
+            const response = await customizeAxios.post(`/incidents/${id}/isolate`, data);
             return response.data;
         } catch (error) {
             console.error('Error isolating incident:', error);
@@ -107,12 +105,7 @@ const incidentsService = {
      */
     submitPostFix: async (id, data) => {
         try {
-            const response = await customizeAxios.post(`/incidents/${id}/submit-post-fix`, {
-                actions_taken: data.actions_taken,
-                root_cause: data.root_cause,
-                solution: data.solution,
-                downtime_minutes: data.downtime_minutes
-            });
+            const response = await customizeAxios.post(`/incidents/${id}/submit-post-fix`, data);
             return response.data;
         } catch (error) {
             console.error('Error submitting post-fix check:', error);
@@ -123,14 +116,11 @@ const incidentsService = {
     /**
      * Kiểm tra sau sửa chữa (post_fix_check → resolved|in_progress)
      * Role: QA, ENGINEERING
-     * result: 'pass' | 'fail'
+     * data: { post_fix_result: 'pass' | 'fail', post_fix_notes: string }
      */
-    postFixCheck: async (id, result, notes = '') => {
+    postFixCheck: async (id, data) => {
         try {
-            const response = await customizeAxios.post(`/incidents/${id}/post-fix-check`, {
-                post_fix_result: result,
-                post_fix_notes: notes
-            });
+            const response = await customizeAxios.post(`/incidents/${id}/post-fix-check`, data);
             return response.data;
         } catch (error) {
             console.error('Error performing post-fix check:', error);
@@ -141,10 +131,11 @@ const incidentsService = {
     /**
      * Đóng sự cố (resolved → closed)
      * Role: MANAGER, QA
+     * data: { close_notes?, downtime_minutes? }
      */
-    closeIncident: async (id) => {
+    closeIncident: async (id, data = {}) => {
         try {
-            const response = await customizeAxios.post(`/incidents/${id}/close`);
+            const response = await customizeAxios.post(`/incidents/${id}/close`, data);
             return response.data;
         } catch (error) {
             console.error('Error closing incident:', error);
@@ -155,12 +146,11 @@ const incidentsService = {
     /**
      * Hủy sự cố (reported → cancelled)
      * Role: MANAGER
+     * data: { cancel_reason: string }
      */
-    cancelIncident: async (id, reason) => {
+    cancelIncident: async (id, data) => {
         try {
-            const response = await customizeAxios.post(`/incidents/${id}/cancel`, {
-                cancel_reason: reason
-            });
+            const response = await customizeAxios.post(`/incidents/${id}/cancel`, data);
             return response.data;
         } catch (error) {
             console.error('Error cancelling incident:', error);

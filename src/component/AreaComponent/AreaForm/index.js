@@ -10,7 +10,7 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import theme from "../../../theme";
 import CloseIcon from '@mui/icons-material/Close';
 
-function AreaForm({ handleClose }) {
+function AreaForm({ handleClose, selectedPlantId }) {
     const dispatch = useDispatch();
     const plants = useSelector((state) => state.plants.plants);
     const error = useSelector((state) => state.areas.error);
@@ -18,7 +18,7 @@ function AreaForm({ handleClose }) {
     const [formData, setFormData] = useState({
         code: '',
         name: '',
-        plant_id: '',
+        plant_id: selectedPlantId || '',
         description: ''
     });
     

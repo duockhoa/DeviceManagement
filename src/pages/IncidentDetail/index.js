@@ -10,7 +10,9 @@ import {
     Button,
     Stack,
     Alert,
-    TextField
+    TextField,
+    Snackbar,
+    Alert as MuiAlert
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
@@ -19,9 +21,19 @@ import BuildIcon from '@mui/icons-material/Build';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import incidentsService from '../../services/incidentsService';
 import Loading from '../../component/Loading';
-import ActionButtons from '../../component/common/ActionButtons';
+import ActionToolbar from '../../components/common/ActionToolbar';
+import ActionDialog from '../../components/common/ActionDialog';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 import StatusTimeline from '../../components/common/StatusTimeline';
 import ActionZone from '../../components/common/ActionZone';
+import TriageDialog from '../../components/incident/TriageDialog';
+import IsolateDialog from '../../components/incident/IsolateDialog';
+import AssignDialog from '../../components/incident/AssignDialog';
+import SubmitPostFixDialog from '../../components/incident/SubmitPostFixDialog';
+import PostFixCheckDialog from '../../components/incident/PostFixCheckDialog';
+import CancelIncidentDialog from '../../components/incident/CancelIncidentDialog';
+import CloseIncidentDialog from '../../components/incident/CloseIncidentDialog';
+import OperationalStatusBadge from '../../components/common/OperationalStatusBadge';
 import { INCIDENT_FLOW, NEXT_ROLE_LABEL } from '../../constants/flowMaps';
 
 const severityConfig = {
@@ -61,6 +73,24 @@ function IncidentDetail() {
     const [resolutionNotes, setResolutionNotes] = useState('');
     const [preventionMeasures, setPreventionMeasures] = useState('');
     const [downtimeHours, setDowntimeHours] = useState('');
+    
+    // Dialog states for new action system
+    const [dialogOpen, setDialogOpen] = useState({
+        triage: false,
+        isolate: false,
+        assign: false,
+        start: false,
+        submit_post_fix: false,
+        post_fix_check: false,
+        close: false,
+        cancel: false
+    });
+    
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
 
     useEffect(() => {
         const loadIncident = async () => {
@@ -95,33 +125,130 @@ function IncidentDetail() {
         }
     }, [id]);
 
-    const actionKeys = useMemo(() => {
-        const transitions = incident?.allowed_actions || [];
-        const mapped = transitions.map((action) => {
-            switch (action) {
-                case 'investigating':
-                    return 'start';
-                case 'in_progress':
-                    return 'update';
-                case 'resolved':
-                    return 'complete';
-                case 'closed':
-                    return 'close';
-                default:
-                    return null;
-            }
-        });
-        return Array.from(new Set(mapped.filter(Boolean)));
-    }, [incident]);
-
     const isClosed = incident?.status === 'closed';
-
-    const handleForbidden = (err) => {
-        if (err?.response?.status === 403) {
-            alert('Bạn không có quyền thực hiện hành động này');
-            return true;
+    
+    // Universal dialog handlers
+    const handleActionClick = (action) => {
+        setDialogOpen(prev => ({ ...prev, [action]: true }));
+    };
+    
+    const handleDialogClose = (action) => {
+        setDialogOpen(prev => ({ ...prev, [action]: false }));
+    };
+    
+    const handleActionSuccess = async (message) => {
+        try {
+            const data = await incidentsService.getIncidentById(id);
+            setIncident(data);
+            setSnackbar({
+                open: true,
+                message: message,
+                severity: 'success'
+            });
+        } catch (err) {
+            console.error('Error reloading incident:', err);
         }
-        return false;
+    };
+    
+    const handleActionError = (error) => {
+        const message = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra';
+        setSnackbar({
+            open: true,
+            message: message,
+            severity: 'error'
+        });
+    };
+    
+    // New action handlers
+    const handleTriageSubmit = async (formData) => {
+        try {
+            await incidentsService.triageIncident(id, formData);
+            handleDialogClose('triage');
+            await handleActionSuccess('✅ Đã phân loại sự cố thành công');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleIsolateSubmit = async (formData) => {
+        try {
+            await incidentsService.isolateIncident(id, formData);
+            handleDialogClose('isolate');
+            await handleActionSuccess('🔒 Đã cô lập thiết bị');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleAssignSubmit = async (formData) => {
+        try {
+            await incidentsService.assignIncident(id, formData.assigned_to);
+            handleDialogClose('assign');
+            await handleActionSuccess('👤 Đã phân công kỹ thuật viên');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleStartSubmit = async () => {
+        try {
+            await incidentsService.startIncident(id);
+            handleDialogClose('start');
+            await handleActionSuccess('▶️ Đã bắt đầu xử lý sự cố');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleSubmitPostFixSubmit = async (formData) => {
+        try {
+            await incidentsService.submitPostFix(id, formData);
+            handleDialogClose('submit_post_fix');
+            await handleActionSuccess('📤 Đã gửi kiểm tra sau sửa');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handlePostFixCheckSubmit = async (formData) => {
+        try {
+            await incidentsService.postFixCheck(id, formData);
+            handleDialogClose('post_fix_check');
+            const resultMessage = formData.post_fix_result === 'pass' 
+                ? '✅ Kiểm tra đạt - Chuyển sang RESOLVED'
+                : '❌ Kiểm tra không đạt - Yêu cầu sửa lại';
+            await handleActionSuccess(resultMessage);
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleCloseSubmit = async (formData) => {
+        try {
+            await incidentsService.closeIncident(id, formData);
+            handleDialogClose('close');
+            await handleActionSuccess('✔️ Đã đóng sự cố');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+    
+    const handleCancelSubmit = async (reason) => {
+        try {
+            await incidentsService.cancelIncident(id, { cancel_reason: reason });
+            handleDialogClose('cancel');
+            await handleActionSuccess('✖️ Đã hủy sự cố');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
     };
 
     const attachmentList = useMemo(() => {
@@ -158,107 +285,6 @@ function IncidentDetail() {
     const status = statusConfig[incident.status] || { label: incident.status, color: 'default' };
     const nextRoleLabel = NEXT_ROLE_LABEL.Incident[incident.status] || '—';
 
-    const handleAssess = async () => {
-        try {
-            setSubmitting(true);
-            await incidentsService.assessIncident(id, assessment);
-            const data = await incidentsService.getIncidentById(id);
-            setIncident(data);
-            setAssessmentSent(true);
-            setActualStatus(data.handover_notes || '');
-            setActualAction(data.solution || '');
-            alert('Đã gửi đánh giá sự cố');
-        } catch (err) {
-            if (!handleForbidden(err)) {
-                alert(err || 'Không thể gửi đánh giá');
-            }
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleSaveActual = async () => {
-        try {
-            setSavingActual(true);
-            await incidentsService.updateIncident(id, {
-                handover_notes: actualStatus,
-                solution: actualAction
-            });
-            const data = await incidentsService.getIncidentById(id);
-            setIncident(data);
-            setActualLocked(true);
-            alert('Đã lưu tình trạng thực tế & cách thức xử lý');
-        } catch (err) {
-            if (!handleForbidden(err)) {
-                alert(err || 'Không thể lưu');
-            }
-        } finally {
-            setSavingActual(false);
-        }
-    };
-
-    const handleApprove = async () => {
-        if (!window.confirm('Duyệt phương án và tạo lệnh sửa chữa?')) return;
-        try {
-            setApproveLoading(true);
-            const result = await incidentsService.approveSolution(id);
-            const maintenanceId = result?.maintenance?.id;
-            if (maintenanceId) {
-                alert('Đã duyệt và tạo lệnh bảo trì thành công!');
-                navigate('/maintenance');
-            } else {
-                alert('Đã duyệt phương án sự cố.');
-                const data = await incidentsService.getIncidentById(id);
-                setIncident(data);
-            }
-        } catch (err) {
-            if (!handleForbidden(err)) {
-                alert(err || 'Không thể duyệt phương án');
-            }
-        } finally {
-            setApproveLoading(false);
-        }
-    };
-
-    const handleResolve = async () => {
-        try {
-            await incidentsService.resolveIncident(id, {
-                root_cause: rootCause,
-                solution: resolutionNotes,
-                prevention_measures: preventionMeasures,
-                downtime_hours: downtimeHours || null
-            });
-            const data = await incidentsService.getIncidentById(id);
-            setIncident(data);
-            alert('Đã cập nhật kết quả và chuyển trạng thái resolved');
-        } catch (err) {
-            if (!handleForbidden(err)) {
-                alert(err || 'Không thể hoàn tất xử lý');
-            }
-        }
-    };
-
-    const handleClose = async () => {
-        if (!window.confirm('Đóng sự cố này?')) return;
-        try {
-            await incidentsService.closeIncident(id);
-            const data = await incidentsService.getIncidentById(id);
-            setIncident(data);
-            alert('Đã đóng sự cố');
-        } catch (err) {
-            if (!handleForbidden(err)) {
-                alert(err || 'Không thể đóng sự cố');
-            }
-        }
-    };
-
-    const actionHandlers = {
-        start: handleAssess,
-        update: handleApprove,
-        complete: handleResolve,
-        close: handleClose
-    };
-
     return (
         <Box sx={{ p: 3 }}>
             <Paper sx={{ p: 3, mb: 3 }}>
@@ -292,14 +318,10 @@ function IncidentDetail() {
                 current_status_label={status.label}
                 next_role_label={nextRoleLabel}
             >
-                <ActionButtons
-                    allowed_actions={actionKeys}
-                    handlers={actionHandlers}
-                    labels={{
-                        update: 'Duyệt & tạo bảo trì',
-                        complete: 'Hoàn tất xử lý',
-                        close: 'Đóng sự cố'
-                    }}
+                <ActionToolbar
+                    entity="incident"
+                    record={incident}
+                    onActionClick={handleActionClick}
                 />
             </ActionZone>
 
@@ -373,115 +395,8 @@ function IncidentDetail() {
                         </Paper>
                     )}
 
-                    {/* Đánh giá & phương án */}
-                    {actionKeys.includes('start') && !assessmentSent && (
-                        <Paper sx={{ p: 0, mt: 3, overflow: 'hidden', boxShadow: 3 }}>
-                            <Box sx={{ background: '#1976d2', color: '#fff', px: 3, py: 2 }}>
-                                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                    Đánh giá & phương án thực tế
-                                </Typography>
-                            </Box>
-                            <Box sx={{ p: 3 }}>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            minRows={4}
-                                            label="Đánh giá thực tế"
-                                            value={assessment.assessment_notes}
-                                            onChange={(e) => setAssessment(prev => ({ ...prev, assessment_notes: e.target.value }))}
-                                            disabled={isClosed}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            minRows={4}
-                                            label="Phương án xử lý"
-                                            value={assessment.solution_plan}
-                                            onChange={(e) => setAssessment(prev => ({ ...prev, solution_plan: e.target.value }))}
-                                            disabled={isClosed}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            minRows={4}
-                                            label="Tình trạng & cách thức xử lý"
-                                            value={assessment.handover_notes}
-                                            onChange={(e) => setAssessment(prev => ({ ...prev, handover_notes: e.target.value }))}
-                                            disabled={isClosed}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                                        <Button variant="contained" onClick={handleAssess} disabled={submitting || isClosed}>
-                                            {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            </Box>
-                        </Paper>
-                    )}
-
-                    {assessmentSent && (
-                        <Paper sx={{ p: 0, mt: 3, overflow: 'hidden', boxShadow: 3 }}>
-                            <Box sx={{ background: '#1976d2', color: '#fff', px: 3, py: 2 }}>
-                                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                    Tình trạng thực tế & cách thức xử lý
-                                </Typography>
-                            </Box>
-                            <Box sx={{ p: 3 }}>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            minRows={4}
-                                            label="Tình trạng thực tế"
-                                            value={actualStatus}
-                                            onChange={(e) => setActualStatus(e.target.value)}
-                                            disabled={actualLocked || isClosed}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            minRows={4}
-                                            label="Cách thức xử lý"
-                                            value={actualAction}
-                                            onChange={(e) => setActualAction(e.target.value)}
-                                            disabled={actualLocked || isClosed}
-                                        />
-                                    </Grid>
-                                    {!actualLocked && (
-                                        <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                                            <Button variant="contained" onClick={handleSaveActual} disabled={savingActual || isClosed}>
-                                                {savingActual ? 'Đang lưu...' : 'Lưu thông tin'}
-                                            </Button>
-                                            <ActionButtons
-                                                allowed_actions={actionKeys}
-                                                handlers={actionHandlers}
-                                                labels={{ update: 'Duyệt & tạo bảo trì' }}
-                                            />
-                                        </Grid>
-                                    )}
-                                    {actualLocked && (
-                                        <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                                            <ActionButtons
-                                                allowed_actions={actionKeys}
-                                                handlers={actionHandlers}
-                                                labels={{ update: 'Duyệt & tạo bảo trì' }}
-                                            />
-                                        </Grid>
-                                    )}
-                                </Grid>
-                            </Box>
-                        </Paper>
-                    )}
+                    {/* Old assessment flow removed - now handled by nextActions dialogs */}
+                    {/* Old actual status section removed - now handled by nextActions dialogs */}
 
                     <Paper sx={{ p: 0, mt: 3, overflow: 'hidden', boxShadow: 3 }}>
                         <Box sx={{ background: '#1976d2', color: '#fff', px: 3, py: 2 }}>
@@ -533,14 +448,7 @@ function IncidentDetail() {
                                     />
                                 </Grid>
                                 <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <ActionButtons
-                                        allowed_actions={actionKeys}
-                                        handlers={actionHandlers}
-                                        labels={{
-                                            complete: 'Hoàn tất xử lý',
-                                            close: 'Đóng sự cố'
-                                        }}
-                                    />
+                                    {/* Old complete/close actions removed - use ActionToolbar above instead */}
                                 </Grid>
                             </Grid>
                         </Box>
@@ -563,6 +471,16 @@ function IncidentDetail() {
                         <Typography>
                             <strong>Vị trí:</strong> {incident.asset?.location || 'N/A'}
                         </Typography>
+                        {incident.asset?.operational_status && (
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Trạng thái hoạt động:
+                                </Typography>
+                                <Box sx={{ mt: 0.5 }}>
+                                    <OperationalStatusBadge status={incident.asset.operational_status} />
+                                </Box>
+                            </Box>
+                        )}
                         {incident.handover_required && (
                             <>
                                 <Divider sx={{ my: 2 }} />
@@ -634,6 +552,108 @@ function IncidentDetail() {
                     </Paper>
                 </Grid>
             </Grid>
+            
+            {/* Action Dialogs */}
+            <ActionDialog
+                open={dialogOpen.triage}
+                onClose={() => handleDialogClose('triage')}
+                title="Phân loại sự cố"
+                icon="🔍"
+                onSubmit={handleTriageSubmit}
+            >
+                <TriageDialog onSubmit={handleTriageSubmit} />
+            </ActionDialog>
+            
+            <ActionDialog
+                open={dialogOpen.isolate}
+                onClose={() => handleDialogClose('isolate')}
+                title="Cô lập thiết bị"
+                icon="🔒"
+                onSubmit={handleIsolateSubmit}
+                confirmText="Xác nhận cô lập"
+                isDestructive
+            >
+                <IsolateDialog incident={incident} onSubmit={handleIsolateSubmit} />
+            </ActionDialog>
+            
+            <ActionDialog
+                open={dialogOpen.assign}
+                onClose={() => handleDialogClose('assign')}
+                title="Phân công kỹ thuật viên"
+                icon="👤"
+                onSubmit={handleAssignSubmit}
+            >
+                <AssignDialog onSubmit={handleAssignSubmit} />
+            </ActionDialog>
+            
+            <ConfirmDialog
+                open={dialogOpen.start}
+                onClose={() => handleDialogClose('start')}
+                onConfirm={handleStartSubmit}
+                title="Bắt đầu xử lý"
+                message="Xác nhận bắt đầu xử lý sự cố này?"
+                severity="info"
+            />
+            
+            <ActionDialog
+                open={dialogOpen.submit_post_fix}
+                onClose={() => handleDialogClose('submit_post_fix')}
+                title="Gửi kiểm tra sau sửa"
+                icon="📤"
+                onSubmit={handleSubmitPostFixSubmit}
+            >
+                <SubmitPostFixDialog onSubmit={handleSubmitPostFixSubmit} />
+            </ActionDialog>
+            
+            <ActionDialog
+                open={dialogOpen.post_fix_check}
+                onClose={() => handleDialogClose('post_fix_check')}
+                title="Kiểm tra sau sửa"
+                icon="✓"
+                onSubmit={handlePostFixCheckSubmit}
+            >
+                <PostFixCheckDialog incident={incident} onSubmit={handlePostFixCheckSubmit} />
+            </ActionDialog>
+            
+            <ActionDialog
+                open={dialogOpen.close}
+                onClose={() => handleDialogClose('close')}
+                title="Đóng sự cố"
+                icon="✔️"
+                onSubmit={handleCloseSubmit}
+            >
+                <CloseIncidentDialog incident={incident} onSubmit={handleCloseSubmit} />
+            </ActionDialog>
+            
+            <ActionDialog
+                open={dialogOpen.cancel}
+                onClose={() => handleDialogClose('cancel')}
+                title="Hủy sự cố"
+                icon="❌"
+                onSubmit={handleCancelSubmit}
+                confirmText="Xác nhận hủy"
+                isDestructive
+            >
+                <CancelIncidentDialog incident={incident} onSubmit={handleCancelSubmit} />
+            </ActionDialog>
+            
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <MuiAlert
+                    severity={snackbar.severity}
+                    onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                    sx={{ width: '100%' }}
+                    elevation={6}
+                    variant="filled"
+                >
+                    {snackbar.message}
+                </MuiAlert>
+            </Snackbar>
         </Box>
     );
 }

@@ -14,13 +14,17 @@ import {
     LinearProgress,
     Stack,
     Card,
-    CardContent
+    CardContent,
+    Menu,
+    MenuItem,
+    ListItemIcon
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DescriptionIcon from '@mui/icons-material/Description';
 import TuneIcon from '@mui/icons-material/Tune';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import usePermissions from '../../../hooks/usePermissions';
 import {
     downloadTemplateAsset,
@@ -44,6 +48,7 @@ const downloadFile = (blobData, filename) => {
 
 function ExcelImportExport({ onImportSuccess }) {
     const { hasAnyPermission } = usePermissions();
+    const [menuAnchor, setMenuAnchor] = useState(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [importing, setImporting] = useState(false);
@@ -144,6 +149,24 @@ function ExcelImportExport({ onImportSuccess }) {
             setImportResult(null);
         };
 
+        const handleOpenMenu = (event) => {
+            setMenuAnchor(event.currentTarget);
+        };
+
+        const handleCloseMenu = () => {
+            setMenuAnchor(null);
+        };
+
+        const handleMenuItemClick = (type, action) => {
+            if (action === 'download') {
+                handleDownload(type);
+            } else if (action === 'import') {
+                setActiveType(type);
+                fileInputRef.current?.click();
+            }
+            handleCloseMenu();
+        };
+
         const renderResult = () => {
             if (!importResult) return null;
 
@@ -217,143 +240,56 @@ function ExcelImportExport({ onImportSuccess }) {
             cards.push(importConfigs.spec, importConfigs.consumable);
         }
 
-        const steps = [
-            { label: 'Import/Tạo thiết bị', note: 'asset_code tự sinh, dk_code có thể trùng' },
-            { label: 'Thêm thông số kỹ thuật', note: 'theo asset_code đã tạo' },
-            { label: 'Thêm vật tư tiêu hao', note: 'theo asset_code đã tạo' }
-        ];
-
         return (
-            <Box sx={{
-                p: 2,
-                borderRadius: 2,
-                border: '1px solid #e2e8f0',
-                background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%)',
-                boxShadow: '0 18px 40px rgba(15,23,42,0.12)'
-            }}>
-                <Stack spacing={2}>
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: { xs: 'column', md: 'row' },
-                        justifyContent: 'space-between',
-                        gap: 2,
-                        alignItems: { xs: 'flex-start', md: 'center' }
-                    }}>
-                        <Box>
-                            <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a' }}>
-                                Import dữ liệu thiết bị nhanh
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                                Chọn đúng bước, dùng template tương ứng và để hệ thống tự sinh asset_code.
-                            </Typography>
-                        </Box>
-                        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                            {steps.map((step, idx) => (
-                                <Box
-                                    key={step.label}
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                        px: 1.5,
-                                        py: 1,
-                                        borderRadius: 2,
-                                        bgcolor: 'white',
-                                        border: '1px dashed #cbd5e1',
-                                        boxShadow: '0 6px 16px rgba(15,23,42,0.08)'
-                                    }}
-                                >
-                                    <Box sx={{
-                                        width: 28,
-                                        height: 28,
-                                        borderRadius: '50%',
-                                        bgcolor: '#0ea5e9',
-                                        color: 'white',
-                                        fontWeight: 700,
-                                        display: 'grid',
-                                        placeItems: 'center'
-                                    }}>
-                                        {idx + 1}
-                                    </Box>
-                                    <Box>
-                                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{step.label}</Typography>
-                                        <Typography variant="caption" color="text.secondary">{step.note}</Typography>
-                                    </Box>
-                                </Box>
-                            ))}
-                        </Stack>
-                    </Box>
+            <>
+                {/* Compact Button */}
+                <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<UploadFileIcon />}
+                    endIcon={<ArrowDropDownIcon />}
+                    onClick={handleOpenMenu}
+                    sx={{ textTransform: 'none' }}
+                >
+                    Import Thiết Bị
+                </Button>
 
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="stretch">
-                        {cards.map((cfg) => (
-                            <Card
-                                key={cfg.key}
-                                variant="outlined"
-                                sx={{
-                                    minWidth: 260,
-                                    flex: 1,
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    borderRadius: 2,
-                                    border: '1px solid #d0e1f3',
-                                    boxShadow: '0 20px 48px rgba(15,23,42,0.14)',
-                                    background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)'
-                                }}
-                            >
-                                <CardContent>
-                                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
-                                        <Box sx={{
-                                            width: 40,
-                                            height: 40,
-                                            borderRadius: 2,
-                                            bgcolor: '#0f766e',
-                                            display: 'grid',
-                                            placeItems: 'center',
-                                            color: 'white'
-                                        }}>
-                                            {cfg.icon}
-                                        </Box>
-                                        <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.35rem' }}>{cfg.title}</Typography>
-                                    </Stack>
-                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                                        {cfg.templateNote}
-                                    </Typography>
-                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1.5 }}>
-                                        <Button
-                                            fullWidth
-                                            size="medium"
-                                            variant="outlined"
-                                            startIcon={<DownloadIcon />}
-                                            onClick={() => handleDownload(cfg.key)}
-                                        >
-                                            {cfg.templateLabel}
-                                        </Button>
-                                        <Button
-                                            fullWidth
-                                            size="medium"
-                                            variant="contained"
-                                            color="success"
-                                            startIcon={<UploadFileIcon />}
-                                            onClick={() => {
-                                                setActiveType(cfg.key);
-                                                fileInputRef.current?.click();
-                                            }}
-                                        >
-                                            Import
-                                        </Button>
-                                    </Stack>
-                                    <Typography variant="caption" color="text.secondary">
-                                        File tên: {cfg.filename}
-                                    </Typography>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </Stack>
-
-                    <Alert severity="info" icon={false} sx={{ borderRadius: 2, border: '1px solid #bfdbfe', backgroundColor: '#e0f2fe' }}>
-                        Quy trình chuẩn: Import/Tạo thiết bị (asset_code tự sinh) → Thêm thông số kỹ thuật theo asset_code → Thêm vật tư tiêu hao theo asset_code.
-                    </Alert>
-                </Stack>
+                {/* Dropdown Menu */}
+                <Menu
+                    anchorEl={menuAnchor}
+                    open={Boolean(menuAnchor)}
+                    onClose={handleCloseMenu}
+                    PaperProps={{
+                        sx: { minWidth: 320 }
+                    }}
+                >
+                    {cards.map((cfg) => [
+                        <MenuItem key={`${cfg.key}-header`} disabled sx={{ opacity: 1, bgcolor: 'action.hover' }}>
+                            <ListItemIcon>{cfg.icon}</ListItemIcon>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                                {cfg.title}
+                            </Typography>
+                        </MenuItem>,
+                        <MenuItem 
+                            key={`${cfg.key}-download`}
+                            onClick={() => handleMenuItemClick(cfg.key, 'download')}
+                        >
+                            <ListItemIcon>
+                                <DownloadIcon fontSize="small" color="primary" />
+                            </ListItemIcon>
+                            <Typography variant="body2">Tải Template</Typography>
+                        </MenuItem>,
+                        <MenuItem 
+                            key={`${cfg.key}-import`}
+                            onClick={() => handleMenuItemClick(cfg.key, 'import')}
+                        >
+                            <ListItemIcon>
+                                <UploadFileIcon fontSize="small" color="success" />
+                            </ListItemIcon>
+                            <Typography variant="body2">Import File</Typography>
+                        </MenuItem>
+                    ]).flat()}
+                </Menu>
 
                 <input
                     type="file"
@@ -396,7 +332,7 @@ function ExcelImportExport({ onImportSuccess }) {
                         </Button>
                     </DialogActions>
                 </Dialog>
-            </Box>
+            </>
         );
 }
 

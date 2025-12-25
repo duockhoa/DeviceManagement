@@ -18,6 +18,8 @@ import { createAsset } from "../../../redux/slice/assetsSlice"
 import theme from '../../../theme';
 import AreaForm from '../../AreaComponent/AreaForm';
 import AddSubCategoriesForm from '../../SubCategories/SubCategoriesForm';
+import AssetCategoryForm from '../../CategoriesComponent/AssetCategoryForm';
+import PlantForm from '../../PlantComponent/PlantFrom';
 import InputDate from '../../InputComponent/InputDate';
 import InputNumber from '../../InputComponent/InputNumber';
 import InputTable from '../../InputComponent/InputTable/Index';
@@ -58,12 +60,14 @@ function AddAssetForm({ handleClose }) {
     const departments = useSelector((state) => state.departments.departments);
     const assets = useSelector((state) => state.assets.assets);
     const assetsSubCategories = useSelector((state) => state.assetSubCategories.subCategories);
+    const users = useSelector((state) => state.users.users);
 
     const [tabValue, setTabValue] = useState(0);
     const [FormComponent, setFormComponent] = useState(null);
     const [formOpen, setFormOpen] = useState(false);
     const [areaOptions, setAreaOptions] = useState(areas);
     const [subCategoryOptions, setSubCategoryOptions] = useState(assetsSubCategories);
+    const [userOptions, setUserOptions] = useState(users);
 
     // Form state cho thông tin chung
     const [formData, setFormData] = useState({
@@ -75,6 +79,7 @@ function AddAssetForm({ handleClose }) {
         area_id: '',
         plant_id: '',
         sub_category_id: '',
+        responsible_user_id: '',
         status: 'active',
         generalInfo: null,
     });
@@ -86,6 +91,18 @@ function AddAssetForm({ handleClose }) {
         {
             id: "inactive",
             name: "Ngưng hoạt động"
+        },
+        {
+            id: "under_maintenance",
+            name: "Đang bảo trì"
+        },
+        {
+            id: "broken",
+            name: "Hỏng hóc"
+        },
+        {
+            id: "pending",
+            name: "Chờ xử lý"
         }
     ]
 
@@ -312,16 +329,39 @@ const formatFileSize = (bytes) => {
         }
     }, [formData.category_id, assetsSubCategories]);
 
+    // Cập nhật danh sách người dùng theo bộ phận
+    useEffect(() => {
+        if (formData.team_id) {
+            const filteredUsers = users.filter(user => user.department === formData.team_id);
+            setUserOptions(filteredUsers);
+            // Reset responsible_user_id nếu không còn trong danh sách mới
+            if (formData.responsible_user_id && !filteredUsers.find(u => u.id === formData.responsible_user_id)) {
+                setFormData(prev => ({ ...prev, responsible_user_id: '' }));
+            }
+        } else {
+            setUserOptions(users);
+        }
+    }, [formData.team_id, users]);
+
     // validate form
     const isFormValid = () => {
-        return formData.asset_code && formData.name && formData.category_id && formData.team_id && formData.area_id ;
+        return (
+            formData.asset_code && 
+            formData.name && 
+            formData.category_id && 
+            formData.sub_category_id && 
+            formData.team_id && 
+            formData.plant_id && 
+            formData.area_id &&
+            formData.responsible_user_id
+        );
     };
    // Thêm khu vực mới
    const handleAddNewArea = () => {
-       // Logic thêm khu vực mới
-        setFormComponent(() => AreaForm);
+       // Logic thêm khu vực mới - pass plant_id from formData
+        setFormComponent(() => (props) => <AreaForm {...props} selectedPlantId={formData.plant_id} />);
         setFormOpen(true);
-       console.log('Thêm khu vực mới');
+       console.log('Thêm khu vực mới với plant_id:', formData.plant_id);
    };
 
     // Thêm loại thiết bị mới
@@ -329,26 +369,57 @@ const formatFileSize = (bytes) => {
         // Logic thêm loại thiết bị mới
         setFormComponent(() => AddSubCategoriesForm);
         setFormOpen(true);
-   }
+   };
+
+   // Thêm nhóm thiết bị mới
+   const handleAddNewCategory = () => {
+       setFormComponent(() => AssetCategoryForm);
+       setFormOpen(true);
+       console.log('Thêm nhóm thiết bị mới');
+   };
+
+   // Thêm địa chỉ mới
+   const handleAddNewPlant = () => {
+       setFormComponent(() => PlantForm);
+       setFormOpen(true);
+       console.log('Thêm địa chỉ mới');
+   };
+
    const handleCloseForm = () => {
        setFormOpen(false);
    };
    // Thêm thông tin chung
-    const handleChangeGeneralInfo = (name, value) => {
+    const handleChangeGeneralInfo = (nameOrEvent, valueOrUndefined) => {
          // Logic thêm thông tin chung
+        let name, value;
+        
+        if (typeof nameOrEvent === 'string') {
+            // InputField/InputNumber passes (name, value)
+            name = nameOrEvent;
+            value = valueOrUndefined;
+        } else {
+            // Event object from standard inputs
+            const event = nameOrEvent;
+            name = event.target.name;
+            value = event.target.value;
+        }
+
         if (!formData.generalInfo) {
             setFormData(prev => ({
                 ...prev,
-                generalInfo: {}
+                generalInfo: {
+                    [name]: value
+                }
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                generalInfo: {
+                    ...prev.generalInfo,
+                    [name]: value
+                }
             }));
         }
-        setFormData(prev => ({
-            ...prev,
-            generalInfo: {
-                ...prev.generalInfo,
-                [name]: value
-            }
-        }));
     };
 
     // Chuẩn bị dữ liệu cho bảng thành phần cấu tạo
@@ -514,6 +585,9 @@ const rows = [
                                     valueKey="id"
                                     labelKey="name"
                                     width='150px'
+                                    showAddNew
+                                    addNewText='Thêm mới'
+                                    onAddNew={handleAddNewCategory}
                                 />
                             </Grid2>
 
@@ -574,6 +648,20 @@ const rows = [
                                     width='150px'
                                 />
                             </Grid2>
+                            <Grid2 lg={2}>
+                                <SelectField
+                                    label="Người phụ trách"
+                                    name="responsible_user_id"
+                                    value={formData.responsible_user_id}
+                                    onChange={handleInputChange}
+                                    options={userOptions}
+                                    required
+                                    placeholder="Chọn người"
+                                    valueKey="id"
+                                    labelKey="name"
+                                    width='150px'
+                                />
+                            </Grid2>
                             <Grid2 lg={2} sx={{ display: 'flex', alignItems: 'center' }}>
 
                                 <SelectField
@@ -587,7 +675,9 @@ const rows = [
                                     valueKey="id"
                                     labelKey="name"
                                     width='150px'
-
+                                    showAddNew
+                                    addNewText='Thêm mới'
+                                    onAddNew={handleAddNewPlant}
                                 />
                             </Grid2>
 
