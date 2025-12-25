@@ -28,26 +28,32 @@ import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import WarningIcon from '@mui/icons-material/Warning';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import Loading from '../../component/Loading';
 import axios from '../../services/customize-axios';
-import { downloadTemplateSpec, importSpecsExcel } from '../../services/assetsService';
+import { downloadTemplateConsumable, importConsumablesExcel } from '../../services/assetsService';
 
-function AssetSpecifications() {
+function AssetConsumables() {
     const dispatch = useDispatch();
     const assets = useSelector((state) => state.assets.assets);
     const loading = useSelector((state) => state.assets.loading);
     
     const [selectedAsset, setSelectedAsset] = useState(null);
-    const [specifications, setSpecifications] = useState([]);
-    const [specCategories, setSpecCategories] = useState([]);
-    const [loadingSpecs, setLoadingSpecs] = useState(false);
+    const [consumables, setConsumables] = useState([]);
+    const [consumableCategories, setConsumableCategories] = useState([]);
+    const [loadingConsumables, setLoadingConsumables] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editValue, setEditValue] = useState({});
     const [openDialog, setOpenDialog] = useState(false);
-    const [newSpecData, setNewSpecData] = useState({
-        spec_category_id: '',
-        spec_value: '',
-        numeric_value: '',
+    const [newConsumableData, setNewConsumableData] = useState({
+        consumable_category_id: '',
+        current_quantity: '',
+        min_stock_level: '',
+        replacement_cycle_hours: '',
+        unit_price: '',
+        supplier: '',
+        specifications: '',
         remarks: ''
     });
     const [importFile, setImportFile] = useState(null);
@@ -57,46 +63,49 @@ function AssetSpecifications() {
 
     useEffect(() => {
         dispatch(fetchAssets());
-        fetchSpecCategories();
+        fetchConsumableCategories();
     }, [dispatch]);
 
-    const fetchSpecCategories = async () => {
+    const fetchConsumableCategories = async () => {
         try {
-            const response = await axios.get('/specification-categories');
-            setSpecCategories(response.data.data || []);
+            const response = await axios.get('/consumable-categories');
+            setConsumableCategories(response.data.data || []);
         } catch (error) {
-            console.error('Error fetching spec categories:', error);
+            console.error('Error fetching consumable categories:', error);
         }
     };
 
-    const fetchAssetSpecifications = async (assetId) => {
-        setLoadingSpecs(true);
+    const fetchAssetConsumables = async (assetId) => {
+        setLoadingConsumables(true);
         try {
-            const response = await axios.get(`/assets/${assetId}/specifications`);
-            setSpecifications(response.data.data || []);
+            const response = await axios.get(`/assets/${assetId}/consumables`);
+            setConsumables(response.data.data || []);
         } catch (error) {
-            console.error('Error fetching specifications:', error);
-            setSpecifications([]);
+            console.error('Error fetching consumables:', error);
+            setConsumables([]);
         } finally {
-            setLoadingSpecs(false);
+            setLoadingConsumables(false);
         }
     };
 
     const handleAssetChange = (event, value) => {
         setSelectedAsset(value);
         if (value) {
-            fetchAssetSpecifications(value.id);
+            fetchAssetConsumables(value.id);
         } else {
-            setSpecifications([]);
+            setConsumables([]);
         }
     };
 
-    const handleEdit = (spec) => {
-        setEditingId(spec.id);
+    const handleEdit = (consumable) => {
+        setEditingId(consumable.id);
         setEditValue({
-            spec_value: spec.spec_value || '',
-            numeric_value: spec.numeric_value || '',
-            remarks: spec.remarks || ''
+            current_quantity: consumable.current_quantity || '',
+            min_stock_level: consumable.min_stock_level || '',
+            replacement_cycle_hours: consumable.replacement_cycle_hours || '',
+            unit_price: consumable.unit_price || '',
+            supplier: consumable.supplier || '',
+            remarks: consumable.remarks || ''
         });
     };
 
@@ -105,35 +114,39 @@ function AssetSpecifications() {
         setEditValue({});
     };
 
-    const handleSaveEdit = async (specId) => {
+    const handleSaveEdit = async (consumableId) => {
         try {
-            await axios.put(`/assets/${selectedAsset.id}/specifications/${specId}`, editValue);
-            fetchAssetSpecifications(selectedAsset.id);
+            await axios.put(`/assets/${selectedAsset.id}/consumables/${consumableId}`, editValue);
+            fetchAssetConsumables(selectedAsset.id);
             setEditingId(null);
             setEditValue({});
         } catch (error) {
-            console.error('Error updating specification:', error);
-            alert('Lỗi khi cập nhật thông số!');
+            console.error('Error updating consumable:', error);
+            alert('Lỗi khi cập nhật vật tư!');
         }
     };
 
-    const handleDelete = async (specId) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa thông số này?')) {
+    const handleDelete = async (consumableId) => {
+        if (window.confirm('Bạn có chắc chắn muốn xóa vật tư này?')) {
             try {
-                await axios.delete(`/assets/${selectedAsset.id}/specifications/${specId}`);
-                fetchAssetSpecifications(selectedAsset.id);
+                await axios.delete(`/assets/${selectedAsset.id}/consumables/${consumableId}`);
+                fetchAssetConsumables(selectedAsset.id);
             } catch (error) {
-                console.error('Error deleting specification:', error);
-                alert('Lỗi khi xóa thông số!');
+                console.error('Error deleting consumable:', error);
+                alert('Lỗi khi xóa vật tư!');
             }
         }
     };
 
     const handleAddNew = () => {
-        setNewSpecData({
-            spec_category_id: '',
-            spec_value: '',
-            numeric_value: '',
+        setNewConsumableData({
+            consumable_category_id: '',
+            current_quantity: '',
+            min_stock_level: '',
+            replacement_cycle_hours: '',
+            unit_price: '',
+            supplier: '',
+            specifications: '',
             remarks: ''
         });
         setOpenDialog(true);
@@ -141,37 +154,41 @@ function AssetSpecifications() {
 
     const handleCloseDialog = () => {
         setOpenDialog(false);
-        setNewSpecData({
-            spec_category_id: '',
-            spec_value: '',
-            numeric_value: '',
+        setNewConsumableData({
+            consumable_category_id: '',
+            current_quantity: '',
+            min_stock_level: '',
+            replacement_cycle_hours: '',
+            unit_price: '',
+            supplier: '',
+            specifications: '',
             remarks: ''
         });
     };
 
     const handleSaveNew = async () => {
-        if (!newSpecData.spec_category_id) {
-            alert('Vui lòng chọn loại thông số!');
+        if (!newConsumableData.consumable_category_id) {
+            alert('Vui lòng chọn loại vật tư!');
             return;
         }
         
         try {
-            await axios.post(`/assets/${selectedAsset.id}/specifications`, newSpecData);
-            fetchAssetSpecifications(selectedAsset.id);
+            await axios.post(`/assets/${selectedAsset.id}/consumables`, newConsumableData);
+            fetchAssetConsumables(selectedAsset.id);
             handleCloseDialog();
         } catch (error) {
-            console.error('Error creating specification:', error);
-            alert('Lỗi khi thêm thông số!');
+            console.error('Error creating consumable:', error);
+            alert('Lỗi khi thêm vật tư!');
         }
     };
 
     const handleDownloadTemplate = async () => {
         try {
-            const data = await downloadTemplateSpec();
+            const data = await downloadTemplateConsumable();
             const url = window.URL.createObjectURL(new Blob([data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', 'Template_Thong_So.xlsx');
+            link.setAttribute('download', 'Template_Vat_Tu.xlsx');
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -200,11 +217,10 @@ function AssetSpecifications() {
         setImporting(true);
         setImportResult(null);
         try {
-            const response = await importSpecsExcel(importFile);
+            const response = await importConsumablesExcel(importFile);
             setImportResult(response.data || response);
-            // Refresh nếu đang xem thiết bị
             if (selectedAsset) {
-                fetchAssetSpecifications(selectedAsset.id);
+                fetchAssetConsumables(selectedAsset.id);
             }
             alert('Import thành công!');
             setImportFile(null);
@@ -226,53 +242,81 @@ function AssetSpecifications() {
 
     const columns = [
         {
-            field: 'SpecCategory.spec_code',
-            headerName: 'Mã thông số',
-            width: 150,
-            valueGetter: (params) => params.row.SpecCategory?.spec_code || '',
-            renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    {params.row.SpecCategory?.spec_code}
-                </Typography>
-            )
+            field: 'status',
+            headerName: '',
+            width: 50,
+            sortable: false,
+            renderCell: (params) => {
+                const isLowStock = params.row.current_quantity < params.row.min_stock_level;
+                if (isLowStock) {
+                    return (
+                        <Tooltip title="Dưới ngưỡng dự trù! Cần đặt mua">
+                            <WarningIcon color="error" />
+                        </Tooltip>
+                    );
+                }
+                return null;
+            }
         },
         {
-            field: 'SpecCategory.spec_name',
-            headerName: 'Tên thông số',
+            field: 'ConsumableCategory.name',
+            headerName: 'Tên vật tư',
             width: 200,
-            valueGetter: (params) => params.row.SpecCategory?.spec_name || '',
+            valueGetter: (params) => params.row.ConsumableCategory?.name || '',
             renderCell: (params) => (
                 <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
-                    {params.row.SpecCategory?.spec_name}
+                    {params.row.ConsumableCategory?.name}
                 </Typography>
             )
         },
         {
-            field: 'spec_value',
-            headerName: 'Giá trị',
-            width: 200,
-            editable: false,
+            field: 'specifications',
+            headerName: 'Thông số kỹ thuật',
+            width: 180,
+            renderCell: (params) => (
+                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
+                    {params.row.ConsumableCategory?.specifications || params.row.specifications || '-'}
+                </Typography>
+            )
+        },
+        {
+            field: 'ConsumableCategory.unit',
+            headerName: 'Đơn vị',
+            width: 80,
+            valueGetter: (params) => params.row.ConsumableCategory?.unit || '',
+            renderCell: (params) => (
+                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
+                    {params.row.ConsumableCategory?.unit || '-'}
+                </Typography>
+            )
+        },
+        {
+            field: 'current_quantity',
+            headerName: 'SL hiện tại',
+            width: 100,
             renderCell: (params) => {
                 if (editingId === params.row.id) {
                     return (
                         <TextField
                             size="small"
-                            value={editValue.spec_value}
-                            onChange={(e) => setEditValue({ ...editValue, spec_value: e.target.value })}
+                            type="number"
+                            value={editValue.current_quantity}
+                            onChange={(e) => setEditValue({ ...editValue, current_quantity: e.target.value })}
                             fullWidth
                         />
                     );
                 }
+                const isLowStock = params.value < params.row.min_stock_level;
                 return (
-                    <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
-                        {params.value || '-'}
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem', color: isLowStock ? 'error.main' : 'inherit', fontWeight: isLowStock ? 'bold' : 'normal' }}>
+                        {params.value || '0'}
                     </Typography>
                 );
             }
         },
         {
-            field: 'numeric_value',
-            headerName: 'Giá trị số',
+            field: 'min_stock_level',
+            headerName: 'Ngưỡng tối thiểu',
             width: 120,
             renderCell: (params) => {
                 if (editingId === params.row.id) {
@@ -280,8 +324,8 @@ function AssetSpecifications() {
                         <TextField
                             size="small"
                             type="number"
-                            value={editValue.numeric_value}
-                            onChange={(e) => setEditValue({ ...editValue, numeric_value: e.target.value })}
+                            value={editValue.min_stock_level}
+                            onChange={(e) => setEditValue({ ...editValue, min_stock_level: e.target.value })}
                             fullWidth
                         />
                     );
@@ -294,20 +338,77 @@ function AssetSpecifications() {
             }
         },
         {
-            field: 'SpecCategory.unit',
-            headerName: 'Đơn vị',
-            width: 100,
-            valueGetter: (params) => params.row.SpecCategory?.unit || '',
-            renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
-                    {params.row.SpecCategory?.unit || '-'}
-                </Typography>
-            )
+            field: 'replacement_cycle_hours',
+            headerName: 'Chu kỳ thay (giờ)',
+            width: 130,
+            renderCell: (params) => {
+                if (editingId === params.row.id) {
+                    return (
+                        <TextField
+                            size="small"
+                            type="number"
+                            value={editValue.replacement_cycle_hours}
+                            onChange={(e) => setEditValue({ ...editValue, replacement_cycle_hours: e.target.value })}
+                            fullWidth
+                        />
+                    );
+                }
+                return (
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
+                        {params.value || '-'}
+                    </Typography>
+                );
+            }
+        },
+        {
+            field: 'unit_price',
+            headerName: 'Đơn giá (VND)',
+            width: 120,
+            renderCell: (params) => {
+                if (editingId === params.row.id) {
+                    return (
+                        <TextField
+                            size="small"
+                            type="number"
+                            value={editValue.unit_price}
+                            onChange={(e) => setEditValue({ ...editValue, unit_price: e.target.value })}
+                            fullWidth
+                        />
+                    );
+                }
+                return (
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
+                        {params.value ? new Intl.NumberFormat('vi-VN').format(params.value) : '-'}
+                    </Typography>
+                );
+            }
+        },
+        {
+            field: 'supplier',
+            headerName: 'Nhà cung cấp',
+            width: 150,
+            renderCell: (params) => {
+                if (editingId === params.row.id) {
+                    return (
+                        <TextField
+                            size="small"
+                            value={editValue.supplier}
+                            onChange={(e) => setEditValue({ ...editValue, supplier: e.target.value })}
+                            fullWidth
+                        />
+                    );
+                }
+                return (
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem' }}>
+                        {params.value || '-'}
+                    </Typography>
+                );
+            }
         },
         {
             field: 'remarks',
             headerName: 'Ghi chú',
-            width: 200,
+            width: 180,
             renderCell: (params) => {
                 if (editingId === params.row.id) {
                     return (
@@ -392,10 +493,10 @@ function AssetSpecifications() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <Box>
                         <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            Thông số kỹ thuật thiết bị
+                            Vật tư tiêu hao thiết bị
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Chọn thiết bị để xem và chỉnh sửa thông số kỹ thuật
+                            Chọn thiết bị để xem và quản lý vật tư tiêu hao
                         </Typography>
                     </Box>
                     <Button
@@ -458,7 +559,6 @@ function AssetSpecifications() {
                 </Box>
             </Paper>
 
-            {/* Dropdown Menu */}
             <Menu
                 anchorEl={menuAnchor}
                 open={Boolean(menuAnchor)}
@@ -480,7 +580,6 @@ function AssetSpecifications() {
                 </MenuItem>
             </Menu>
 
-            {/* Alert hiển thị file đã chọn */}
             {importFile && (
                 <Paper sx={{ p: 2, mb: 2, bgcolor: 'info.lighter' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -524,41 +623,39 @@ function AssetSpecifications() {
                         height: '100%' 
                     }}>
                         <Typography variant="h6" color="text.secondary">
-                            Vui lòng chọn thiết bị để xem thông số kỹ thuật
+                            Vui lòng chọn thiết bị để xem vật tư tiêu hao
                         </Typography>
                     </Box>
                 ) : (
-                    <Box sx={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <DataGrid
-                            rows={specifications}
-                            columns={columns}
-                            loading={loadingSpecs}
-                            pageSize={10}
-                            rowsPerPageOptions={[10, 25, 50]}
-                            disableSelectionOnClick
-                            sx={{
-                                flex: 1,
-                                border: 'none',
-                                '& .MuiDataGrid-cell': {
-                                    fontSize: '1.2rem',
-                                    borderBottom: '1px solid #f0f0f0'
-                                },
-                                '& .MuiDataGrid-columnHeaders': {
-                                    fontSize: '1.2rem',
-                                    fontWeight: 'bold',
-                                    backgroundColor: '#f8f9fa',
-                                    borderBottom: '2px solid #e0e0e0'
-                                },
-                                '& .MuiDataGrid-row': {
-                                    minHeight: '60px !important'
-                                }
-                            }}
-                        />
-                    </Box>
+                    <DataGrid
+                        rows={consumables}
+                        columns={columns}
+                        loading={loadingConsumables}
+                        pageSize={10}
+                        rowsPerPageOptions={[10, 25, 50]}
+                        disableSelectionOnClick
+                        autoHeight={false}
+                        sx={{
+                            flex: 1,
+                            border: 'none',
+                            '& .MuiDataGrid-cell': {
+                                fontSize: '1.2rem',
+                                borderBottom: '1px solid #f0f0f0'
+                            },
+                            '& .MuiDataGrid-columnHeaders': {
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold',
+                                backgroundColor: '#f8f9fa',
+                                borderBottom: '2px solid #e0e0e0'
+                            },
+                            '& .MuiDataGrid-row': {
+                                minHeight: '60px !important'
+                            }
+                        }}
+                    />
                 )}
             </Paper>
 
-            {/* FAB Button */}
             {selectedAsset && (
                 <Fab 
                     color="primary" 
@@ -575,49 +672,84 @@ function AssetSpecifications() {
                 </Fab>
             )}
 
-            {/* Dialog thêm thông số mới */}
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.6rem' }}>
-                    Thêm thông số kỹ thuật
+                    Thêm vật tư tiêu hao
                 </DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
                         <TextField
                             select
-                            label="Loại thông số"
-                            value={newSpecData.spec_category_id}
-                            onChange={(e) => setNewSpecData({ ...newSpecData, spec_category_id: e.target.value })}
+                            label="Loại vật tư"
+                            value={newConsumableData.consumable_category_id}
+                            onChange={(e) => setNewConsumableData({ ...newConsumableData, consumable_category_id: e.target.value })}
                             required
                             fullWidth
                         >
-                            {specCategories.map((cat) => (
+                            {consumableCategories.map((cat) => (
                                 <MenuItem key={cat.id} value={cat.id}>
-                                    {cat.spec_code} - {cat.spec_name}
+                                    {cat.code} - {cat.name}
                                 </MenuItem>
                             ))}
                         </TextField>
-                        
+
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <TextField
+                                label="Số lượng hiện tại"
+                                type="number"
+                                value={newConsumableData.current_quantity}
+                                onChange={(e) => setNewConsumableData({ ...newConsumableData, current_quantity: e.target.value })}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Ngưỡng tối thiểu"
+                                type="number"
+                                value={newConsumableData.min_stock_level}
+                                onChange={(e) => setNewConsumableData({ ...newConsumableData, min_stock_level: e.target.value })}
+                                fullWidth
+                                helperText="Cảnh báo khi dưới ngưỡng này"
+                            />
+                        </Box>
+
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <TextField
+                                label="Chu kỳ thay (giờ)"
+                                type="number"
+                                value={newConsumableData.replacement_cycle_hours}
+                                onChange={(e) => setNewConsumableData({ ...newConsumableData, replacement_cycle_hours: e.target.value })}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Đơn giá (VND)"
+                                type="number"
+                                value={newConsumableData.unit_price}
+                                onChange={(e) => setNewConsumableData({ ...newConsumableData, unit_price: e.target.value })}
+                                fullWidth
+                            />
+                        </Box>
+
                         <TextField
-                            label="Giá trị"
-                            value={newSpecData.spec_value}
-                            onChange={(e) => setNewSpecData({ ...newSpecData, spec_value: e.target.value })}
+                            label="Nhà cung cấp"
+                            value={newConsumableData.supplier}
+                            onChange={(e) => setNewConsumableData({ ...newConsumableData, supplier: e.target.value })}
                             fullWidth
                         />
-                        
+
                         <TextField
-                            label="Giá trị số"
-                            type="number"
-                            value={newSpecData.numeric_value}
-                            onChange={(e) => setNewSpecData({ ...newSpecData, numeric_value: e.target.value })}
+                            label="Thông số kỹ thuật"
+                            value={newConsumableData.specifications}
+                            onChange={(e) => setNewConsumableData({ ...newConsumableData, specifications: e.target.value })}
+                            multiline
+                            rows={2}
                             fullWidth
                         />
-                        
+
                         <TextField
                             label="Ghi chú"
-                            value={newSpecData.remarks}
-                            onChange={(e) => setNewSpecData({ ...newSpecData, remarks: e.target.value })}
+                            value={newConsumableData.remarks}
+                            onChange={(e) => setNewConsumableData({ ...newConsumableData, remarks: e.target.value })}
                             multiline
-                            rows={3}
+                            rows={2}
                             fullWidth
                         />
                     </Box>
@@ -644,4 +776,4 @@ function AssetSpecifications() {
     );
 }
 
-export default AssetSpecifications;
+export default AssetConsumables;

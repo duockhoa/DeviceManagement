@@ -231,7 +231,7 @@ export default function Sidebar() {
                             onClick={() => switchActiveSidebar('/asset-specifications')}
                             >
                                 <ListItemIcon>
-                                    <SpecsIcon sx={commonIconStyle} />
+                                    <SpecsIcon sx={location.pathname === '/asset-specifications' ? activeIconStyle : commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{    sx: location.pathname === '/asset-specifications' ? activeTextStyle : commonTextStyle }}
@@ -246,11 +246,28 @@ export default function Sidebar() {
                                 onClick={() => switchActiveSidebar('/consumables')}
                             >
                                 <ListItemIcon>
-                                    <DevicesIcon sx={location.pathname === '/consumables' ? activeIconStyle : commonIconStyle} />
+                                    <InventoryIcon sx={location.pathname === '/consumables' ? activeIconStyle : commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ 
                                         sx: location.pathname === '/consumables' ? activeTextStyle : commonTextStyle 
+                                    }}
+                                    primary={isOpen ? 'Vật tư tiêu hao' : ''}
+                                />
+                            </ListItemButton>
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    ...(location.pathname === '/checklist-standards' ? activeStyle : subItemHoverStyle)
+                                }}
+                                onClick={() => switchActiveSidebar('/checklist-standards')}
+                            >
+                                <ListItemIcon>
+                                    <CheckCircleIcon sx={location.pathname === '/checklist-standards' ? activeIconStyle : commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{ 
+                                        sx: location.pathname === '/checklist-standards' ? activeTextStyle : commonTextStyle 
                                     }}
                                     primary={isOpen ? 'Tiêu chuẩn checklist' : ''}
                                 />
