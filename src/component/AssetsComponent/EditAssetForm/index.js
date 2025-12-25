@@ -96,6 +96,34 @@ function EditAssetForm({ handleClose, assetData }) {
         } : (assetData?.generalInfo || null),
     });
     
+    // Sync formData khi assetData thay đổi
+    useEffect(() => {
+        if (assetData) {
+            setFormData({
+                asset_code: assetData?.asset_code || '',
+                dk_code: assetData?.dk_code || '',
+                name: assetData?.name || '',
+                category_id: assetData?.SubCategory?.category_id || '',
+                team_id: assetData?.team_id || assetData?.Department?.name || '',
+                area_id: assetData?.area_id || '',
+                plant_id: assetData?.Area?.Plant?.id || '',
+                sub_category_id: assetData?.sub_category_id || '',
+                status: assetData?.status || 'active',
+                generalInfo: assetData?.GeneralInfo ? {
+                    manufacture_year: assetData.GeneralInfo.manufacture_year || '',
+                    manufacturer: assetData.GeneralInfo.manufacturer || '',
+                    country_of_origin: assetData.GeneralInfo.country_of_origin || '',
+                    model: assetData.GeneralInfo.model || '',
+                    serial_number: assetData.GeneralInfo.serial_number || '',
+                    warranty_period_months: assetData.GeneralInfo.warranty_period_months || '',
+                    warranty_expiration_date: assetData.GeneralInfo.warranty_expiry_date || '',
+                    supplier: assetData.GeneralInfo.supplier || '',
+                    description: assetData.GeneralInfo.description || ''
+                } : null,
+            });
+        }
+    }, [assetData]);
+    
     const statusOptions = [
         {
             id: "active",
@@ -320,6 +348,11 @@ const formatFileSize = (bytes) => {
 };
 
     const handleSave = () => {
+        console.log('=== EDIT ASSET SAVE ===');
+        console.log('formData:', formData);
+        console.log('team_id:', formData.team_id);
+        console.log('assetData:', assetData);
+        
         const submitData = {
             ...formData,
             components: componentsData,
@@ -328,6 +361,9 @@ const formatFileSize = (bytes) => {
             deviceImage: deviceImage,
             attachedFiles: attachedFiles
         };
+        
+        console.log('submitData:', submitData);
+        
         dispatch(updateExistingAsset({ 
             id: assetData.id, 
             data: submitData 

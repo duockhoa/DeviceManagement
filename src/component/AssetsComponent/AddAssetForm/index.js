@@ -118,11 +118,11 @@ function AddAssetForm({ handleClose }) {
         if (typeof eventOrName === 'string') {
             // SelectField: (name, value)
             name = eventOrName;
-            value = valueOrUndefined;
+            value = valueOrUndefined ?? ''; // Đảm bảo không undefined
         } else {
             // Input field thông thường: (event)
             name = eventOrName.target.name;
-            value = eventOrName.target.value;
+            value = eventOrName.target.value ?? ''; // Đảm bảo không undefined
         }
 
         setFormData(prev => ({
