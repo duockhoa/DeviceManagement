@@ -221,6 +221,20 @@ export default function Sidebar() {
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{    sx: location.pathname === '/specifications' ? activeTextStyle : commonTextStyle }}
+                                    primary={isOpen ? 'Loại thiết bị' : ''}
+                                />
+                            </ListItemButton>
+                            <ListItemButton sx={{ 
+                                pl: 4, 
+                                ...(location.pathname === '/asset-specifications' ? activeStyle : subItemHoverStyle)
+                            }}
+                            onClick={() => switchActiveSidebar('/asset-specifications')}
+                            >
+                                <ListItemIcon>
+                                    <SpecsIcon sx={commonIconStyle} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primaryTypographyProps={{    sx: location.pathname === '/asset-specifications' ? activeTextStyle : commonTextStyle }}
                                     primary={isOpen ? 'Thông số kỹ thuật' : ''}
                                 />
                             </ListItemButton>

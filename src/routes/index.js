@@ -7,6 +7,7 @@ import DashBoard from '../pages/DashBoard';
 import Devices from '../pages/Devices';
 import Categories from '../pages/Categories';
 import ChecklistStandards from '../pages/ChecklistStandards';
+import AssetSpecifications from '../pages/AssetSpecifications';
 import Maintenance from '../pages/Maintenance';
 import MaintenanceDetail from '../component/MaintenanceComponent/MaintenanceDetail';
 import MaintenanceWork from '../pages/MaintenanceWork';
@@ -45,6 +46,10 @@ const publicRoutes = [
     {
         path: '/specifications',
         component: Specifications,
+    },
+    {
+        path: '/asset-specifications',
+        component: AssetSpecifications,
     },
     {
         path: '/consumables',

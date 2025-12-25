@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import SubCategoriesList from '../../component/SubCategories/SubCategoriesList';
+import AddSubCategoryButton from '../../component/SubCategories/AddSubCategoryBtn';
 
 function Specifications() {
     return (
@@ -14,6 +15,16 @@ function Specifications() {
                 flexDirection: 'column'
             }}>
                 <SubCategoriesList />
+            </Box>
+
+            {/* Fixed Add Button */}
+            <Box sx={{
+                position: 'fixed',
+                bottom: 40,
+                right: 40,
+                zIndex: 1000
+            }}>
+                <AddSubCategoryButton />
             </Box>
         </Box>
     );
