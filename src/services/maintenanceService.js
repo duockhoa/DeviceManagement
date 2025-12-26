@@ -21,7 +21,8 @@ const maintenanceService = {
         try {
             const response = await customizeAxios.get(`/maintenance/${id}`);
             // Response bao gồm nextActions array cho UI
-            return response.data;
+            // Backend returns: {success: true, data: {...}}
+            return response.data.data || response.data;
         } catch (error) {
             console.error('Error fetching maintenance by ID:', error);
             throw error;
@@ -31,7 +32,8 @@ const maintenanceService = {
     createMaintenance: async (data) => {
         try {
             const response = await customizeAxios.post('/maintenance', data);
-            return response.data;
+            // Backend returns {success, message, data}
+            return response.data.data || response.data;
         } catch (error) {
             console.error('Error creating maintenance:', error);
             throw error;
@@ -61,7 +63,8 @@ const maintenanceService = {
     approveMaintenance: async (id, data = {}) => {
         try {
             const response = await customizeAxios.post(`/maintenance/${id}/approve`, data);
-            return response.data;
+            // Backend returns {success, message, data}
+            return response.data.data || response.data;
         } catch (error) {
             console.error('Error approving maintenance:', error);
             throw error.response?.data?.message || 'Không thể phê duyệt';
@@ -182,7 +185,8 @@ const maintenanceService = {
     updateMaintenance: async (id, data) => {
         try {
             const response = await customizeAxios.put(`/maintenance/${id}`, data);
-            return response.data;
+            // Backend returns {success, message, data}
+            return response.data.data || response.data;
         } catch (error) {
             console.error('Error updating maintenance:', error);
             throw error;

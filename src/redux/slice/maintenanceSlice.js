@@ -206,7 +206,9 @@ export const maintenanceSlice = createSlice({
                 state.error = null;
             })
             .addCase(createMaintenanceRecord.fulfilled, (state, action) => {
-                state.maintenance = [action.payload, ...state.maintenance];
+                // Extract data from response: {success, message, data}
+                const newMaintenance = action.payload.data || action.payload;
+                state.maintenance = [newMaintenance, ...state.maintenance];
                 state.loading = false;
                 state.success = true;
             })
@@ -219,9 +221,11 @@ export const maintenanceSlice = createSlice({
                 state.error = null;
             })
             .addCase(updateMaintenanceRecord.fulfilled, (state, action) => {
-                const index = state.maintenance.findIndex(item => item.id === action.payload.id);
+                // Extract data from response: {success, message, data}
+                const updatedMaintenance = action.payload.data || action.payload;
+                const index = state.maintenance.findIndex(item => item.id === updatedMaintenance.id);
                 if (index !== -1) {
-                    state.maintenance[index] = action.payload;
+                    state.maintenance[index] = updatedMaintenance;
                 }
                 state.loading = false;
                 state.error = null;
@@ -249,14 +253,16 @@ export const maintenanceSlice = createSlice({
                 state.error = null;
             })
             .addCase(approveMaintenanceRecord.fulfilled, (state, action) => {
+                // Extract data from response if needed
+                const updatedMaintenance = action.payload;
                 // Cập nhật maintenance trong danh sách
-                const index = state.maintenance.findIndex(item => item.id === action.payload.id);
+                const index = state.maintenance.findIndex(item => item.id === updatedMaintenance.id);
                 if (index !== -1) {
-                    state.maintenance[index] = action.payload;
+                    state.maintenance[index] = updatedMaintenance;
                 }
                 // Cập nhật currentMaintenance nếu đang xem chi tiết
-                if (state.currentMaintenance?.id === action.payload.id) {
-                    state.currentMaintenance = action.payload;
+                if (state.currentMaintenance?.id === updatedMaintenance.id) {
+                    state.currentMaintenance = updatedMaintenance;
                 }
                 state.loading = false;
                 state.success = true;
