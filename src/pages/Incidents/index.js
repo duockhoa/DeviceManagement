@@ -23,7 +23,11 @@ import {
     TableRow,
     TextField,
     Typography,
-    MenuItem
+    MenuItem,
+    Autocomplete,
+    FormControl,
+    InputLabel,
+    Select
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -32,6 +36,14 @@ import { fetchIncidents } from '../../redux/slice/incidentsSlice';
 import Loading from '../../component/Loading';
 import incidentsService from '../../services/incidentsService';
 import { getAllAssets } from '../../services/assetsService';
+import {
+    INCIDENT_CATEGORY_LABELS,
+    INCIDENT_STATUS_LABELS,
+    FACILITY_TYPE_LABELS,
+    SYSTEM_TYPE_LABELS,
+    OPERATION_TYPE_LABELS,
+    NOTIFICATION_TYPE_LABELS
+} from '../../constants/flowMaps';
 
 const severityColor = (s) => ({
     critical: 'error',
@@ -39,6 +51,13 @@ const severityColor = (s) => ({
     medium: 'info',
     low: 'success'
 }[s] || 'default');
+
+const severityLabel = (s) => ({
+    critical: 'Khẩn cấp',
+    high: 'Cao',
+    medium: 'Trung bình',
+    low: 'Thấp'
+}[s] || s);
 
 function IncidentsPage() {
     const dispatch = useDispatch();
@@ -51,7 +70,15 @@ function IncidentsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [isUnlinked, setIsUnlinked] = useState(false);
     const [form, setForm] = useState({
+        incident_category: 'EQUIPMENT',
+        notification_type: 'M2',
         asset_id: '',
+        facility_type: '',
+        system_type: '',
+        operation_type: '',
+        building: '',
+        floor: '',
+        room: '',
         title: '',
         description: '',
         severity: 'medium',
@@ -96,30 +123,44 @@ function IncidentsPage() {
         e.preventDefault();
         setReportError(null);
         setReportSuccess(null);
-        if (!isUnlinked && !form.asset_id) {
-            setReportError('Vui lòng chọn thiết bị hoặc bật chế độ không gắn thiết bị.');
+        
+        // Validation theo category
+        const category = form.incident_category;
+        if (category === 'EQUIPMENT' && !form.asset_id) {
+            setReportError('Vui lòng chọn thiết bị.');
             return;
         }
-        if (isUnlinked && !form.unlinked_target.trim()) {
-            setReportError('Vui lòng nhập đối tượng/địa điểm cho yêu cầu không gắn thiết bị.');
+        if (category === 'FACILITY' && !form.facility_type) {
+            setReportError('Vui lòng chọn loại cơ sở.');
+            return;
+        }
+        if (category === 'SYSTEM' && !form.system_type) {
+            setReportError('Vui lòng chọn loại hệ thống.');
+            return;
+        }
+        if (category === 'OPERATION' && !form.operation_type) {
+            setReportError('Vui lòng chọn loại yêu cầu.');
             return;
         }
         if (!form.title) {
             setReportError('Vui lòng nhập tiêu đề.');
             return;
         }
+        
         try {
             setSubmitting(true);
-            const descriptionPrefix = isUnlinked
-                ? `[Không gắn thiết bị] ${form.unlinked_target}${form.unlinked_location ? ` - ${form.unlinked_location}` : ''}`
-                : '';
-            const composedDescription = descriptionPrefix
-                ? `${descriptionPrefix}\n${form.description || ''}`.trim()
-                : form.description;
             await incidentsService.createIncident({
-                asset_id: isUnlinked ? null : Number(form.asset_id),
+                incident_category: form.incident_category,
+                notification_type: form.notification_type || null,
+                asset_id: category === 'EQUIPMENT' ? Number(form.asset_id) : null,
+                facility_type: category === 'FACILITY' ? form.facility_type : null,
+                system_type: category === 'SYSTEM' ? form.system_type : null,
+                operation_type: category === 'OPERATION' ? form.operation_type : null,
+                building: form.building || null,
+                floor: form.floor || null,
+                room: form.room || null,
                 title: form.title,
-                description: composedDescription,
+                description: form.description,
                 severity: form.severity,
                 impact: form.impact,
                 images: parseImages(form.images),
@@ -127,9 +168,17 @@ function IncidentsPage() {
                 handover_notes: form.handover_notes,
                 follow_up_notes: form.follow_up_notes
             });
-            setReportSuccess('Đã gửi đánh giá sự cố.');
+            setReportSuccess('Đã tạo sự cố thành công!');
             setForm({
+                incident_category: 'EQUIPMENT',
+                notification_type: 'M2',
                 asset_id: '',
+                facility_type: '',
+                system_type: '',
+                operation_type: '',
+                building: '',
+                floor: '',
+                room: '',
                 title: '',
                 description: '',
                 severity: 'medium',
@@ -154,8 +203,8 @@ function IncidentsPage() {
     if (loading) return <Loading />;
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Paper sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ p: 3, position: 'relative' }}>
+            <Paper sx={{ p: 2, mb: 2 }}>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Quản lý sự cố</Typography>
             </Paper>
 
@@ -169,6 +218,7 @@ function IncidentsPage() {
                         <TableRow>
                             <TableCell>Mã</TableCell>
                             <TableCell>Tiêu đề</TableCell>
+                            <TableCell>Loại</TableCell>
                             <TableCell>Thiết bị</TableCell>
                             <TableCell>Mức độ</TableCell>
                             <TableCell>Trạng thái</TableCell>
@@ -182,13 +232,30 @@ function IncidentsPage() {
                                 <TableCell><strong>{item.incident_code}</strong></TableCell>
                                 <TableCell>{item.title}</TableCell>
                                 <TableCell>
+                                    <Chip 
+                                        label={INCIDENT_CATEGORY_LABELS[item.incident_category] || item.incident_category} 
+                                        size="small" 
+                                        color={
+                                            item.incident_category === 'EQUIPMENT' ? 'primary' :
+                                            item.incident_category === 'FACILITY' ? 'secondary' :
+                                            item.incident_category === 'SYSTEM' ? 'warning' : 'info'
+                                        }
+                                    />
+                                </TableCell>
+                                <TableCell>
                                     <Typography sx={{ fontWeight: 500 }}>{item.asset?.name || 'N/A'}</Typography>
                                     <Typography variant="caption" color="text.secondary">{item.asset?.asset_code}</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <Chip label={item.severity} color={severityColor(item.severity)} size="small" />
+                                    <Chip label={severityLabel(item.severity)} color={severityColor(item.severity)} size="small" />
                                 </TableCell>
-                                <TableCell>{item.status}</TableCell>
+                                <TableCell>
+                                    <Chip 
+                                        label={INCIDENT_STATUS_LABELS[item.status] || item.status}
+                                        size="small"
+                                        variant="outlined"
+                                    />
+                                </TableCell>
                                 <TableCell>{item.reported_date ? new Date(item.reported_date).toLocaleDateString('vi-VN') : 'N/A'}</TableCell>
                                 <TableCell align="center" sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                                     <Button
@@ -249,56 +316,181 @@ function IncidentsPage() {
                     <Box component="form" onSubmit={handleSubmitReport}>
                         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                             <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
-                                Thông tin sự cố
+                                Loại sự cố
                             </Typography>
                             <Grid container spacing={2}>
-                                <Grid item xs={12} md={6}>
+                                <Grid item xs={12}>
                                     <TextField
                                         select
                                         fullWidth
-                                        label="Thiết bị"
-                                        value={form.asset_id}
-                                        onChange={(e) => setForm((p) => ({ ...p, asset_id: e.target.value }))}
-                                        helperText="Chọn thiết bị gặp sự cố"
-                                        disabled={isUnlinked}
+                                        required
+                                        label="Phân loại sự cố"
+                                        value={form.incident_category}
+                                        onChange={(e) => {
+                                            const cat = e.target.value;
+                                            setForm((p) => ({ 
+                                                ...p, 
+                                                incident_category: cat,
+                                                // Clear category-specific fields
+                                                asset_id: cat === 'EQUIPMENT' ? p.asset_id : '',
+                                                facility_type: '',
+                                                system_type: '',
+                                                operation_type: ''
+                                            }));
+                                            setIsUnlinked(cat !== 'EQUIPMENT');
+                                        }}
                                     >
-                                        {assets.map((asset) => (
-                                            <MenuItem key={asset.id} value={asset.id}>
-                                                {asset.name} ({asset.asset_code})
+                                        {Object.entries(INCIDENT_CATEGORY_LABELS).map(([key, label]) => (
+                                            <MenuItem key={key} value={key}>
+                                                {label}
                                             </MenuItem>
                                         ))}
                                     </TextField>
                                 </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <Stack direction="row" alignItems="center" spacing={1} sx={{ height: '100%' }}>
-                                        <Typography variant="body2">Không gắn thiết bị</Typography>
-                                        <Switch
-                                            checked={isUnlinked}
-                                            onChange={(e) => setIsUnlinked(e.target.checked)}
-                                            inputProps={{ 'aria-label': 'toggle-unlinked-request' }}
-                                        />
-                                    </Stack>
-                                </Grid>
-                                {isUnlinked && (
+                            </Grid>
+                        </Paper>
+
+                        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+                                Thông tin chi tiết
+                            </Typography>
+                            <Grid container spacing={2}>
+                                {/* EQUIPMENT - Thiết bị */}
+                                {form.incident_category === 'EQUIPMENT' && (
                                     <Grid item xs={12}>
-                                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                                        <TextField
+                                            select
+                                            fullWidth
+                                            required
+                                            label="Thiết bị"
+                                            value={form.asset_id}
+                                            onChange={(e) => setForm((p) => ({ ...p, asset_id: e.target.value }))}
+                                            helperText="Chọn thiết bị gặp sự cố"
+                                        >
+                                            {assets.map((asset) => (
+                                                <MenuItem key={asset.id} value={asset.id}>
+                                                    {asset.name} ({asset.asset_code})
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </Grid>
+                                )}
+
+                                {/* FACILITY - Nhà xưởng/Cơ sở hạ tầng */}
+                                {form.incident_category === 'FACILITY' && (
+                                    <>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                select
+                                                fullWidth
+                                                required
+                                                label="Loại cơ sở"
+                                                value={form.facility_type}
+                                                onChange={(e) => setForm((p) => ({ ...p, facility_type: e.target.value }))}
+                                            >
+                                                {Object.entries(FACILITY_TYPE_LABELS).map(([key, label]) => (
+                                                    <MenuItem key={key} value={key}>
+                                                        {label}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
                                             <TextField
                                                 fullWidth
-                                                size="small"
-                                                label="Đối tượng/địa điểm"
-                                                value={form.unlinked_target}
-                                                onChange={(e) => setForm((p) => ({ ...p, unlinked_target: e.target.value }))}
-                                                helperText="Ví dụ: Khu vực sảnh chính, hệ thống HVAC, yêu cầu chung"
+                                                label="Tòa nhà"
+                                                value={form.building}
+                                                onChange={(e) => setForm((p) => ({ ...p, building: e.target.value }))}
+                                                placeholder="Ví dụ: Nhà A, Kho B"
                                             />
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
                                             <TextField
                                                 fullWidth
-                                                size="small"
-                                                label="Thông tin bổ sung"
-                                                value={form.unlinked_location}
-                                                onChange={(e) => setForm((p) => ({ ...p, unlinked_location: e.target.value }))}
-                                                helperText="Địa điểm, liên hệ hoặc ghi chú ngắn"
+                                                label="Tầng"
+                                                value={form.floor}
+                                                onChange={(e) => setForm((p) => ({ ...p, floor: e.target.value }))}
+                                                placeholder="Ví dụ: Tầng 2, Tầng trệt"
                                             />
-                                        </Stack>
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
+                                            <TextField
+                                                fullWidth
+                                                label="Phòng/Khu vực"
+                                                value={form.room}
+                                                onChange={(e) => setForm((p) => ({ ...p, room: e.target.value }))}
+                                                placeholder="Ví dụ: P201, Hành lang"
+                                            />
+                                        </Grid>
+                                    </>
+                                )}
+
+                                {/* SYSTEM - Hệ thống điện/nước/khí */}
+                                {form.incident_category === 'SYSTEM' && (
+                                    <>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                select
+                                                fullWidth
+                                                required
+                                                label="Loại hệ thống"
+                                                value={form.system_type}
+                                                onChange={(e) => setForm((p) => ({ ...p, system_type: e.target.value }))}
+                                            >
+                                                {Object.entries(SYSTEM_TYPE_LABELS).map(([key, label]) => (
+                                                    <MenuItem key={key} value={key}>
+                                                        {label}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
+                                            <TextField
+                                                fullWidth
+                                                label="Tòa nhà"
+                                                value={form.building}
+                                                onChange={(e) => setForm((p) => ({ ...p, building: e.target.value }))}
+                                                placeholder="Ví dụ: Nhà A, Toàn nhà máy"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
+                                            <TextField
+                                                fullWidth
+                                                label="Tầng"
+                                                value={form.floor}
+                                                onChange={(e) => setForm((p) => ({ ...p, floor: e.target.value }))}
+                                                placeholder="Ví dụ: Tầng 2, Tất cả"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={4}>
+                                            <TextField
+                                                fullWidth
+                                                label="Khu vực"
+                                                value={form.room}
+                                                onChange={(e) => setForm((p) => ({ ...p, room: e.target.value }))}
+                                                placeholder="Ví dụ: Khu vực sản xuất"
+                                            />
+                                        </Grid>
+                                    </>
+                                )}
+
+                                {/* OPERATION - Vận hành/Yêu cầu */}
+                                {form.incident_category === 'OPERATION' && (
+                                    <Grid item xs={12}>
+                                        <TextField
+                                            select
+                                            fullWidth
+                                            required
+                                            label="Loại yêu cầu"
+                                            value={form.operation_type}
+                                            onChange={(e) => setForm((p) => ({ ...p, operation_type: e.target.value }))}
+                                        >
+                                            {Object.entries(OPERATION_TYPE_LABELS).map(([key, label]) => (
+                                                <MenuItem key={key} value={key}>
+                                                    {label}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
                                     </Grid>
                                 )}
                                 <Grid item xs={12} md={6}>
@@ -422,6 +614,19 @@ function IncidentsPage() {
                 </DialogActions>
             </Dialog>
 
+            <Fab 
+                color="primary" 
+                aria-label="add"
+                onClick={() => setOpenReport(true)}
+                sx={{
+                    position: 'fixed',
+                    bottom: 24,
+                    right: 24,
+                    zIndex: 1000
+                }}
+            >
+                <AddIcon />
+            </Fab>
         </Box>
     );
 }

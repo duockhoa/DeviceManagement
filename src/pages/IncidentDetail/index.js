@@ -26,6 +26,7 @@ import ActionDialog from '../../components/common/ActionDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import StatusTimeline from '../../components/common/StatusTimeline';
 import ActionZone from '../../components/common/ActionZone';
+import ActionStepCard from '../../components/incident/ActionStepCard';
 import TriageDialog from '../../components/incident/TriageDialog';
 import IsolateDialog from '../../components/incident/IsolateDialog';
 import AssignDialog from '../../components/incident/AssignDialog';
@@ -34,7 +35,7 @@ import PostFixCheckDialog from '../../components/incident/PostFixCheckDialog';
 import CancelIncidentDialog from '../../components/incident/CancelIncidentDialog';
 import CloseIncidentDialog from '../../components/incident/CloseIncidentDialog';
 import OperationalStatusBadge from '../../components/common/OperationalStatusBadge';
-import { INCIDENT_FLOW, NEXT_ROLE_LABEL } from '../../constants/flowMaps';
+import { INCIDENT_FLOW, INCIDENT_STATUS_LABELS, NEXT_ROLE_LABEL } from '../../constants/flowMaps';
 
 const severityConfig = {
     critical: { label: 'Khẩn cấp', color: 'error' },
@@ -310,11 +311,164 @@ function IncidentDetail() {
             </Paper>
 
             <Paper sx={{ p: 2, mb: 2 }}>
-                <StatusTimeline statuses={INCIDENT_FLOW} current={incident.status} />
+                <StatusTimeline 
+                    statuses={INCIDENT_FLOW} 
+                    current={incident.status} 
+                    statusLabels={INCIDENT_STATUS_LABELS}
+                />
             </Paper>
 
+            {/* Action Step Card - Hiển thị bước tiếp theo rõ ràng */}
+            {incident.status === 'reported' && (
+                <ActionStepCard
+                    title="📋 Bước tiếp theo: Phân loại sự cố"
+                    description="Đánh giá và phân loại sự cố để xác định hướng xử lý"
+                    icon="🔍"
+                    variant="primary"
+                    steps={[
+                        'Đánh giá mức độ nghiêm trọng',
+                        'Xác định loại sự cố (Thiết bị/Nhà xưởng/Hệ thống/Vận hành)',
+                        'Quyết định cô lập thiết bị nếu cần thiết'
+                    ]}
+                    assignee={nextRoleLabel}
+                    actions={[
+                        {
+                            label: '🔍 Phân loại ngay',
+                            onClick: () => handleActionClick('triage')
+                        }
+                    ]}
+                />
+            )}
+
+            {incident.status === 'triaged' && (
+                <ActionStepCard
+                    title="🔧 Bước tiếp theo: Phân công xử lý"
+                    description="Lựa chọn: Cô lập thiết bị (nếu nguy hiểm) hoặc phân công kỹ thuật viên"
+                    icon="👷"
+                    variant="warning"
+                    steps={[
+                        'Đánh giá mức độ nguy hiểm',
+                        'Cô lập thiết bị nếu cần (tùy chọn)',
+                        'Chọn kỹ thuật viên phù hợp để xử lý'
+                    ]}
+                    assignee={nextRoleLabel}
+                    actions={[
+                        {
+                            label: '🔒 Cô lập thiết bị',
+                            onClick: () => handleActionClick('isolate')
+                        },
+                        {
+                            label: '👷 Phân công KTV',
+                            onClick: () => handleActionClick('assign')
+                        }
+                    ]}
+                />
+            )}
+
+            {incident.status === 'out_of_service' && (
+                <ActionStepCard
+                    title="👷 Bước tiếp theo: Phân công xử lý"
+                    description="Thiết bị đã được cô lập, phân công kỹ thuật viên để sửa chữa"
+                    icon="🔧"
+                    variant="warning"
+                    assignee={nextRoleLabel}
+                    actions={[
+                        {
+                            label: '👷 Phân công KTV',
+                            onClick: () => handleActionClick('assign')
+                        }
+                    ]}
+                />
+            )}
+
+            {incident.status === 'assigned' && (
+                <ActionStepCard
+                    title="▶️ Bước tiếp theo: Bắt đầu xử lý"
+                    description="Kỹ thuật viên đã được phân công, sẵn sàng bắt đầu công việc"
+                    icon="🔨"
+                    variant="info"
+                    assignee={incident.assigned_technician?.name || 'Chưa xác định'}
+                    estimatedTime="Dự kiến: 2-4 giờ"
+                    actions={[
+                        {
+                            label: '▶️ Bắt đầu xử lý',
+                            onClick: () => handleActionClick('start')
+                        }
+                    ]}
+                />
+            )}
+
+            {incident.status === 'in_progress' && (
+                <ActionStepCard
+                    title="⚙️ Đang xử lý sự cố..."
+                    description="Khi hoàn thành, ghi nhận giải pháp và gửi yêu cầu kiểm tra"
+                    icon="⚡"
+                    variant="info"
+                    steps={[
+                        'Thực hiện sửa chữa/khắc phục',
+                        'Ghi nhận giải pháp đã áp dụng',
+                        'Chụp ảnh kết quả (nếu có)',
+                        'Gửi yêu cầu kiểm tra kết quả'
+                    ]}
+                    assignee={incident.assigned_technician?.name || 'Đang xử lý'}
+                    actions={[
+                        {
+                            label: '📤 Gửi kiểm tra',
+                            onClick: () => handleActionClick('submit_post_fix')
+                        }
+                    ]}
+                />
+            )}
+
+            {incident.status === 'post_fix_check' && (
+                <ActionStepCard
+                    title="✅ Bước tiếp theo: Kiểm tra kết quả"
+                    description="Đánh giá kết quả sửa chữa và quyết định đạt/không đạt"
+                    icon="🔍"
+                    variant="success"
+                    steps={[
+                        'Kiểm tra thiết bị hoạt động bình thường',
+                        'Xác nhận giải pháp đã khắc phục triệt để',
+                        'Quyết định ĐẠT hoặc KHÔNG ĐẠT'
+                    ]}
+                    assignee={nextRoleLabel}
+                    actions={[
+                        {
+                            label: '✅ Kiểm tra ĐẠT',
+                            onClick: () => handleActionClick('post_fix_pass')
+                        },
+                        {
+                            label: '❌ Không ĐẠT',
+                            onClick: () => handleActionClick('post_fix_fail')
+                        }
+                    ]}
+                />
+            )}
+
+            {incident.status === 'resolved' && (
+                <ActionStepCard
+                    title="🎯 Hoàn tất & đóng sự cố"
+                    description="Bổ sung thông tin cuối cùng và đóng sự cố"
+                    icon="📝"
+                    variant="success"
+                    steps={[
+                        'Ghi nhận nguyên nhân gốc',
+                        'Biện pháp phòng ngừa',
+                        'Thời gian downtime (nếu có)',
+                        'Đóng sự cố hoàn tất'
+                    ]}
+                    assignee={nextRoleLabel}
+                    actions={[
+                        {
+                            label: '📝 Đóng sự cố',
+                            onClick: () => handleActionClick('close')
+                        }
+                    ]}
+                />
+            )}
+
             <ActionZone
-                title="Thao tác"
+                title="Thao tác khác"
                 current_status_label={status.label}
                 next_role_label={nextRoleLabel}
             >

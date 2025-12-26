@@ -16,13 +16,14 @@ import MaintenanceWorkDetail from '../pages/MaintenanceWorkDetail';
 import MaintenanceResult from '../pages/MaintenanceResult';
 import MaintenanceRecord from '../pages/MaintenanceRecord';
 import MaintenancePlan from '../pages/MaintenancePlan';
-import WorkRequests from '../pages/WorkRequests';
+// import WorkRequests from '../pages/WorkRequests'; // DEPRECATED: Merged into Incidents with 4 categories
 import Calibration from '../pages/Calibration';
 import Specifications from '../pages/Specifications';
 import AssetDetail from '../component/AssetsComponent/AssetDetail';
 import IncidentsPage from '../pages/Incidents';
 import IncidentDetail from '../pages/IncidentDetail';
 import IncidentReport from '../pages/IncidentReport';
+import IncidentReports from '../pages/IncidentReports';
 import Handovers from '../pages/Handovers';
 import HandoversFollowUp from '../pages/HandoversFollowUp';
 import AccessControlPage from '../pages/AccessControl';
@@ -68,14 +69,15 @@ const publicRoutes = [
         path: '/maintenance-plan',
         component: MaintenancePlan,
     },
-    {
-        path: '/work-requests',
-        component: WorkRequests,
-    },
-    {
-        path: '/work-requests/ops',
-        component: WorkRequests,
-    },
+    // DEPRECATED: Work Requests merged into Incidents with 4 categories (EQUIPMENT, FACILITY, SYSTEM, OPERATION)
+    // {
+    //     path: '/work-requests',
+    //     component: WorkRequests,
+    // },
+    // {
+    //     path: '/work-requests/ops',
+    //     component: WorkRequests,
+    // },
     {
         path: '/maintenance/:id',
         component: MaintenanceDetail,
@@ -99,6 +101,10 @@ const publicRoutes = [
     {
         path: '/incidents',
         component: IncidentsPage,
+    },
+    {
+        path: '/incidents/reports',
+        component: IncidentReports,
     },
     {
         path: '/incidents/:id',

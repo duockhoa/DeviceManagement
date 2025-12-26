@@ -321,23 +321,6 @@ export default function Sidebar() {
                             <ListItemButton
                                 sx={{
                                     pl: 4,
-                                    ...(location.pathname === '/work-requests/ops' ? activeStyle : subItemHoverStyle)
-                                }}
-                                onClick={() => switchActiveSidebar('/work-requests/ops')}
-                            >
-                                <ListItemIcon>
-                                    <AssignmentIcon sx={location.pathname === '/work-requests/ops' ? activeIconStyle : commonIconStyle} />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primaryTypographyProps={{ 
-                                        sx: location.pathname === '/work-requests/ops' ? activeTextStyle : commonTextStyle 
-                                    }}
-                                    primary={isOpen ? 'Xử lý yêu cầu' : ''}
-                                />
-                            </ListItemButton>
-                            <ListItemButton
-                                sx={{
-                                    pl: 4,
                                     ...(location.pathname === '/maintenance' ? activeStyle : subItemHoverStyle)
                                 }}
                                 onClick={() => switchActiveSidebar('/maintenance')}
@@ -468,7 +451,7 @@ export default function Sidebar() {
                         <ListItemIcon sx={{ minWidth: '30px' }}>
                             <WarningAmberIcon sx={commonIconStyle} />
                         </ListItemIcon>
-                        <ListItemText primaryTypographyProps={{ sx: commonTextStyle }} primary={isOpen ? 'Sự cố & Yêu cầu' : ''} />
+                        <ListItemText primaryTypographyProps={{ sx: commonTextStyle }} primary={isOpen ? 'Sự cố thiết bị' : ''} />
                         {isOpen && (activeCollapse.includes('incidents') ? <ExpandMoreIcon /> : <ArrowForwardIosIcon sx={{ fontSize: 14 }} />)}
                     </ListItemButton>
                     <Collapse in={activeCollapse.includes('incidents') && isOpen} timeout="auto" unmountOnExit>
@@ -494,18 +477,18 @@ export default function Sidebar() {
                             <ListItemButton 
                                 sx={{ 
                                     pl: 4,
-                                    ...(location.pathname === '/work-requests' ? activeStyle : subItemHoverStyle)
+                                    ...(location.pathname === '/incidents/reports' ? activeStyle : subItemHoverStyle)
                                 }}
-                                onClick={() => switchActiveSidebar('/work-requests')}
+                                onClick={() => switchActiveSidebar('/incidents/reports')}
                             >
                                 <ListItemIcon>
-                                    <AssignmentIcon sx={location.pathname === '/work-requests' ? activeIconStyle : commonIconStyle} />
+                                    <AssessmentIcon sx={location.pathname === '/incidents/reports' ? activeIconStyle : commonIconStyle} />
                                 </ListItemIcon>
                                 <ListItemText
                                     primaryTypographyProps={{ 
-                                        sx: location.pathname === '/work-requests' ? activeTextStyle : commonTextStyle 
+                                        sx: location.pathname === '/incidents/reports' ? activeTextStyle : commonTextStyle 
                                     }}
-                                    primary={isOpen ? 'Yêu cầu xử lý' : ''}
+                                    primary={isOpen ? 'Báo cáo sự cố' : ''}
                                 />
                             </ListItemButton>
 

@@ -114,6 +114,63 @@ export const CALIBRATION_STATUS_LABELS = {
     cancelled: 'Đã hủy'
 };
 
+// Incident category labels
+export const INCIDENT_CATEGORY_LABELS = {
+    EQUIPMENT: 'Sửa chữa Thiết bị',
+    FACILITY: 'Nhà xưởng',
+    SYSTEM: 'Hệ thống',
+    OPERATION: 'Vận hành'
+};
+
+export const FACILITY_TYPE_LABELS = {
+    building_structure: 'Kết cấu tòa nhà',
+    roof: 'Mái nhà',
+    wall: 'Tường',
+    floor: 'Sàn',
+    door_window: 'Cửa/Cửa sổ',
+    lighting: 'Chiếu sáng',
+    restroom: 'Toilet/Vệ sinh',
+    office: 'Văn phòng',
+    warehouse: 'Kho',
+    workshop: 'Xưởng sản xuất',
+    parking: 'Bãi đỗ xe',
+    landscape: 'Cảnh quan',
+    other: 'Khác'
+};
+
+export const SYSTEM_TYPE_LABELS = {
+    electrical: 'Điện',
+    water: 'Nước',
+    compressed_air: 'Khí nén',
+    hvac: 'Điều hòa/Thông gió',
+    fire_protection: 'PCCC',
+    it_network: 'Mạng IT',
+    cctv_security: 'Camera/An ninh',
+    telephone: 'Điện thoại',
+    waste_treatment: 'Xử lý chất thải',
+    steam: 'Hơi nước',
+    gas: 'Khí gas',
+    other: 'Khác'
+};
+
+export const OPERATION_TYPE_LABELS = {
+    support_request: 'Yêu cầu hỗ trợ',
+    inspection: 'Kiểm tra',
+    cleaning: 'Vệ sinh',
+    setup: 'Thiết lập/Cài đặt',
+    training: 'Đào tạo',
+    consultation: 'Tư vấn',
+    documentation: 'Lập tài liệu',
+    other: 'Khác'
+};
+
+export const NOTIFICATION_TYPE_LABELS = {
+    M1: 'M1 - Hỏng hóc (Breakdown)',
+    M2: 'M2 - Trục trặc (Malfunction)',
+    M3: 'M3 - Yêu cầu (Request)',
+    M4: 'M4 - Hoạt động (Activity)'
+};
+
 export const NEXT_ROLE_LABEL = {
     Incident: {
         reported: 'Manager / QA',

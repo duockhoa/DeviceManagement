@@ -243,6 +243,21 @@ const incidentsService = {
             console.error('Error approving solution:', error);
             throw error.response?.data?.message || 'Không thể duyệt phương án';
         }
+    },
+
+    // ==================== REPORTS ====================
+
+    /**
+     * Get incident reports with statistics
+     */
+    getIncidentReports: async (params = {}) => {
+        try {
+            const response = await customizeAxios.get('/incidents/reports', { params });
+            return response.data.data || response.data;
+        } catch (error) {
+            console.error('Error fetching incident reports:', error);
+            throw error.response?.data?.message || 'Không thể tải báo cáo';
+        }
     }
 };
 

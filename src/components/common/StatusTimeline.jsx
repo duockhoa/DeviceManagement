@@ -10,13 +10,13 @@ const StepIcon = ({ active, completed }) => {
     return <RadioButtonUncheckedIcon color="disabled" fontSize="small" />;
 };
 
-const StatusTimeline = ({ statuses = [], current, timestamps = {}, assignee = {} }) => {
+const StatusTimeline = ({ statuses = [], current, timestamps = {}, assignee = {}, statusLabels = {} }) => {
     const activeIndex = Math.max(statuses.indexOf(current), 0);
 
     const steps = useMemo(
         () => statuses.map((status, index) => ({
             key: status,
-            label: status,
+            label: statusLabels[status] || status,
             active: index === activeIndex,
             completed: index < activeIndex,
             tooltip: [
@@ -24,7 +24,7 @@ const StatusTimeline = ({ statuses = [], current, timestamps = {}, assignee = {}
                 assignee[status] ? `Người xử lý: ${assignee[status]}` : null
             ].filter(Boolean).join(' • ')
         })),
-        [statuses, activeIndex, timestamps, assignee]
+        [statuses, activeIndex, timestamps, assignee, statusLabels]
     );
 
     return (
