@@ -14,6 +14,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { getMaintenanceResults } from '../../services/maintenanceWorkService';
+import { MAINTENANCE_STATUS_LABELS } from '../../constants/flowMaps';
 
 function MaintenanceResult() {
     const navigate = useNavigate();
@@ -65,20 +66,21 @@ function MaintenanceResult() {
 
     const getStatusColor = (status) => {
         switch (status) {
+            case 'draft': return 'default';
+            case 'pending': return 'warning';
+            case 'approved': return 'primary';
+            case 'scheduled': return 'secondary';
             case 'in_progress': return 'info';
-            case 'awaiting_approval': return 'warning';
-            case 'completed': return 'success';
+            case 'awaiting_acceptance': return 'warning';
+            case 'accepted': return 'success';
+            case 'closed': return 'success';
+            case 'cancelled': return 'error';
             default: return 'default';
         }
     };
 
     const getStatusLabel = (status) => {
-        switch (status) {
-            case 'in_progress': return 'Đang thực hiện';
-            case 'awaiting_approval': return 'Chờ phê duyệt';
-            case 'completed': return 'Hoàn thành';
-            default: return status;
-        }
+        return MAINTENANCE_STATUS_LABELS[status] || status;
     };
 
     const columns = [

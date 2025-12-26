@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { MAINTENANCE_STATUS_LABELS } from '../../constants/flowMaps';
 import {
     Box,
     Typography,
@@ -557,24 +558,21 @@ function MaintenanceWorkDetail() {
 
     const getStatusColor = (status) => {
         switch (status) {
+            case 'draft': return 'default';
             case 'pending': return 'warning';
+            case 'approved': return 'primary';
+            case 'scheduled': return 'secondary';
             case 'in_progress': return 'info';
-            case 'awaiting_approval': return 'secondary';
-            case 'completed': return 'success';
+            case 'awaiting_acceptance': return 'warning';
+            case 'accepted': return 'success';
+            case 'closed': return 'success';
             case 'cancelled': return 'error';
             default: return 'default';
         }
     };
 
     const getStatusLabel = (status) => {
-        switch (status) {
-            case 'pending': return 'Chờ xử lý';
-            case 'in_progress': return 'Đang thực hiện';
-            case 'awaiting_approval': return 'Chờ phê duyệt';
-            case 'completed': return 'Hoàn thành';
-            case 'cancelled': return 'Đã hủy';
-            default: return status;
-        }
+        return MAINTENANCE_STATUS_LABELS[status] || status;
     };
 
     if (loading) {

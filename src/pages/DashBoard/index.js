@@ -37,11 +37,15 @@ const severityConfig = {
 };
 
 const statusConfig = {
-    reported: { label: 'Đã báo cáo', color: '#512da8', progress: 15 },
-    investigating: { label: 'Đang điều tra', color: '#1976d2', progress: 40 },
-    in_progress: { label: 'Đang xử lý', color: '#0288d1', progress: 65 },
+    reported: { label: 'Đã báo cáo', color: '#512da8', progress: 10 },
+    triaged: { label: 'Đã phân loại', color: '#1976d2', progress: 20 },
+    out_of_service: { label: 'Ngừng hoạt động', color: '#d32f2f', progress: 30 },
+    assigned: { label: 'Đã phân công', color: '#0288d1', progress: 40 },
+    in_progress: { label: 'Đang xử lý', color: '#0288d1', progress: 60 },
+    post_fix_check: { label: 'Đang kiểm tra', color: '#f57c00', progress: 80 },
     resolved: { label: 'Đã xử lý', color: '#2e7d32', progress: 90 },
     closed: { label: 'Đã đóng', color: '#616161', progress: 100 },
+    cancelled: { label: 'Đã hủy', color: '#757575', progress: 100 }
 };
 
 const formatRelativeTime = (value) => {

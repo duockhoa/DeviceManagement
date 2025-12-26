@@ -100,6 +100,20 @@ export const WORKREQUEST_STATUS_LABELS = {
     cancelled: 'Đã hủy'
 };
 
+// Calibration status labels
+export const CALIBRATION_STATUS_LABELS = {
+    draft: 'Nháp',
+    scheduled: 'Đã lập lịch',
+    in_progress: 'Đang thực hiện',
+    awaiting_qa_review: 'Chờ QA duyệt',
+    accepted: 'Đã chấp nhận',
+    rejected: 'Bị từ chối',
+    out_of_tolerance: 'Ngoài dung sai',
+    corrective_action: 'Hành động khắc phục',
+    closed: 'Đã đóng',
+    cancelled: 'Đã hủy'
+};
+
 export const NEXT_ROLE_LABEL = {
     Incident: {
         reported: 'Manager / QA',

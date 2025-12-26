@@ -16,6 +16,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { getMyWorkOrders, getMyRequestTasks } from '../../services/maintenanceWorkService';
 import axios from '../../services/customize-axios';
+import { MAINTENANCE_STATUS_LABELS } from '../../constants/flowMaps';
 import {
     Dialog,
     DialogTitle,
@@ -96,26 +97,21 @@ function MaintenanceWork() {
 
     const getStatusColor = (status) => {
         switch (status) {
+            case 'draft': return 'default';
             case 'pending': return 'warning';
-            case 'assigned': return 'info';
+            case 'approved': return 'primary';
+            case 'scheduled': return 'secondary';
             case 'in_progress': return 'info';
-            case 'awaiting_approval': return 'secondary';
-            case 'completed': return 'success';
+            case 'awaiting_acceptance': return 'warning';
+            case 'accepted': return 'success';
+            case 'closed': return 'success';
             case 'cancelled': return 'error';
             default: return 'default';
         }
     };
 
     const getStatusLabel = (status) => {
-        switch (status) {
-            case 'pending': return 'Chờ xử lý';
-            case 'assigned': return 'Đã phân công';
-            case 'in_progress': return 'Đang thực hiện';
-            case 'awaiting_approval': return 'Chờ phê duyệt';
-            case 'completed': return 'Hoàn thành';
-            case 'cancelled': return 'Đã hủy';
-            default: return status;
-        }
+        return MAINTENANCE_STATUS_LABELS[status] || status;
     };
 
     const columns = [

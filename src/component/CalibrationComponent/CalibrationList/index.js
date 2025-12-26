@@ -78,20 +78,32 @@ function CalibrationList() {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'pending': return 'warning';
+            case 'draft': return 'default';
+            case 'scheduled': return 'secondary';
             case 'in_progress': return 'info';
-            case 'completed': return 'success';
-            case 'failed': return 'error';
+            case 'awaiting_qa_review': return 'warning';
+            case 'accepted': return 'success';
+            case 'rejected': return 'error';
+            case 'out_of_tolerance': return 'error';
+            case 'corrective_action': return 'warning';
+            case 'closed': return 'success';
+            case 'cancelled': return 'error';
             default: return 'default';
         }
     };
 
     const getStatusLabel = (status) => {
         switch (status) {
-            case 'pending': return 'Chờ xử lý';
+            case 'draft': return 'Nháp';
+            case 'scheduled': return 'Đã lập lịch';
             case 'in_progress': return 'Đang thực hiện';
-            case 'completed': return 'Hoàn thành';
-            case 'failed': return 'Thất bại';
+            case 'awaiting_qa_review': return 'Chờ QA duyệt';
+            case 'accepted': return 'Đã chấp nhận';
+            case 'rejected': return 'Bị từ chối';
+            case 'out_of_tolerance': return 'Ngoài dung sai';
+            case 'corrective_action': return 'Hành động khắc phục';
+            case 'closed': return 'Đã đóng';
+            case 'cancelled': return 'Đã hủy';
             default: return 'Không xác định';
         }
     };
