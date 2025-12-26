@@ -83,7 +83,7 @@ function a11yProps(index) {
     };
 }
 
-function AddMaintenanceForm({ handleClose, onReload }) {
+function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
     const theme = useTheme();
     const dispatch = useDispatch();
     const assets = useSelector((state) => state.assets.assets);
@@ -108,7 +108,8 @@ function AddMaintenanceForm({ handleClose, onReload }) {
         safety_tools: '',
         spare_parts: [], // Changed to array
         consumables: [], // Changed from string to array
-        notes: ''
+        notes: '',
+        incident_id: null // Link back to incident if created from incident
     });
 
     // State cho danh mục vật tư tiêu hao
@@ -173,6 +174,7 @@ function AddMaintenanceForm({ handleClose, onReload }) {
     const [dkLookup, setDkLookup] = useState('');
     const [dkLookupError, setDkLookupError] = useState(null);
     const [dkLookupLoading, setDkLookupLoading] = useState(false);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
     useEffect(() => {
         // Fetch assets if not already loaded
@@ -220,6 +222,46 @@ function AddMaintenanceForm({ handleClose, onReload }) {
         };
         loadStandards();
     }, [dispatch, assets, users]);
+
+    // Pre-fill form data khi tạo từ incident
+    useEffect(() => {
+        if (incidentData) {
+            const priorityMap = {
+                'critical': 'critical',
+                'high': 'high',
+                'medium': 'medium',
+                'low': 'low'
+            };
+
+            setFormData(prev => ({
+                ...prev,
+                asset_id: incidentData.asset_id || '',
+                maintenance_type: incidentData.maintenance_type || 'corrective',
+                priority: priorityMap[incidentData.severity] || 'medium',
+                title: incidentData.title || '',
+                description: incidentData.description || '',
+                scheduled_date: new Date().toISOString().split('T')[0],
+                estimated_duration: 4,
+                incident_id: incidentData.incident_id,
+                notes: `🔗 Chuyển từ sự cố: ${incidentData.incident_code || ''}`
+            }));
+
+            // Set selected asset info for display
+            if (incidentData.asset_id) {
+                const asset = assets.find(a => a.id === incidentData.asset_id);
+                if (asset) {
+                    setSelectedAssetInfo(asset);
+                }
+            }
+
+            // Show alert
+            setSnackbar({
+                open: true,
+                message: `✅ Đã điền sẵn thông tin từ sự cố ${incidentData.incident_code}`,
+                severity: 'success'
+            });
+        }
+    }, [incidentData, assets]);
 
     // Debounced dk_code lookup (optional, does not override selection on error)
     useEffect(() => {
@@ -1968,6 +2010,22 @@ function AddMaintenanceForm({ handleClose, onReload }) {
                     sx={{ width: '100%' }}
                 >
                     {successMessage}
+                </Alert>
+            </Snackbar>
+
+            {/* Incident Data Snackbar */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert 
+                    onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+                    severity={snackbar.severity} 
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
                 </Alert>
             </Snackbar>
         </Box>

@@ -34,6 +34,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import SecurityIcon from '@mui/icons-material/Security';
 import SpeedIcon from '@mui/icons-material/Speed';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import AddIcon from '@mui/icons-material/Add';
 
 export default function Sidebar() {
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -456,41 +457,85 @@ export default function Sidebar() {
                     </ListItemButton>
                     <Collapse in={activeCollapse.includes('incidents') && isOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            <ListItemButton 
-                                sx={{ 
-                                    pl: 4,
-                                    ...(location.pathname === '/incidents' ? activeStyle : subItemHoverStyle)
-                                }}
-                                onClick={() => switchActiveSidebar('/incidents')}
-                            >
-                                <ListItemIcon>
-                                    <WarningAmberIcon sx={location.pathname === '/incidents' ? activeIconStyle : commonIconStyle} />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primaryTypographyProps={{ 
-                                        sx: location.pathname === '/incidents' ? activeTextStyle : commonTextStyle 
-                                    }}
-                                    primary={isOpen ? 'Sự cố' : ''}
-                                />
-                            </ListItemButton>
+                            {/* END USER: Menu đơn giản - chỉ báo cáo và xem */}
+                            {user?.role === 'END_USER' ? (
+                                <>
+                                    <ListItemButton 
+                                        sx={{ 
+                                            pl: 4,
+                                            ...(location.pathname === '/incidents/report' ? activeStyle : subItemHoverStyle)
+                                        }}
+                                        onClick={() => switchActiveSidebar('/incidents/report')}
+                                    >
+                                        <ListItemIcon>
+                                            <AddIcon sx={location.pathname === '/incidents/report' ? activeIconStyle : commonIconStyle} />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primaryTypographyProps={{ 
+                                                sx: location.pathname === '/incidents/report' ? activeTextStyle : commonTextStyle 
+                                            }}
+                                            primary={isOpen ? 'Báo cáo sự cố' : ''}
+                                        />
+                                    </ListItemButton>
 
-                            <ListItemButton 
-                                sx={{ 
-                                    pl: 4,
-                                    ...(location.pathname === '/incidents/reports' ? activeStyle : subItemHoverStyle)
-                                }}
-                                onClick={() => switchActiveSidebar('/incidents/reports')}
-                            >
-                                <ListItemIcon>
-                                    <AssessmentIcon sx={location.pathname === '/incidents/reports' ? activeIconStyle : commonIconStyle} />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primaryTypographyProps={{ 
-                                        sx: location.pathname === '/incidents/reports' ? activeTextStyle : commonTextStyle 
-                                    }}
-                                    primary={isOpen ? 'Báo cáo sự cố' : ''}
-                                />
-                            </ListItemButton>
+                                    <ListItemButton 
+                                        sx={{ 
+                                            pl: 4,
+                                            ...(location.pathname === '/incidents/my-reports' ? activeStyle : subItemHoverStyle)
+                                        }}
+                                        onClick={() => switchActiveSidebar('/incidents/my-reports')}
+                                    >
+                                        <ListItemIcon>
+                                            <WarningAmberIcon sx={location.pathname === '/incidents/my-reports' ? activeIconStyle : commonIconStyle} />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primaryTypographyProps={{ 
+                                                sx: location.pathname === '/incidents/my-reports' ? activeTextStyle : commonTextStyle 
+                                            }}
+                                            primary={isOpen ? 'Sự cố của tôi' : ''}
+                                        />
+                                    </ListItemButton>
+                                </>
+                            ) : (
+                                /* MANAGEMENT ROLES: Menu đầy đủ với actions */
+                                <>
+                                    <ListItemButton 
+                                        sx={{ 
+                                            pl: 4,
+                                            ...(location.pathname === '/incidents' ? activeStyle : subItemHoverStyle)
+                                        }}
+                                        onClick={() => switchActiveSidebar('/incidents')}
+                                    >
+                                        <ListItemIcon>
+                                            <WarningAmberIcon sx={location.pathname === '/incidents' ? activeIconStyle : commonIconStyle} />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primaryTypographyProps={{ 
+                                                sx: location.pathname === '/incidents' ? activeTextStyle : commonTextStyle 
+                                            }}
+                                            primary={isOpen ? 'Quản lý sự cố' : ''}
+                                        />
+                                    </ListItemButton>
+
+                                    <ListItemButton 
+                                        sx={{ 
+                                            pl: 4,
+                                            ...(location.pathname === '/incidents/reports' ? activeStyle : subItemHoverStyle)
+                                        }}
+                                        onClick={() => switchActiveSidebar('/incidents/reports')}
+                                    >
+                                        <ListItemIcon>
+                                            <AssessmentIcon sx={location.pathname === '/incidents/reports' ? activeIconStyle : commonIconStyle} />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primaryTypographyProps={{ 
+                                                sx: location.pathname === '/incidents/reports' ? activeTextStyle : commonTextStyle 
+                                            }}
+                                            primary={isOpen ? 'Báo cáo thống kê' : ''}
+                                        />
+                                    </ListItemButton>
+                                </>
+                            )}
 
                             <ListItemButton 
                                 sx={{ 

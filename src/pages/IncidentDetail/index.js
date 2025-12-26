@@ -342,26 +342,70 @@ function IncidentDetail() {
 
             {incident.status === 'triaged' && (
                 <ActionStepCard
-                    title="🔧 Bước tiếp theo: Phân công xử lý"
-                    description="Lựa chọn: Cô lập thiết bị (nếu nguy hiểm) hoặc phân công kỹ thuật viên"
+                    title={
+                        incident.incident_category === 'EQUIPMENT' 
+                            ? '🔧 Bước tiếp theo: Xử lý sự cố thiết bị'
+                            : '🔧 Bước tiếp theo: Phân công xử lý'
+                    }
+                    description={
+                        incident.incident_category === 'EQUIPMENT'
+                            ? 'Sự cố thiết bị: Cô lập (nếu nguy hiểm) → Tạo lệnh sửa chữa → Phân công'
+                            : 'Sự cố không phải thiết bị: Phân công trực tiếp cho bộ phận xử lý'
+                    }
                     icon="👷"
                     variant="warning"
-                    steps={[
-                        'Đánh giá mức độ nguy hiểm',
-                        'Cô lập thiết bị nếu cần (tùy chọn)',
-                        'Chọn kỹ thuật viên phù hợp để xử lý'
-                    ]}
+                    steps={
+                        incident.incident_category === 'EQUIPMENT' 
+                            ? [
+                                '✅ Đã đánh giá hiện trạng',
+                                'Cô lập thiết bị (nếu mức độ Critical)',
+                                'Tạo lệnh sửa chữa (Maintenance Order)',
+                                'Phân công kỹ thuật viên'
+                            ]
+                            : [
+                                '✅ Đã đánh giá hiện trạng',
+                                'Phân công bộ phận xử lý',
+                                'Bắt đầu xử lý trực tiếp'
+                            ]
+                    }
                     assignee={nextRoleLabel}
-                    actions={[
-                        {
-                            label: '🔒 Cô lập thiết bị',
-                            onClick: () => handleActionClick('isolate')
-                        },
-                        {
-                            label: '👷 Phân công KTV',
-                            onClick: () => handleActionClick('assign')
-                        }
-                    ]}
+                    actions={
+                        incident.incident_category === 'EQUIPMENT'
+                            ? [
+                                {
+                                    label: '🔒 Cô lập thiết bị',
+                                    onClick: () => handleActionClick('isolate')
+                                },
+                                {
+                                    label: '🔧 Chuyển sang Bảo trì',
+                                    onClick: () => {
+                                        // Navigate to maintenance page with incident data
+                                        navigate('/maintenance', {
+                                            state: {
+                                                createFromIncident: true,
+                                                incidentData: {
+                                                    incident_id: incident.id,
+                                                    incident_code: incident.incident_code,
+                                                    asset_id: incident.asset_id,
+                                                    asset_code: incident.asset?.asset_code,
+                                                    asset_name: incident.asset?.name,
+                                                    title: incident.title,
+                                                    description: incident.assessment_notes || incident.description,
+                                                    severity: incident.severity,
+                                                    maintenance_type: 'corrective'
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            ]
+                            : [
+                                {
+                                    label: '👷 Phân công xử lý',
+                                    onClick: () => handleActionClick('assign')
+                                }
+                            ]
+                    }
                 />
             )}
 

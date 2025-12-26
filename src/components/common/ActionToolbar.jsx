@@ -24,23 +24,21 @@ export default function ActionToolbar({ entity, record, onActionClick }) {
             {nextActions.map((action) => {
                 const config = getActionConfig(entity, action.key);
                 const Icon = config?.icon;
+                const buttonColor = ['primary', 'secondary', 'error', 'warning', 'info', 'success'].includes(config?.color) 
+                    ? config.color 
+                    : 'primary';
                 
                 return (
                     <Button
                         key={action.key}
                         variant={config?.variant || 'contained'}
-                        color={config?.color || 'primary'}
+                        color={buttonColor}
                         size="medium"
                         startIcon={Icon ? <Icon /> : null}
                         onClick={() => onActionClick(action.key)}
                         sx={{
                             textTransform: 'none',
-                            fontWeight: 500,
-                            ...(config?.color === 'error' && {
-                                bgcolor: 'error.main',
-                                color: 'white',
-                                '&:hover': { bgcolor: 'error.dark' }
-                            })
+                            fontWeight: 500
                         }}
                     >
                         {action.label || config?.label || action.key}

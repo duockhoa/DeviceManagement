@@ -1,18 +1,33 @@
 import MaintenanceList from '../../component/MaintenanceComponent/MaintenanceList';
 import AddMaintenanceButton from '../../component/MaintenanceComponent/AddMaintenanceBtn';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     Box
 } from '@mui/material';
 
 function Maintenance() {
     const maintenanceListRef = useRef();
+    const addButtonRef = useRef();
+    const location = useLocation();
 
     const handleReload = () => {
         if (maintenanceListRef.current && maintenanceListRef.current.reloadData) {
             maintenanceListRef.current.reloadData();
         }
     };
+
+    // Auto-open create dialog nếu có incident data
+    useEffect(() => {
+        if (location.state?.createFromIncident && location.state?.incidentData) {
+            // Trigger click on AddMaintenanceButton to open dialog with pre-filled data
+            setTimeout(() => {
+                if (addButtonRef.current && addButtonRef.current.openDialogWithIncidentData) {
+                    addButtonRef.current.openDialogWithIncidentData(location.state.incidentData);
+                }
+            }, 100);
+        }
+    }, [location.state]);
 
     return (
         <Box sx={{ height: '100%', display: 'flex', position: 'relative' }}>
@@ -35,7 +50,7 @@ function Maintenance() {
                 right: 40,
                 zIndex: 1000
             }}>
-                <AddMaintenanceButton onReload={handleReload} />
+                <AddMaintenanceButton ref={addButtonRef} onReload={handleReload} />
             </Box>
         </Box>
     );

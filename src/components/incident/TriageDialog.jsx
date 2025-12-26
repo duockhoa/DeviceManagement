@@ -14,10 +14,11 @@ import {
 import { validateTriage } from '../../utils/validators';
 import { NOTIFICATION_TYPES, SEVERITY_LEVELS, requiresIsolation } from '../../utils/sapPmLite';
 
-const TriageDialog = ({ onSubmit }) => {
+const TriageDialog = ({ onSubmit, incident }) => {
     const [formData, setFormData] = useState({
         severity: '',
         notification_type: '',
+        assessment_notes: '',
         triage_notes: ''
     });
     const [errors, setErrors] = useState({});
@@ -104,9 +105,23 @@ const TriageDialog = ({ onSubmit }) => {
             <TextField
                 fullWidth
                 multiline
-                rows={3}
+                rows={4}
+                required
+                label="📋 Đánh giá hiện trạng"
+                placeholder="Mô tả chi tiết tình trạng hiện tại: nguyên nhân, mức độ hư hỏng, ảnh hưởng đến sản xuất..."
+                value={formData.assessment_notes}
+                onChange={(e) => handleChange('assessment_notes', e.target.value)}
+                error={!!errors.assessment_notes}
+                helperText={errors.assessment_notes || 'Thông tin này rất quan trọng để quyết định hướng xử lý'}
+                sx={{ mb: 2 }}
+            />
+            
+            <TextField
+                fullWidth
+                multiline
+                rows={2}
                 label="Ghi chú phân loại"
-                placeholder="Nhập ghi chú về việc phân loại sự cố..."
+                placeholder="Ghi chú bổ sung về việc phân loại sự cố..."
                 value={formData.triage_notes}
                 onChange={(e) => handleChange('triage_notes', e.target.value)}
                 error={!!errors.triage_notes}

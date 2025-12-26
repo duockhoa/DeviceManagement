@@ -20,8 +20,8 @@ const incidentsService = {
     getIncidentById: async (id) => {
         try {
             const response = await customizeAxios.get(`/incidents/${id}`);
-            // Response bao gồm nextActions array cho UI
-            return response.data;
+            // Backend returns { success: true, data: {...incident} }
+            return response.data.data || response.data;
         } catch (error) {
             console.error('Error fetching incident:', error);
             throw error.response?.data?.message || 'Không thể tải chi tiết sự cố';
@@ -82,6 +82,22 @@ const incidentsService = {
         } catch (error) {
             console.error('Error assigning incident:', error);
             throw error.response?.data?.message || 'Không thể phân công sự cố';
+        }
+    },
+
+    /**
+     * Chuyển sự cố thiết bị thành lệnh bảo trì sửa chữa (triaged → maintenance)
+     * Tạo maintenance order từ incident data, link incident_id, và chuyển status
+     * Chỉ áp dụng cho incident_category = EQUIPMENT
+     * Role: MANAGER
+     */
+    convertToMaintenance: async (id, data) => {
+        try {
+            const response = await customizeAxios.post(`/incidents/${id}/convert-to-maintenance`, data);
+            return response.data;
+        } catch (error) {
+            console.error('Error converting to maintenance:', error);
+            throw error.response?.data?.message || 'Không thể chuyển sang lệnh bảo trì';
         }
     },
 

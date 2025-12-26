@@ -24,6 +24,8 @@ import IncidentsPage from '../pages/Incidents';
 import IncidentDetail from '../pages/IncidentDetail';
 import IncidentReport from '../pages/IncidentReport';
 import IncidentReports from '../pages/IncidentReports';
+import ReportIncident from '../pages/ReportIncident';
+import MyIncidentReports from '../pages/MyIncidentReports';
 import Handovers from '../pages/Handovers';
 import HandoversFollowUp from '../pages/HandoversFollowUp';
 import AccessControlPage from '../pages/AccessControl';
@@ -98,6 +100,17 @@ const publicRoutes = [
         path: '/maintenance-record',
         component: MaintenanceRecord,
     },
+    // ==================== INCIDENT ROUTES ====================
+    // END USER routes (simple reporting + viewing)
+    {
+        path: '/incidents/report',
+        component: ReportIncident,
+    },
+    {
+        path: '/incidents/my-reports',
+        component: MyIncidentReports,
+    },
+    // MANAGEMENT routes (full actions for QA/Manager/Technician)
     {
         path: '/incidents',
         component: IncidentsPage,

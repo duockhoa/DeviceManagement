@@ -1,23 +1,33 @@
 import { Fab } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import Dialog from '@mui/material/Dialog';
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { useSelector } from "react-redux";
 import AddMaintenanceForm from "../AddMaintenanceForm";
 import usePermissions from "../../../hooks/usePermissions";
 
-function AddMaintenanceButton({ onReload }) {
+const AddMaintenanceButton = forwardRef(({ onReload }, ref) => {
     const [open, setOpen] = useState(false);
+    const [incidentData, setIncidentData] = useState(null);
     const user = useSelector((state) => state.user.userInfo);
     const { hasPermission } = usePermissions();
 
     const handleClose = () => {
         setOpen(false);
+        setIncidentData(null);
     };
 
     const handleOpen = () => {
         setOpen(true);
     };
+
+    // Expose method để parent component gọi
+    useImperativeHandle(ref, () => ({
+        openDialogWithIncidentData: (data) => {
+            setIncidentData(data);
+            setOpen(true);
+        }
+    }));
 
     // Không hiển thị nút nếu user không có quyền
     if (!hasPermission('maintenance.create')) {
@@ -37,10 +47,14 @@ function AddMaintenanceButton({ onReload }) {
                 maxWidth="lg"
                 fullWidth
             >
-                <AddMaintenanceForm handleClose={handleClose} onReload={onReload} />
+                <AddMaintenanceForm 
+                    handleClose={handleClose} 
+                    onReload={onReload}
+                    incidentData={incidentData}
+                />
             </Dialog>
         </>
     );
-}
+});
 
 export default AddMaintenanceButton;

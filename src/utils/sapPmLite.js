@@ -194,5 +194,5 @@ const ACTION_CONFIGS = {
 };
 
 export const getActionConfig = (entity, actionKey) => {
-    return ACTION_CONFIGS[entity]?.[actionKey] || { label: actionKey, color: 'default', variant: 'contained' };
+    return ACTION_CONFIGS[entity]?.[actionKey] || { label: actionKey, color: 'primary', variant: 'contained' };
 };
