@@ -326,7 +326,28 @@ function MaintenanceWorkDetail() {
                 is_completed: !currentStatus,
                 notes: notes || ''
             });
-            loadWorkOrder();
+            await loadWorkOrder();
+            
+            // Kiểm tra xem tất cả checklist đã hoàn thành chưa
+            const updatedWorkOrder = await getWorkOrderById(id);
+            const completedChecklistItems = updatedWorkOrder?.data?.checklists?.filter((c) => c.is_completed).length || 0;
+            const totalChecklistItems = updatedWorkOrder?.data?.checklists?.length || 0;
+            const allChecklistCompleted = totalChecklistItems > 0 && completedChecklistItems === totalChecklistItems;
+            
+            // Nếu tất cả checklist đã hoàn thành và workOrder đang ở trạng thái in_progress
+            if (allChecklistCompleted && updatedWorkOrder?.data?.status === 'in_progress') {
+                if (window.confirm('Tất cả checklist đã hoàn thành! Bạn có muốn gửi duyệt lệnh bảo trì ngay không?')) {
+                    try {
+                        await completeWork(id, {
+                            final_notes: updatedWorkOrder?.data?.notes || 'Hoàn thành checklist'
+                        });
+                        await loadWorkOrder();
+                        alert('✅ Lệnh bảo trì đã được gửi duyệt thành công!');
+                    } catch (err) {
+                        alert('Lỗi khi gửi duyệt: ' + (err.response?.data?.message || err.message));
+                    }
+                }
+            }
         } catch (err) {
             alert('Lỗi khi cập nhật checklist: ' + err.message);
         }
@@ -637,6 +658,11 @@ function MaintenanceWorkDetail() {
                 current_status_label={getStatusLabel(workOrder.status)}
                 next_role_label={nextRoleLabel}
             >
+                {(workOrder.status === 'pending' || workOrder.status === 'scheduled' || workOrder.status === 'awaiting_approval') && (
+                    <Alert severity="warning" sx={{ mb: 2, width: '100%' }}>
+                        👇 <strong>Bước tiếp theo:</strong> Nhấn nút "Bắt đầu bảo trì" bên dưới để bắt đầu làm việc
+                    </Alert>
+                )}
                 <ActionToolbar
                     entity="maintenance"
                     record={workOrder}
@@ -843,6 +869,12 @@ function MaintenanceWorkDetail() {
 
                         {/* Tab 0: Checklist */}
                         <TabPanel value={tabValue} index={0}>
+                            {workOrder.status === 'pending' || workOrder.status === 'scheduled' || workOrder.status === 'awaiting_approval' ? (
+                                <Alert severity="info" sx={{ mb: 2 }}>
+                                    ⚠️ Lệnh bảo trì chưa được bắt đầu.<br />
+                                    👉 Vui lòng nhấn nút <strong>"Bắt đầu bảo trì"</strong> ở khu vực <strong>"Thao tác"</strong> phía trên để bắt đầu làm việc.
+                                </Alert>
+                            ) : null}
                             {workOrder.checklists && workOrder.checklists.length > 0 ? (
                                 <Box sx={{ overflowX: 'auto' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.1rem' }}>
@@ -916,6 +948,12 @@ function MaintenanceWorkDetail() {
 
                         {/* Tab 1: Work Tasks */}
                         <TabPanel value={tabValue} index={1}>
+                            {workOrder.status === 'pending' || workOrder.status === 'scheduled' || workOrder.status === 'awaiting_approval' ? (
+                                <Alert severity="info" sx={{ mb: 2 }}>
+                                    ⚠️ Lệnh bảo trì chưa được bắt đầu.<br />
+                                    👉 Vui lòng nhấn nút <strong>"Bắt đầu bảo trì"</strong> ở khu vực <strong>"Thao tác"</strong> phía trên để bắt đầu làm việc.
+                                </Alert>
+                            ) : null}
                             {workOrder.workTasks && workOrder.workTasks.length > 0 ? (
                                 <Box>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.1rem' }}>
@@ -990,7 +1028,32 @@ function MaintenanceWorkDetail() {
                                                         )}
                                                     </td>
                                                     <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                                                        {task.work_report ? (
+                                                        {(task.status === 'in_progress' || task.status === 'pending') && !isReadOnly ? (
+                                                            <TextField
+                                                                fullWidth
+                                                                multiline
+                                                                rows={2}
+                                                                size="small"
+                                                                value={task.work_report || ''}
+                                                                onChange={(e) => {
+                                                                    const newReport = e.target.value;
+                                                                    // Debounce hoặc save on blur
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    const newReport = e.target.value;
+                                                                    if (newReport !== task.work_report) {
+                                                                        updateWorkTaskReport(id, task.id, {
+                                                                            work_report: newReport,
+                                                                            actual_hours: task.actual_hours || '',
+                                                                            issues_found: task.issues_found || '',
+                                                                            materials_used: task.materials_used || ''
+                                                                        }).then(() => loadWorkOrder()).catch(err => alert('Lỗi: ' + err.message));
+                                                                    }
+                                                                }}
+                                                                placeholder="Nhập nội dung công việc..."
+                                                                sx={{ fontSize: '1rem' }}
+                                                            />
+                                                        ) : task.work_report ? (
                                                             <Typography sx={{ fontSize: '1rem' }}>
                                                                 {task.work_report}
                                                             </Typography>
@@ -1123,8 +1186,9 @@ function MaintenanceWorkDetail() {
                                 <Typography variant="h6" sx={{ mb: 2 }}>
                                     Các thao tác
                                 </Typography>
-                                <Alert severity="info" sx={{ mb: 1 }}>
-                                    Thao tác chính nằm ở ActionZone cố định phía trên. Việc hoàn thành checklist không tự gửi duyệt lệnh.
+                                <Alert severity="success" sx={{ mb: 1 }}>
+                                    ✅ Thao tác chính nằm ở ActionZone cố định phía trên.<br />
+                                    🎯 Khi hoàn thành tất cả checklist, hệ thống sẽ tự động đề nghị gửi duyệt lệnh.
                                 </Alert>
                                 {canSaveProgress && (
                                     <Button 

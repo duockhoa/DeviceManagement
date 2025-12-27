@@ -27,11 +27,8 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import StatusTimeline from '../../components/common/StatusTimeline';
 import ActionZone from '../../components/common/ActionZone';
 import ActionStepCard from '../../components/incident/ActionStepCard';
-import TriageDialog from '../../components/incident/TriageDialog';
-import IsolateDialog from '../../components/incident/IsolateDialog';
-import AssignDialog from '../../components/incident/AssignDialog';
-import SubmitPostFixDialog from '../../components/incident/SubmitPostFixDialog';
-import PostFixCheckDialog from '../../components/incident/PostFixCheckDialog';
+import AcknowledgeDialog from '../../components/incident/AcknowledgeDialog';
+import ResolveDialog from '../../components/incident/ResolveDialog';
 import CancelIncidentDialog from '../../components/incident/CancelIncidentDialog';
 import CloseIncidentDialog from '../../components/incident/CloseIncidentDialog';
 import OperationalStatusBadge from '../../components/common/OperationalStatusBadge';
@@ -75,14 +72,10 @@ function IncidentDetail() {
     const [preventionMeasures, setPreventionMeasures] = useState('');
     const [downtimeHours, setDowntimeHours] = useState('');
     
-    // Dialog states for new action system
+    // Dialog states for simplified action system
     const [dialogOpen, setDialogOpen] = useState({
-        triage: false,
-        isolate: false,
-        assign: false,
-        start: false,
-        submit_post_fix: false,
-        post_fix_check: false,
+        acknowledge: false,
+        resolve: false,
         close: false,
         cancel: false
     });
@@ -130,7 +123,12 @@ function IncidentDetail() {
     
     // Universal dialog handlers
     const handleActionClick = (action) => {
-        setDialogOpen(prev => ({ ...prev, [action]: true }));
+        console.log('[DEBUG handleActionClick]', 'action:', action, 'dialogOpen before:', JSON.stringify(dialogOpen));
+        setDialogOpen(prev => {
+            const newState = { ...prev, [action]: true };
+            console.log('[DEBUG handleActionClick]', 'dialogOpen after:', JSON.stringify(newState));
+            return newState;
+        });
     };
     
     const handleDialogClose = (action) => {
@@ -160,70 +158,23 @@ function IncidentDetail() {
         });
     };
     
-    // New action handlers
-    const handleTriageSubmit = async (formData) => {
+    // Simplified action handlers
+    const handleAcknowledgeSubmit = async (formData = {}) => {
         try {
-            await incidentsService.triageIncident(id, formData);
-            handleDialogClose('triage');
-            await handleActionSuccess('✅ Đã phân loại sự cố thành công');
+            await incidentsService.acknowledgeIncident(id, formData);
+            handleDialogClose('acknowledge');
+            await handleActionSuccess('✅ Đã tiếp nhận và bắt đầu xử lý sự cố');
         } catch (err) {
             handleActionError(err);
             throw err;
         }
     };
     
-    const handleIsolateSubmit = async (formData) => {
+    const handleResolveSubmit = async (formData) => {
         try {
-            await incidentsService.isolateIncident(id, formData);
-            handleDialogClose('isolate');
-            await handleActionSuccess('🔒 Đã cô lập thiết bị');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-    
-    const handleAssignSubmit = async (formData) => {
-        try {
-            await incidentsService.assignIncident(id, formData.assigned_to);
-            handleDialogClose('assign');
-            await handleActionSuccess('👤 Đã phân công kỹ thuật viên');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-    
-    const handleStartSubmit = async () => {
-        try {
-            await incidentsService.startIncident(id);
-            handleDialogClose('start');
-            await handleActionSuccess('▶️ Đã bắt đầu xử lý sự cố');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-    
-    const handleSubmitPostFixSubmit = async (formData) => {
-        try {
-            await incidentsService.submitPostFix(id, formData);
-            handleDialogClose('submit_post_fix');
-            await handleActionSuccess('📤 Đã gửi kiểm tra sau sửa');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-    
-    const handlePostFixCheckSubmit = async (formData) => {
-        try {
-            await incidentsService.postFixCheck(id, formData);
-            handleDialogClose('post_fix_check');
-            const resultMessage = formData.post_fix_result === 'pass' 
-                ? '✅ Kiểm tra đạt - Chuyển sang RESOLVED'
-                : '❌ Kiểm tra không đạt - Yêu cầu sửa lại';
-            await handleActionSuccess(resultMessage);
+            await incidentsService.resolveIncident(id, formData);
+            handleDialogClose('resolve');
+            await handleActionSuccess('✅ Đã đánh dấu sự cố đã giải quyết');
         } catch (err) {
             handleActionError(err);
             throw err;
@@ -286,6 +237,8 @@ function IncidentDetail() {
     const status = statusConfig[incident.status] || { label: incident.status, color: 'default' };
     const nextRoleLabel = NEXT_ROLE_LABEL.Incident[incident.status] || '—';
 
+    console.log('[DEBUG IncidentDetail Render]', 'ID:', incident.id, 'Status:', incident.status, 'NextActions:', incident.nextActions, 'isResolved:', incident.status === 'resolved');
+
     return (
         <Box sx={{ p: 3 }}>
             <Paper sx={{ p: 3, mb: 3 }}>
@@ -318,68 +271,64 @@ function IncidentDetail() {
                 />
             </Paper>
 
-            {/* Action Step Card - Hiển thị bước tiếp theo rõ ràng */}
+            {/* Action Step Card - Simplified Workflow */}
             {incident.status === 'reported' && (
                 <ActionStepCard
-                    title="📋 Bước tiếp theo: Phân loại sự cố"
-                    description="Đánh giá và phân loại sự cố để xác định hướng xử lý"
-                    icon="🔍"
-                    variant="primary"
+                    title="📋 Sự cố mới - Chờ tiếp nhận"
+                    description="Bộ phận liên quan đã nhận thông báo, vui lòng tiếp nhận và bắt đầu xử lý"
+                    icon="🔔"
+                    variant="warning"
                     steps={[
-                        'Đánh giá mức độ nghiêm trọng',
-                        'Xác định loại sự cố (Thiết bị/Nhà xưởng/Hệ thống/Vận hành)',
-                        'Quyết định cô lập thiết bị nếu cần thiết'
+                        `✅ Thông báo đã gửi đến: ${incident.incident_category === 'EQUIPMENT' ? 'Bảo trì & Kỹ thuật' : 
+                          incident.incident_category === 'FACILITY' ? 'Cơ sở hạ tầng' :
+                          incident.incident_category === 'SYSTEM' ? 'IT & Kỹ thuật' : 'Sản xuất & Kế hoạch'}`,
+                        'Bộ phận tiếp nhận và xác nhận',
+                        'Bắt đầu xử lý hoặc tạo lệnh bảo trì (nếu cần)'
                     ]}
                     assignee={nextRoleLabel}
                     actions={[
                         {
-                            label: '🔍 Phân loại ngay',
-                            onClick: () => handleActionClick('triage')
+                            label: '✅ Tiếp nhận xử lý',
+                            onClick: () => handleActionClick('acknowledge')
                         }
                     ]}
                 />
             )}
 
-            {incident.status === 'triaged' && (
+            {incident.status === 'in_progress' && (
                 <ActionStepCard
                     title={
                         incident.incident_category === 'EQUIPMENT' 
-                            ? '🔧 Bước tiếp theo: Xử lý sự cố thiết bị'
-                            : '🔧 Bước tiếp theo: Phân công xử lý'
+                            ? '🔧 Đang xử lý - Có thể tạo lệnh bảo trì'
+                            : '⚙️ Đang xử lý sự cố'
                     }
                     description={
                         incident.incident_category === 'EQUIPMENT'
-                            ? 'Sự cố thiết bị: Cô lập (nếu nguy hiểm) → Tạo lệnh sửa chữa → Phân công'
-                            : 'Sự cố không phải thiết bị: Phân công trực tiếp cho bộ phận xử lý'
+                            ? 'Sự cố thiết bị: Xử lý trực tiếp hoặc tạo lệnh bảo trì chi tiết'
+                            : 'Tiến hành xử lý và ghi nhận kết quả khi hoàn thành'
                     }
-                    icon="👷"
-                    variant="warning"
+                    icon="⚡"
+                    variant="info"
                     steps={
                         incident.incident_category === 'EQUIPMENT' 
                             ? [
-                                '✅ Đã đánh giá hiện trạng',
-                                'Cô lập thiết bị (nếu mức độ Critical)',
-                                'Tạo lệnh sửa chữa (Maintenance Order)',
-                                'Phân công kỹ thuật viên'
+                                'Xử lý trực tiếp nếu đơn giản',
+                                'Hoặc tạo lệnh bảo trì nếu phức tạp',
+                                'Ghi nhận giải pháp khi hoàn thành'
                             ]
                             : [
-                                '✅ Đã đánh giá hiện trạng',
-                                'Phân công bộ phận xử lý',
-                                'Bắt đầu xử lý trực tiếp'
+                                'Tiến hành xử lý',
+                                'Ghi nhận giải pháp áp dụng',
+                                'Đánh dấu đã giải quyết'
                             ]
                     }
-                    assignee={nextRoleLabel}
+                    assignee="Bộ phận đang xử lý"
                     actions={
                         incident.incident_category === 'EQUIPMENT'
                             ? [
                                 {
-                                    label: '🔒 Cô lập thiết bị',
-                                    onClick: () => handleActionClick('isolate')
-                                },
-                                {
-                                    label: '🔧 Chuyển sang Bảo trì',
+                                    label: '🔧 Tạo lệnh Bảo trì',
                                     onClick: () => {
-                                        // Navigate to maintenance page with incident data
                                         navigate('/maintenance', {
                                             state: {
                                                 createFromIncident: true,
@@ -390,125 +339,51 @@ function IncidentDetail() {
                                                     asset_code: incident.asset?.asset_code,
                                                     asset_name: incident.asset?.name,
                                                     title: incident.title,
-                                                    description: incident.assessment_notes || incident.description,
+                                                    description: incident.description,
                                                     severity: incident.severity,
                                                     maintenance_type: 'corrective'
                                                 }
                                             }
                                         });
                                     }
+                                },
+                                {
+                                    label: '✅ Đã giải quyết',
+                                    onClick: () => handleActionClick('resolve')
                                 }
                             ]
                             : [
                                 {
-                                    label: '👷 Phân công xử lý',
-                                    onClick: () => handleActionClick('assign')
+                                    label: '✅ Đã giải quyết',
+                                    onClick: () => handleActionClick('resolve')
                                 }
                             ]
                     }
                 />
             )}
 
-            {incident.status === 'out_of_service' && (
-                <ActionStepCard
-                    title="👷 Bước tiếp theo: Phân công xử lý"
-                    description="Thiết bị đã được cô lập, phân công kỹ thuật viên để sửa chữa"
-                    icon="🔧"
-                    variant="warning"
-                    assignee={nextRoleLabel}
-                    actions={[
-                        {
-                            label: '👷 Phân công KTV',
-                            onClick: () => handleActionClick('assign')
-                        }
-                    ]}
-                />
-            )}
-
-            {incident.status === 'assigned' && (
-                <ActionStepCard
-                    title="▶️ Bước tiếp theo: Bắt đầu xử lý"
-                    description="Kỹ thuật viên đã được phân công, sẵn sàng bắt đầu công việc"
-                    icon="🔨"
-                    variant="info"
-                    assignee={incident.assigned_technician?.name || 'Chưa xác định'}
-                    estimatedTime="Dự kiến: 2-4 giờ"
-                    actions={[
-                        {
-                            label: '▶️ Bắt đầu xử lý',
-                            onClick: () => handleActionClick('start')
-                        }
-                    ]}
-                />
-            )}
-
-            {incident.status === 'in_progress' && (
-                <ActionStepCard
-                    title="⚙️ Đang xử lý sự cố..."
-                    description="Khi hoàn thành, ghi nhận giải pháp và gửi yêu cầu kiểm tra"
-                    icon="⚡"
-                    variant="info"
-                    steps={[
-                        'Thực hiện sửa chữa/khắc phục',
-                        'Ghi nhận giải pháp đã áp dụng',
-                        'Chụp ảnh kết quả (nếu có)',
-                        'Gửi yêu cầu kiểm tra kết quả'
-                    ]}
-                    assignee={incident.assigned_technician?.name || 'Đang xử lý'}
-                    actions={[
-                        {
-                            label: '📤 Gửi kiểm tra',
-                            onClick: () => handleActionClick('submit_post_fix')
-                        }
-                    ]}
-                />
-            )}
-
-            {incident.status === 'post_fix_check' && (
-                <ActionStepCard
-                    title="✅ Bước tiếp theo: Kiểm tra kết quả"
-                    description="Đánh giá kết quả sửa chữa và quyết định đạt/không đạt"
-                    icon="🔍"
-                    variant="success"
-                    steps={[
-                        'Kiểm tra thiết bị hoạt động bình thường',
-                        'Xác nhận giải pháp đã khắc phục triệt để',
-                        'Quyết định ĐẠT hoặc KHÔNG ĐẠT'
-                    ]}
-                    assignee={nextRoleLabel}
-                    actions={[
-                        {
-                            label: '✅ Kiểm tra ĐẠT',
-                            onClick: () => handleActionClick('post_fix_pass')
-                        },
-                        {
-                            label: '❌ Không ĐẠT',
-                            onClick: () => handleActionClick('post_fix_fail')
-                        }
-                    ]}
-                />
-            )}
-
             {incident.status === 'resolved' && (
-                <ActionStepCard
-                    title="🎯 Hoàn tất & đóng sự cố"
-                    description="Bổ sung thông tin cuối cùng và đóng sự cố"
-                    icon="📝"
-                    variant="success"
-                    steps={[
-                        'Ghi nhận nguyên nhân gốc',
-                        'Biện pháp phòng ngừa',
-                        'Thời gian downtime (nếu có)',
-                        'Đóng sự cố hoàn tất'
-                    ]}
-                    assignee={nextRoleLabel}
-                    actions={[
-                        {
-                            label: '📝 Đóng sự cố',
-                            onClick: () => handleActionClick('close')
-                        }
-                    ]}
-                />
+                <>
+                    {console.log('[DEBUG IncidentDetail] Rendering close action card - Status:', incident.status, 'NextActions:', incident.nextActions)}
+                    <ActionStepCard
+                        title="🎯 Đã giải quyết - Chờ đóng"
+                        description="Sự cố đã được xử lý xong, xác nhận và đóng hoàn tất"
+                        icon="📝"
+                        variant="success"
+                        steps={[
+                            '✅ Đã xử lý xong',
+                            'Xem xét giải pháp',
+                            'Đóng sự cố hoàn tất'
+                        ]}
+                        assignee={nextRoleLabel}
+                        actions={[
+                            {
+                                label: '📝 Đóng sự cố',
+                                onClick: () => handleActionClick('close')
+                            }
+                        ]}
+                    />
+                </>
             )}
 
             <ActionZone
@@ -752,88 +627,32 @@ function IncidentDetail() {
             </Grid>
             
             {/* Action Dialogs */}
-            <ActionDialog
-                open={dialogOpen.triage}
-                onClose={() => handleDialogClose('triage')}
-                title="Phân loại sự cố"
-                icon="🔍"
-                onSubmit={handleTriageSubmit}
-            >
-                <TriageDialog onSubmit={handleTriageSubmit} />
-            </ActionDialog>
-            
-            <ActionDialog
-                open={dialogOpen.isolate}
-                onClose={() => handleDialogClose('isolate')}
-                title="Cô lập thiết bị"
-                icon="🔒"
-                onSubmit={handleIsolateSubmit}
-                confirmText="Xác nhận cô lập"
-                isDestructive
-            >
-                <IsolateDialog incident={incident} onSubmit={handleIsolateSubmit} />
-            </ActionDialog>
-            
-            <ActionDialog
-                open={dialogOpen.assign}
-                onClose={() => handleDialogClose('assign')}
-                title="Phân công kỹ thuật viên"
-                icon="👤"
-                onSubmit={handleAssignSubmit}
-            >
-                <AssignDialog onSubmit={handleAssignSubmit} />
-            </ActionDialog>
-            
-            <ConfirmDialog
-                open={dialogOpen.start}
-                onClose={() => handleDialogClose('start')}
-                onConfirm={handleStartSubmit}
-                title="Bắt đầu xử lý"
-                message="Xác nhận bắt đầu xử lý sự cố này?"
-                severity="info"
+            {/* Simplified Workflow Dialogs */}
+            <AcknowledgeDialog
+                open={dialogOpen.acknowledge}
+                onClose={() => handleDialogClose('acknowledge')}
+                onSubmit={handleAcknowledgeSubmit}
             />
             
-            <ActionDialog
-                open={dialogOpen.submit_post_fix}
-                onClose={() => handleDialogClose('submit_post_fix')}
-                title="Gửi kiểm tra sau sửa"
-                icon="📤"
-                onSubmit={handleSubmitPostFixSubmit}
-            >
-                <SubmitPostFixDialog onSubmit={handleSubmitPostFixSubmit} />
-            </ActionDialog>
+            <ResolveDialog
+                open={dialogOpen.resolve}
+                onClose={() => handleDialogClose('resolve')}
+                onSubmit={handleResolveSubmit}
+            />
             
-            <ActionDialog
-                open={dialogOpen.post_fix_check}
-                onClose={() => handleDialogClose('post_fix_check')}
-                title="Kiểm tra sau sửa"
-                icon="✓"
-                onSubmit={handlePostFixCheckSubmit}
-            >
-                <PostFixCheckDialog incident={incident} onSubmit={handlePostFixCheckSubmit} />
-            </ActionDialog>
-            
-            <ActionDialog
+            <CloseIncidentDialog
                 open={dialogOpen.close}
                 onClose={() => handleDialogClose('close')}
-                title="Đóng sự cố"
-                icon="✔️"
+                incident={incident}
                 onSubmit={handleCloseSubmit}
-            >
-                <CloseIncidentDialog incident={incident} onSubmit={handleCloseSubmit} />
-            </ActionDialog>
+            />
             
-            <ActionDialog
+            <CancelIncidentDialog
                 open={dialogOpen.cancel}
                 onClose={() => handleDialogClose('cancel')}
-                title="Hủy sự cố"
-                icon="❌"
+                incident={incident}
                 onSubmit={handleCancelSubmit}
-                confirmText="Xác nhận hủy"
-                isDestructive
-            >
-                <CancelIncidentDialog incident={incident} onSubmit={handleCancelSubmit} />
-            </ActionDialog>
+            />
             
             {/* Snackbar for notifications */}
             <Snackbar

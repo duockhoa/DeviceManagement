@@ -38,56 +38,41 @@ const incidentsService = {
         }
     },
 
-    // ==================== ACTION-BASED WORKFLOW ====================
+    // ==================== ACTION-BASED WORKFLOW (SIMPLIFIED) ====================
     
     /**
-     * Phân loại sự cố (reported → triaged)
-     * Role: MANAGER, QA
+     * Tiếp nhận và bắt đầu xử lý sự cố (reported → in_progress)
+     * Role: TECHNICIAN, QA, MANAGER
+     * Thay thế cho triage + assign + start
      */
-    triageIncident: async (id, data = {}) => {
+    acknowledgeIncident: async (id, data = {}) => {
         try {
-            const response = await customizeAxios.post(`/incidents/${id}/triage`, data);
+            const response = await customizeAxios.post(`/incidents/${id}/acknowledge`, data);
             return response.data;
         } catch (error) {
-            console.error('Error triaging incident:', error);
-            throw error.response?.data?.message || 'Không thể phân loại sự cố';
+            console.error('Error acknowledging incident:', error);
+            throw error.response?.data?.message || 'Không thể tiếp nhận sự cố';
         }
     },
 
     /**
-     * Cô lập thiết bị (triaged → out_of_service)
-     * Role: MANAGER
-     * Required for critical incidents
+     * Đánh dấu sự cố đã được giải quyết (in_progress → resolved)
+     * Role: TECHNICIAN, QA, MANAGER
+     * data: { solution: string, root_cause: string, downtime_minutes: number }
      */
-    isolateIncident: async (id, data = {}) => {
+    resolveIncident: async (id, data = {}) => {
         try {
-            const response = await customizeAxios.post(`/incidents/${id}/isolate`, data);
+            const response = await customizeAxios.post(`/incidents/${id}/resolve`, data);
             return response.data;
         } catch (error) {
-            console.error('Error isolating incident:', error);
-            throw error.response?.data?.message || 'Không thể cô lập thiết bị';
+            console.error('Error resolving incident:', error);
+            throw error.response?.data?.message || 'Không thể đánh dấu đã giải quyết';
         }
     },
 
     /**
-     * Phân công kỹ thuật viên (triaged|out_of_service → assigned)
-     * Role: MANAGER
-     */
-    assignIncident: async (id, assignedTo) => {
-        try {
-            const response = await customizeAxios.post(`/incidents/${id}/assign`, { 
-                assigned_to: assignedTo 
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Error assigning incident:', error);
-            throw error.response?.data?.message || 'Không thể phân công sự cố';
-        }
-    },
-
-    /**
-     * Chuyển sự cố thiết bị thành lệnh bảo trì sửa chữa (triaged → maintenance)
-     * Tạo maintenance order từ incident data, link incident_id, và chuyển status
+     * Chuyển sự cố thiết bị thành lệnh bảo trì sửa chữa
+     * Tạo maintenance order từ incident data, link incident_id
      * Chỉ áp dụng cho incident_category = EQUIPMENT
      * Role: MANAGER
      */
@@ -98,49 +83,6 @@ const incidentsService = {
         } catch (error) {
             console.error('Error converting to maintenance:', error);
             throw error.response?.data?.message || 'Không thể chuyển sang lệnh bảo trì';
-        }
-    },
-
-    /**
-     * Bắt đầu xử lý (assigned → in_progress)
-     * Role: TECHNICIAN
-     */
-    startIncident: async (id) => {
-        try {
-            const response = await customizeAxios.post(`/incidents/${id}/start`);
-            return response.data;
-        } catch (error) {
-            console.error('Error starting incident:', error);
-            throw error.response?.data?.message || 'Không thể bắt đầu xử lý sự cố';
-        }
-    },
-
-    /**
-     * Gửi kiểm tra sau sửa chữa (in_progress → post_fix_check)
-     * Role: TECHNICIAN
-     */
-    submitPostFix: async (id, data) => {
-        try {
-            const response = await customizeAxios.post(`/incidents/${id}/submit-post-fix`, data);
-            return response.data;
-        } catch (error) {
-            console.error('Error submitting post-fix check:', error);
-            throw error.response?.data?.message || 'Không thể gửi kiểm tra';
-        }
-    },
-
-    /**
-     * Kiểm tra sau sửa chữa (post_fix_check → resolved|in_progress)
-     * Role: QA, ENGINEERING
-     * data: { post_fix_result: 'pass' | 'fail', post_fix_notes: string }
-     */
-    postFixCheck: async (id, data) => {
-        try {
-            const response = await customizeAxios.post(`/incidents/${id}/post-fix-check`, data);
-            return response.data;
-        } catch (error) {
-            console.error('Error performing post-fix check:', error);
-            throw error.response?.data?.message || 'Không thể thực hiện kiểm tra';
         }
     },
 

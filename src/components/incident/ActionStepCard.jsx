@@ -16,6 +16,8 @@ const ActionStepCard = ({
     estimatedTime = null,
     variant = 'primary' // 'primary' | 'warning' | 'success'
 }) => {
+    console.log('[DEBUG ActionStepCard]', 'title:', title, 'actions:', actions, 'actions.length:', actions.length);
+    
     const bgColor = {
         primary: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         warning: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -130,8 +132,10 @@ const ActionStepCard = ({
 
                 {/* Action buttons */}
                 {actions.length > 0 && (
-                    <Stack direction="row" spacing={2} flexWrap="wrap">
-                        {actions.map((action, index) => (
+                    <Stack direction="row" spacing={2} flexWrap="wrap" sx={{ mt: 2 }}>
+                        {actions.map((action, index) => {
+                            console.log('[DEBUG ActionStepCard Button]', 'index:', index, 'label:', action.label, 'disabled:', action.disabled);
+                            return (
                             <Button
                                 key={index}
                                 variant={index === 0 ? 'contained' : 'outlined'}
@@ -140,15 +144,17 @@ const ActionStepCard = ({
                                 disabled={action.disabled}
                                 endIcon={<ArrowForwardIcon />}
                                 sx={{
-                                    background: index === 0 ? '#fff' : 'transparent',
-                                    color: index === 0 ? variant === 'primary' ? '#667eea' : '#f5576c' : '#fff',
+                                    background: index === 0 ? '#fff !important' : 'transparent',
+                                    color: index === 0 ? '#000 !important' : '#fff',
                                     borderColor: '#fff',
                                     fontWeight: 700,
                                     px: 3,
                                     py: 1.5,
                                     textTransform: 'none',
+                                    minWidth: '200px',
+                                    border: '2px solid #fff !important',
                                     '&:hover': {
-                                        background: index === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.1)',
+                                        background: index === 0 ? 'rgba(255,255,255,0.9) !important' : 'rgba(255,255,255,0.1)',
                                         borderColor: '#fff',
                                         transform: 'translateY(-2px)',
                                         boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
@@ -158,7 +164,8 @@ const ActionStepCard = ({
                             >
                                 {action.label}
                             </Button>
-                        ))}
+                            );
+                        })}
                     </Stack>
                 )}
             </Stack>

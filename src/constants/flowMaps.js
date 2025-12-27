@@ -1,14 +1,10 @@
-// Cập nhật theo state machine mới - action-based workflow
+// Simplified Incident Workflow - Optimized for efficiency
 
 export const INCIDENT_FLOW = [
-    'reported', 
-    'triaged', 
-    'out_of_service', 
-    'assigned', 
-    'in_progress', 
-    'post_fix_check', 
-    'resolved', 
-    'closed'
+    'reported',      // Báo cáo (auto notify bộ phận)
+    'in_progress',   // Đang xử lý (bộ phận đã tiếp nhận)
+    'resolved',      // Đã giải quyết
+    'closed'         // Đã đóng
 ];
 
 export const WORKORDER_FLOW = [
@@ -31,15 +27,10 @@ export const WORKREQUEST_FLOW = [
     'closed'
 ];
 
-// Action labels - hiển thị tên action thay vì next state
+// Action labels - Simplified workflow
 export const INCIDENT_ACTION_LABELS = {
-    triage: 'Phân loại',
-    isolate: 'Cô lập thiết bị',
-    assign: 'Phân công',
-    start: 'Bắt đầu xử lý',
-    submit_post_fix: 'Gửi kiểm tra',
-    post_fix_pass: 'Kiểm tra đạt',
-    post_fix_fail: 'Kiểm tra không đạt',
+    acknowledge: 'Tiếp nhận xử lý',
+    resolve: 'Đã giải quyết',
     close: 'Đóng sự cố',
     cancel: 'Hủy'
 };
@@ -65,15 +56,11 @@ export const WORKREQUEST_ACTION_LABELS = {
     cancel: 'Hủy'
 };
 
-// Status labels - hiển thị tên trạng thái
+// Status labels - Simplified statuses
 export const INCIDENT_STATUS_LABELS = {
     reported: 'Đã báo cáo',
-    triaged: 'Đã phân loại',
-    out_of_service: 'Ngừng hoạt động',
-    assigned: 'Đã phân công',
     in_progress: 'Đang xử lý',
-    post_fix_check: 'Đang kiểm tra',
-    resolved: 'Đã xử lý',
+    resolved: 'Đã giải quyết',
     closed: 'Đã đóng',
     cancelled: 'Đã hủy'
 };
