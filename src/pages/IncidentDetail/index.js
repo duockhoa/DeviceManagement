@@ -21,7 +21,6 @@ import BuildIcon from '@mui/icons-material/Build';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import incidentsService from '../../services/incidentsService';
 import Loading from '../../component/Loading';
-import ActionToolbar from '../../components/common/ActionToolbar';
 import ActionDialog from '../../components/common/ActionDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import StatusTimeline from '../../components/common/StatusTimeline';
@@ -387,15 +386,78 @@ function IncidentDetail() {
             )}
 
             <ActionZone
-                title="Thao tác khác"
+                title="Thảo tác"
                 current_status_label={status.label}
                 next_role_label={nextRoleLabel}
             >
-                <ActionToolbar
-                    entity="incident"
-                    record={incident}
-                    onActionClick={handleActionClick}
-                />
+                {/* Nút đơn giản theo status - dễ hiểu cho người dùng */}
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', width: '100%' }}>
+                    {incident.status === 'reported' && (
+                        <>
+                            <Alert severity="info" sx={{ width: '100%', mb: 2 }}>
+                                <strong>Sự cố mới báo cáo.</strong> Nhấn "Tiếp nhận" để bắt đầu xử lý.
+                            </Alert>
+                            <Button 
+                                variant="contained" 
+                                color="primary" 
+                                size="large"
+                                onClick={() => handleActionClick('acknowledge')}
+                            >
+                                Tiếp nhận xử lý
+                            </Button>
+                        </>
+                    )}
+                    
+                    {incident.status === 'in_progress' && (
+                        <>
+                            <Alert severity="info" sx={{ width: '100%', mb: 2 }}>
+                                <strong>Đang xử lý sự cố.</strong> Nhấn "Đã giải quyết" khi hoàn thành.
+                            </Alert>
+                            <Button 
+                                variant="contained" 
+                                color="success" 
+                                size="large"
+                                onClick={() => handleActionClick('resolve')}
+                            >
+                                Đã giải quyết
+                            </Button>
+                        </>
+                    )}
+                    
+                    {incident.status === 'resolved' && (
+                        <>
+                            <Alert severity="success" sx={{ width: '100%', mb: 2 }}>
+                                <strong>Sự cố đã giải quyết.</strong> Nhấn "Đóng sự cố" để hoàn tất.
+                            </Alert>
+                            <Button 
+                                variant="contained" 
+                                color="primary" 
+                                size="large"
+                                onClick={() => handleActionClick('close')}
+                            >
+                                Đóng sự cố
+                            </Button>
+                        </>
+                    )}
+                    
+                    {incident.status === 'closed' && (
+                        <Alert severity="success" sx={{ width: '100%' }}>
+                            <strong>Sự cố đã đóng.</strong> Hoàn tất toàn bộ quy trình.
+                        </Alert>
+                    )}
+                    
+                    {/* Nút hủy - hiển ở mọi status trừ khi chưa close */}
+                    {incident.status !== 'closed' && incident.status !== 'cancelled' && (
+                        <Button 
+                            variant="outlined" 
+                            color="error" 
+                            size="large"
+                            onClick={() => handleActionClick('cancel')}
+                        >
+                            Hủy sự cố
+                        </Button>
+                    )}
+                </Box>
             </ActionZone>
 
             <Grid container spacing={3}>
@@ -521,7 +583,7 @@ function IncidentDetail() {
                                     />
                                 </Grid>
                                 <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    {/* Old complete/close actions removed - use ActionToolbar above instead */}
+                                    {/* Actions are now in the ActionZone section above */}
                                 </Grid>
                             </Grid>
                         </Box>

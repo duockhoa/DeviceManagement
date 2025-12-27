@@ -37,7 +37,7 @@ const ScheduleMaintenanceDialog = ({ onSubmit }) => {
     const loadTechnicians = async () => {
         try {
             setLoading(true);
-            const response = await userServices.getUsers({ role: 'TECHNICIAN', status: 'active' });
+            const response = await userServices.getUsers({ role: 'TECHNICIAN' });
             setTechnicians(response.data || []);
         } catch (err) {
             console.error('Failed to load technicians:', err);
@@ -97,16 +97,15 @@ const ScheduleMaintenanceDialog = ({ onSubmit }) => {
                     label="Thời gian dự kiến *"
                     value={formData.scheduled_date}
                     onChange={(value) => handleChange('scheduled_date', value)}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            fullWidth
-                            error={!!errors.scheduled_date}
-                            helperText={errors.scheduled_date}
-                            required
-                            sx={{ mb: 2 }}
-                        />
-                    )}
+                    slotProps={{
+                        textField: {
+                            fullWidth: true,
+                            error: !!errors.scheduled_date,
+                            helperText: errors.scheduled_date,
+                            required: true,
+                            sx: { mb: 2 }
+                        }
+                    }}
                     minDateTime={new Date()}
                 />
             </LocalizationProvider>

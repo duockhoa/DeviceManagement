@@ -96,7 +96,11 @@ const IncidentReportsPage = () => {
                                 label="Từ ngày"
                                 value={startDate}
                                 onChange={(newValue) => setStartDate(newValue)}
-                                renderInput={(params) => <TextField {...params} fullWidth />}
+                                slotProps={{
+                                    textField: {
+                                        fullWidth: true
+                                    }
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12} md={4}>
@@ -104,7 +108,11 @@ const IncidentReportsPage = () => {
                                 label="Đến ngày"
                                 value={endDate}
                                 onChange={(newValue) => setEndDate(newValue)}
-                                renderInput={(params) => <TextField {...params} fullWidth />}
+                                slotProps={{
+                                    textField: {
+                                        fullWidth: true
+                                    }
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12} md={4}>

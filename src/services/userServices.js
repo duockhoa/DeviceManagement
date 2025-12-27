@@ -10,7 +10,7 @@ const userServices = {
      */
     getUsers: async (params = {}) => {
         try {
-            const response = await customizeAxios.get('/users', { params });
+            const response = await customizeAxios.get('/rbac/users', { params });
             return response.data;
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -38,7 +38,7 @@ const userServices = {
      * @returns {Promise} Response with technicians array
      */
     getTechnicians: async () => {
-        return await userServices.getUsers({ role: 'TECHNICIAN', status: 'active' });
+        return await userServices.getUsers({ role: 'TECHNICIAN' });
     }
 };
 

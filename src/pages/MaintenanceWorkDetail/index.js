@@ -35,7 +35,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
-import SaveIcon from '@mui/icons-material/Save';
+import BuildIcon from '@mui/icons-material/Build';
 import {
     getWorkOrderById,
     updateChecklistItem,
@@ -46,21 +46,14 @@ import {
     startWorkTask,
     completeWorkTask,
     startMaintenance,
-    saveMaintenanceProgress,
     decideWorkOrder
 } from '../../services/maintenanceWorkService';
 import { scheduleMaintenance, approveMaintenance, submitAcceptance, acceptMaintenance, rejectAcceptance, closeMaintenance, cancelMaintenance } from '../../services/maintenanceService';
-import ActionToolbar from '../../components/common/ActionToolbar';
-import ActionDialog from '../../components/common/ActionDialog';
-import ConfirmDialog from '../../components/common/ConfirmDialog';
 import StatusTimeline from '../../components/common/StatusTimeline';
-import ActionZone from '../../components/common/ActionZone';
-import ScheduleMaintenanceDialog from '../../components/maintenance/ScheduleMaintenanceDialog';
 import SubmitAcceptanceDialog from '../../components/maintenance/SubmitAcceptanceDialog';
-import AcceptanceDialog from '../../components/maintenance/AcceptanceDialog';
-import CancelMaintenanceDialog from '../../components/maintenance/CancelMaintenanceDialog';
 import SystemStatusStepper from '../../components/common/SystemStatusStepper';
 import { WORKORDER_FLOW, NEXT_ROLE_LABEL } from '../../constants/flowMaps';
+import usePermissions from '../../hooks/usePermissions';
 
 function TabPanel({ children, value, index }) {
     return (
@@ -73,10 +66,17 @@ function TabPanel({ children, value, index }) {
 function MaintenanceWorkDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { hasPermission } = usePermissions();
     const [workOrder, setWorkOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [tabValue, setTabValue] = useState(0);
+    
+    // Action dialogs state
+    const [submitAcceptanceDialogOpen, setSubmitAcceptanceDialogOpen] = useState(false);
+    const [acceptanceDialogOpen, setAcceptanceDialogOpen] = useState(false);
+    const [rejectAcceptanceDialogOpen, setRejectAcceptanceDialogOpen] = useState(false);
+    const [closeDialogOpen, setCloseDialogOpen] = useState(false);
     
     // Progress dialog
     const [progressDialogOpen, setProgressDialogOpen] = useState(false);
@@ -96,10 +96,6 @@ function MaintenanceWorkDetail() {
         image_type: 'during',
         description: ''
     });
-    
-    // Save progress dialog
-    const [saveProgressDialogOpen, setSaveProgressDialogOpen] = useState(false);
-    const [saveProgressNotes, setSaveProgressNotes] = useState('');
 
     // Work report dialog
     const [workReportDialogOpen, setWorkReportDialogOpen] = useState(false);
@@ -157,32 +153,11 @@ function MaintenanceWorkDetail() {
         totalWorkTasks
     } = progressStats;
 
-    // Dialog states for new action system
-    const [dialogOpen, setDialogOpen] = useState({
-        approve: false,
-        schedule: false,
-        start: false,
-        submit_acceptance: false,
-        accept: false,
-        reject_acceptance: false,
-        close: false,
-        cancel: false
-    });
-    
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
         severity: 'success'
     });
-    
-    // Universal dialog handlers
-    const handleActionClick = (action) => {
-        setDialogOpen(prev => ({ ...prev, [action]: true }));
-    };
-    
-    const handleDialogClose = (action) => {
-        setDialogOpen(prev => ({ ...prev, [action]: false }));
-    };
     
     const handleActionSuccess = async (message) => {
         try {
@@ -205,103 +180,18 @@ function MaintenanceWorkDetail() {
             severity: 'error'
         });
     };
-    
-    // New action handlers
-    const handleApproveSubmit = async () => {
-        try {
-            await approveMaintenance(id);
-            handleDialogClose('approve');
-            await handleActionSuccess('✅ Đã phê duyệt lệnh bảo trì');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
 
-    const handleScheduleSubmit = async (formData) => {
-        try {
-            await scheduleMaintenance(id, formData);
-            handleDialogClose('schedule');
-            await handleActionSuccess('📅 Đã lập lịch bảo trì');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-    
-    const handleStartSubmit = async () => {
-        try {
-            await startMaintenance(id);
-            handleDialogClose('start');
-            await handleActionSuccess('▶️ Đã bắt đầu bảo trì');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-    
+    // Handler cho Submit Acceptance (technician gửi nghiệm thu)
     const handleSubmitAcceptanceSubmit = async (formData) => {
         try {
             await submitAcceptance(id, formData);
-            handleDialogClose('submit_acceptance');
+            setSubmitAcceptanceDialogOpen(false);
             await handleActionSuccess('📋 Đã gửi nghiệm thu');
         } catch (err) {
             handleActionError(err);
             throw err;
         }
     };
-    
-    const handleAcceptanceSubmit = async (formData) => {
-        try {
-            if (formData.action === 'accept') {
-                await acceptMaintenance(id);
-                handleDialogClose('accept');
-                await handleActionSuccess('✅ Nghiệm thu đạt');
-            } else {
-                await rejectAcceptance(id, { rejection_reason: formData.rejection_reason });
-                handleDialogClose('reject_acceptance');
-                await handleActionSuccess('❌ Yêu cầu làm lại');
-            }
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-
-    const handleCloseSubmit = async () => {
-        try {
-            await closeMaintenance(id);
-            handleDialogClose('close');
-            await handleActionSuccess('✔️ Đã đóng lệnh bảo trì');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-
-    const handleCancelSubmit = async (formData) => {
-        try {
-            await cancelMaintenance(id, formData.cancel_reason);
-            handleDialogClose('cancel');
-            await handleActionSuccess('❌ Đã hủy lệnh bảo trì');
-        } catch (err) {
-            handleActionError(err);
-            throw err;
-        }
-    };
-
-    const canSaveProgress = useMemo(
-        () => (workOrder?.allowed_actions || []).includes('awaiting_approval'),
-        [workOrder]
-    );
-    const canSendForApproval = useMemo(
-        () => (workOrder?.allowed_actions || []).includes('complete'), 
-        [workOrder]
-    );
-    const showCompletionReminder = useMemo(
-        () => canSendForApproval && overallProgress === 100 && workOrder?.status === 'in_progress',
-        [canSendForApproval, overallProgress, workOrder]
-    );
 
     const nextRoleLabel = useMemo(() => NEXT_ROLE_LABEL.WorkOrder[workOrder?.status] || '—', [workOrder]);
     const isReadOnly = useMemo(() => ['completed', 'closed'].includes(workOrder?.status), [workOrder]);
@@ -342,16 +232,16 @@ function MaintenanceWorkDetail() {
             
             // Kiểm tra xem tất cả checklist đã hoàn thành chưa
             const updatedWorkOrder = await getWorkOrderById(id);
-            const completedChecklistItems = updatedWorkOrder?.data?.checklists?.filter((c) => c.is_completed).length || 0;
-            const totalChecklistItems = updatedWorkOrder?.data?.checklists?.length || 0;
+            const completedChecklistItems = updatedWorkOrder?.checklists?.filter((c) => c.is_completed).length || 0;
+            const totalChecklistItems = updatedWorkOrder?.checklists?.length || 0;
             const allChecklistCompleted = totalChecklistItems > 0 && completedChecklistItems === totalChecklistItems;
             
             // Nếu tất cả checklist đã hoàn thành và workOrder đang ở trạng thái in_progress
-            if (allChecklistCompleted && updatedWorkOrder?.data?.status === 'in_progress') {
+            if (allChecklistCompleted && updatedWorkOrder?.status === 'in_progress') {
                 if (window.confirm('Tất cả checklist đã hoàn thành! Bạn có muốn gửi duyệt lệnh bảo trì ngay không?')) {
                     try {
                         await completeWork(id, {
-                            final_notes: updatedWorkOrder?.data?.notes || 'Hoàn thành checklist'
+                            final_notes: updatedWorkOrder?.notes || 'Hoàn thành checklist'
                         });
                         await loadWorkOrder();
                         alert('✅ Lệnh bảo trì đã được gửi duyệt thành công!');
@@ -406,20 +296,6 @@ function MaintenanceWorkDetail() {
                 if (!handleForbidden(err)) {
                     alert('Lỗi khi bắt đầu lệnh bảo trì: ' + (err.response?.data?.message || err.message));
                 }
-            }
-        }
-    };
-
-    const handleSaveProgress = async () => {
-        try {
-            await saveMaintenanceProgress(id, { notes: saveProgressNotes });
-            setSaveProgressDialogOpen(false);
-            setSaveProgressNotes('');
-            loadWorkOrder();
-            alert('Đã lưu tiến độ công việc!');
-        } catch (err) {
-            if (!handleForbidden(err)) {
-                alert('Lỗi khi lưu tiến độ: ' + (err.response?.data?.message || err.message));
             }
         }
     };
@@ -665,47 +541,7 @@ function MaintenanceWorkDetail() {
                 <StatusTimeline statuses={WORKORDER_FLOW} current={workOrder.status} />
             </Paper>
 
-            <ActionZone
-                title="Thao tác"
-                current_status_label={getStatusLabel(workOrder.status)}
-                next_role_label={nextRoleLabel}
-            >
-                {workOrder.status === 'approved' && (
-                    <Alert severity="info" sx={{ mb: 2, width: '100%' }}>
-                        👇 <strong>Bước tiếp theo:</strong> Nhấn nút "Bắt đầu" để bắt đầu thực hiện công việc
-                    </Alert>
-                )}
-                {workOrder.status === 'in_progress' && progressStats.overallProgress === 100 && (
-                    <Alert severity="success" sx={{ mb: 2, width: '100%' }}>
-                        ✅ <strong>Đã hoàn thành:</strong> Nhấn nút "Gửi nghiệm thu" để hoàn tất
-                    </Alert>
-                )}
-                <ActionToolbar
-                    entity="maintenance"
-                    record={workOrder}
-                    onActionClick={handleActionClick}
-                />
-                {showCompletionReminder && (
-                    <Box sx={{ width: '100%' }}>
-                        <Alert severity="warning" sx={{ mt: 1 }}>
-                            Tất cả công việc đã hoàn thành<br />
-                            Lệnh bảo trì chưa được gửi duyệt
-                        </Alert>
-                    </Box>
-                )}
-                {canSaveProgress && (
-                                <Button 
-                                    variant="outlined" 
-                                    startIcon={<ImageIcon />}
-                                    onClick={() => {
-                                        setSaveProgressNotes(workOrder.notes || '');
-                                        setSaveProgressDialogOpen(true);
-                                    }}
-                                >
-                                    Lưu tiến độ
-                                </Button>
-                )}
-            </ActionZone>
+
 
             {/* Main Content */}
             <Grid container spacing={2} sx={{ flexGrow: 1 }}>
@@ -1208,37 +1044,60 @@ function MaintenanceWorkDetail() {
                         {/* Tab 3: Actions */}
                         <TabPanel value={tabValue} index={3}>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2 }}>
-                                <Typography variant="h6" sx={{ mb: 2 }}>
-                                    Các thao tác
+                                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.4rem' }}>
+                                    Thao tác
                                 </Typography>
-                                <Alert severity="success" sx={{ mb: 1 }}>
-                                    ✅ Thao tác chính nằm ở ActionZone cố định phía trên.<br />
-                                    🎯 Khi hoàn thành tất cả checklist, hệ thống sẽ tự động đề nghị gửi duyệt lệnh.
-                                </Alert>
-                                {canSaveProgress && (
+
+                                {/* Approved - Show Start Button */}
+                                {workOrder.status === 'approved' && (
                                     <Button 
-                                        variant="outlined"
+                                        variant="contained" 
+                                        color="primary" 
                                         size="large"
-                                        startIcon={<SaveIcon />}
-                                        onClick={() => {
-                                            setSaveProgressNotes(workOrder.notes || '');
-                                            setSaveProgressDialogOpen(true);
-                                        }}
-                                        sx={{ justifyContent: 'flex-start', py: 2 }}
+                                        onClick={handleStartMaintenance}
+                                        startIcon={<BuildIcon />}
+                                        sx={{ py: 2 }}
                                     >
-                                        Lưu tiến độ công việc
+                                        Bắt đầu thực hiện
                                     </Button>
                                 )}
-                                {overallProgress < 100 && (
-                                    <Alert severity="warning" sx={{ mt: 2 }}>
-                                        Vui lòng hoàn thành tất cả công việc ({overallProgress}% hoàn thành) trước khi báo cáo hoàn thành.
-                                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
-                                            • Checklist: {completedChecklistItems}/{totalChecklistItems} mục ({checklistProgress}%)
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ display: 'block' }}>
-                                            • Công việc khác: {completedWorkTasks}/{totalWorkTasks} việc
-                                        </Typography>
-                                    </Alert>
+
+                                {/* In Progress - Show Submit Acceptance when 100% */}
+                                {workOrder.status === 'in_progress' && (
+                                    <>
+                                        {overallProgress === 100 ? (
+                                            <Button 
+                                                variant="contained" 
+                                                color="success" 
+                                                size="large"
+                                                onClick={() => setSubmitAcceptanceDialogOpen(true)}
+                                                sx={{ py: 2 }}
+                                            >
+                                                Gửi nghiệm thu
+                                            </Button>
+                                        ) : (
+                                            <Alert severity="info">
+                                                <strong>Tiến độ: {overallProgress}%</strong><br />
+                                                • Checklist: {completedChecklistItems}/{totalChecklistItems} mục<br />
+                                                • Công việc: {completedWorkTasks}/{totalWorkTasks} việc<br /><br />
+                                                Hoàn thành tất cả để gửi nghiệm thu.
+                                            </Alert>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Other statuses - Show info */}
+                                {workOrder.status === 'draft' && (
+                                    <Alert severity="info">Lệnh đang ở trạng thái nháp. Chờ quản lý phê duyệt.</Alert>
+                                )}
+                                {workOrder.status === 'awaiting_acceptance' && (
+                                    <Alert severity="warning">Đã gửi nghiệm thu. Chờ quản lý kiểm tra.</Alert>
+                                )}
+                                {workOrder.status === 'accepted' && (
+                                    <Alert severity="success">✓ Nghiệm thu đạt! Chờ quản lý đóng lệnh.</Alert>
+                                )}
+                                {workOrder.status === 'closed' && (
+                                    <Alert severity="success">✓ Lệnh đã đóng. Hoàn thành!</Alert>
                                 )}
                             </Box>
                         </TabPanel>
@@ -1299,35 +1158,8 @@ function MaintenanceWorkDetail() {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setProgressDialogOpen(false)}>Hủy</Button>
-                    <Button onClick={handleAddProgress} variant="contained" startIcon={<SaveIcon />}>
+                    <Button onClick={handleAddProgress} variant="contained">
                         Lưu
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Save Progress Dialog */}
-            <Dialog open={saveProgressDialogOpen} onClose={() => setSaveProgressDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Lưu tiến độ công việc</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2 }}>
-                        <Alert severity="info" sx={{ mb: 2 }}>
-                            Lưu ghi chú về tiến độ hiện tại. Dữ liệu checklist và work tasks sẽ được tự động lưu.
-                        </Alert>
-                        <TextField
-                            label="Ghi chú tiến độ"
-                            multiline
-                            rows={6}
-                            fullWidth
-                            value={saveProgressNotes}
-                            onChange={(e) => setSaveProgressNotes(e.target.value)}
-                            placeholder="Nhập ghi chú về công việc đã làm, vấn đề gặp phải, kế hoạch tiếp theo..."
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setSaveProgressDialogOpen(false)}>Hủy</Button>
-                    <Button onClick={handleSaveProgress} variant="contained" startIcon={<SaveIcon />}>
-                        Lưu tiến độ
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -1633,80 +1465,14 @@ function MaintenanceWorkDetail() {
             </Dialog>
             
             {/* New Action Dialogs */}
-            <ConfirmDialog
-                open={dialogOpen.approve}
-                onClose={() => handleDialogClose('approve')}
-                onConfirm={handleApproveSubmit}
-                title="Phê duyệt lệnh bảo trì"
-                message="Xác nhận phê duyệt lệnh bảo trì này?"
-                icon="✅"
+            {/* Dialog cho kỹ thuật viên gửi nghiệm thu */}
+            <SubmitAcceptanceDialog 
+                open={submitAcceptanceDialogOpen}
+                onClose={() => setSubmitAcceptanceDialogOpen(false)}
+                maintenance={workOrder} 
+                onSubmit={handleSubmitAcceptanceSubmit} 
             />
 
-            <ActionDialog
-                open={dialogOpen.schedule}
-                onClose={() => handleDialogClose('schedule')}
-                title="Lập lịch bảo trì"
-                icon="📅"
-                onSubmit={handleScheduleSubmit}
-            >
-                <ScheduleMaintenanceDialog onSubmit={handleScheduleSubmit} />
-            </ActionDialog>
-            
-            <ConfirmDialog
-                open={dialogOpen.start}
-                onClose={() => handleDialogClose('start')}
-                onConfirm={handleStartSubmit}
-                title="Bắt đầu bảo trì"
-                message="Xác nhận bắt đầu thực hiện bảo trì?"
-                severity="info"
-            />
-            
-            <ActionDialog
-                open={dialogOpen.submit_acceptance}
-                onClose={() => handleDialogClose('submit_acceptance')}
-                title="Gửi nghiệm thu"
-                icon="📋"
-                onSubmit={handleSubmitAcceptanceSubmit}
-            >
-                <SubmitAcceptanceDialog maintenance={workOrder} onSubmit={handleSubmitAcceptanceSubmit} />
-            </ActionDialog>
-            
-            <ActionDialog
-                open={dialogOpen.accept || dialogOpen.reject_acceptance}
-                onClose={() => {
-                    handleDialogClose('accept');
-                    handleDialogClose('reject_acceptance');
-                }}
-                title="Nghiệm thu"
-                icon="✓"
-                onSubmit={handleAcceptanceSubmit}
-            >
-                <AcceptanceDialog maintenance={workOrder} onSubmit={handleAcceptanceSubmit} />
-            </ActionDialog>
-            
-            <ConfirmDialog
-                open={dialogOpen.close}
-                onClose={() => handleDialogClose('close')}
-                onConfirm={handleCloseSubmit}
-                title="Đóng lệnh bảo trì"
-                message="Xác nhận đóng lệnh bảo trì này?"
-                severity="success"
-                confirmText="Xác nhận đóng"
-            />
-            
-            <ActionDialog
-                open={dialogOpen.cancel}
-                onClose={() => handleDialogClose('cancel')}
-                title="Hủy lệnh bảo trì"
-                icon="❌"
-                onSubmit={handleCancelSubmit}
-                confirmText="Xác nhận hủy"
-                isDestructive
-            >
-                <CancelMaintenanceDialog onSubmit={handleCancelSubmit} />
-            </ActionDialog>
-            
-            {/* Snackbar for notifications */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}
