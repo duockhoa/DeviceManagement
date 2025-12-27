@@ -9,9 +9,7 @@ export const INCIDENT_FLOW = [
 
 export const WORKORDER_FLOW = [
     'draft',
-    'pending', 
     'approved', 
-    'scheduled', 
     'in_progress', 
     'awaiting_acceptance', 
     'accepted', 
@@ -36,9 +34,7 @@ export const INCIDENT_ACTION_LABELS = {
 };
 
 export const MAINTENANCE_ACTION_LABELS = {
-    submit: 'Gửi phê duyệt',
     approve: 'Phê duyệt',
-    schedule: 'Lập lịch',
     start: 'Bắt đầu',
     submit_acceptance: 'Gửi nghiệm thu',
     accept: 'Nghiệm thu đạt',
@@ -67,9 +63,7 @@ export const INCIDENT_STATUS_LABELS = {
 
 export const MAINTENANCE_STATUS_LABELS = {
     draft: 'Nháp',
-    pending: 'Chờ duyệt',
     approved: 'Đã duyệt',
-    scheduled: 'Đã lập lịch',
     in_progress: 'Đang thực hiện',
     awaiting_acceptance: 'Chờ nghiệm thu',
     accepted: 'Đã nghiệm thu',

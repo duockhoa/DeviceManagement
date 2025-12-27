@@ -35,7 +35,8 @@ function Maintenance() {
             <Box sx={{
                 flex: 1,
                 backgroundColor: '#fff',
-                height: '100%',
+                height: '100vh',
+                width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 p: 1

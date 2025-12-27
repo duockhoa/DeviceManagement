@@ -220,7 +220,7 @@ function DashBoard() {
 
     const totalDevices = assets.length;
     const activeDevices = assets.filter((item) => item.status === 'active').length;
-    const maintenanceOpen = maintenances.filter((m) => ['pending', 'in_progress', 'awaiting_approval'].includes(m.status)).length;
+    const maintenanceOpen = maintenances.filter((m) => ['draft', 'approved', 'in_progress', 'awaiting_acceptance'].includes(m.status)).length;
     const deviceStats = useMemo(() => {
         const palette = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00897b', '#c2185b'];
         const counts = {};

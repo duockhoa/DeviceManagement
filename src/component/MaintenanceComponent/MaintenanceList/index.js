@@ -45,7 +45,7 @@ const MaintenanceList = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         reloadData: async () => {
             try {
-                console.log('🔄 Reloading all maintenance...');
+                console.log('[RELOAD] Reloading all maintenance...');
                 await dispatch(fetchMaintenance()).unwrap();
                 console.log('All maintenance reloaded');
             } catch (error) {

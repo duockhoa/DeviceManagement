@@ -49,7 +49,7 @@ import {
     saveMaintenanceProgress,
     decideWorkOrder
 } from '../../services/maintenanceWorkService';
-import { scheduleMaintenance, submitAcceptance, acceptMaintenance, rejectAcceptance, closeMaintenance, cancelMaintenance } from '../../services/maintenanceService';
+import { scheduleMaintenance, approveMaintenance, submitAcceptance, acceptMaintenance, rejectAcceptance, closeMaintenance, cancelMaintenance } from '../../services/maintenanceService';
 import ActionToolbar from '../../components/common/ActionToolbar';
 import ActionDialog from '../../components/common/ActionDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -159,6 +159,7 @@ function MaintenanceWorkDetail() {
 
     // Dialog states for new action system
     const [dialogOpen, setDialogOpen] = useState({
+        approve: false,
         schedule: false,
         start: false,
         submit_acceptance: false,
@@ -206,6 +207,17 @@ function MaintenanceWorkDetail() {
     };
     
     // New action handlers
+    const handleApproveSubmit = async () => {
+        try {
+            await approveMaintenance(id);
+            handleDialogClose('approve');
+            await handleActionSuccess('✅ Đã phê duyệt lệnh bảo trì');
+        } catch (err) {
+            handleActionError(err);
+            throw err;
+        }
+    };
+
     const handleScheduleSubmit = async (formData) => {
         try {
             await scheduleMaintenance(id, formData);
@@ -658,9 +670,14 @@ function MaintenanceWorkDetail() {
                 current_status_label={getStatusLabel(workOrder.status)}
                 next_role_label={nextRoleLabel}
             >
-                {(workOrder.status === 'pending' || workOrder.status === 'scheduled' || workOrder.status === 'awaiting_approval') && (
-                    <Alert severity="warning" sx={{ mb: 2, width: '100%' }}>
-                        👇 <strong>Bước tiếp theo:</strong> Nhấn nút "Bắt đầu bảo trì" bên dưới để bắt đầu làm việc
+                {workOrder.status === 'approved' && (
+                    <Alert severity="info" sx={{ mb: 2, width: '100%' }}>
+                        👇 <strong>Bước tiếp theo:</strong> Nhấn nút "Bắt đầu" để bắt đầu thực hiện công việc
+                    </Alert>
+                )}
+                {workOrder.status === 'in_progress' && progressStats.overallProgress === 100 && (
+                    <Alert severity="success" sx={{ mb: 2, width: '100%' }}>
+                        ✅ <strong>Đã hoàn thành:</strong> Nhấn nút "Gửi nghiệm thu" để hoàn tất
                     </Alert>
                 )}
                 <ActionToolbar
@@ -869,10 +886,15 @@ function MaintenanceWorkDetail() {
 
                         {/* Tab 0: Checklist */}
                         <TabPanel value={tabValue} index={0}>
-                            {workOrder.status === 'pending' || workOrder.status === 'scheduled' || workOrder.status === 'awaiting_approval' ? (
+                            {workOrder.status === 'draft' ? (
                                 <Alert severity="info" sx={{ mb: 2 }}>
-                                    ⚠️ Lệnh bảo trì chưa được bắt đầu.<br />
-                                    👉 Vui lòng nhấn nút <strong>"Bắt đầu bảo trì"</strong> ở khu vực <strong>"Thao tác"</strong> phía trên để bắt đầu làm việc.
+                                    📋 Lệnh bảo trì đang ở trạng thái nháp.<br />
+                                    👉 Chờ quản lý phê duyệt để bắt đầu công việc.
+                                </Alert>
+                            ) : workOrder.status === 'approved' ? (
+                                <Alert severity="warning" sx={{ mb: 2 }}>
+                                    ⏳ Lệnh đã được duyệt.<br />
+                                    👉 Vui lòng nhấn nút <strong>"Bắt đầu"</strong> ở khu vực <strong>"Thao tác"</strong> phía trên để bắt đầu làm việc.
                                 </Alert>
                             ) : null}
                             {workOrder.checklists && workOrder.checklists.length > 0 ? (
@@ -948,10 +970,13 @@ function MaintenanceWorkDetail() {
 
                         {/* Tab 1: Work Tasks */}
                         <TabPanel value={tabValue} index={1}>
-                            {workOrder.status === 'pending' || workOrder.status === 'scheduled' || workOrder.status === 'awaiting_approval' ? (
+                            {workOrder.status === 'draft' ? (
                                 <Alert severity="info" sx={{ mb: 2 }}>
-                                    ⚠️ Lệnh bảo trì chưa được bắt đầu.<br />
-                                    👉 Vui lòng nhấn nút <strong>"Bắt đầu bảo trì"</strong> ở khu vực <strong>"Thao tác"</strong> phía trên để bắt đầu làm việc.
+                                    📋 Lệnh bảo trì đang ở trạng thái nháp. Chờ quản lý phê duyệt.
+                                </Alert>
+                            ) : workOrder.status === 'approved' ? (
+                                <Alert severity="warning" sx={{ mb: 2 }}>
+                                    ⏳ Lệnh đã được duyệt. Nhấn <strong>"Bắt đầu"</strong> để bắt đầu làm việc.
                                 </Alert>
                             ) : null}
                             {workOrder.workTasks && workOrder.workTasks.length > 0 ? (
@@ -1608,6 +1633,15 @@ function MaintenanceWorkDetail() {
             </Dialog>
             
             {/* New Action Dialogs */}
+            <ConfirmDialog
+                open={dialogOpen.approve}
+                onClose={() => handleDialogClose('approve')}
+                onConfirm={handleApproveSubmit}
+                title="Phê duyệt lệnh bảo trì"
+                message="Xác nhận phê duyệt lệnh bảo trì này?"
+                icon="✅"
+            />
+
             <ActionDialog
                 open={dialogOpen.schedule}
                 onClose={() => handleDialogClose('schedule')}

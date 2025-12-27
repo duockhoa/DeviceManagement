@@ -240,8 +240,8 @@ function MaintenanceDetail() {
                     </Stack>
                 </Box>
 
-                {/* Nút phê duyệt - hiện khi status là pending hoặc awaiting_approval VÀ user có quyền approve */}
-                {(maintenanceData.status === 'pending' || maintenanceData.status === 'awaiting_approval') && hasPermission('maintenance.approve') && (
+                {/* Nút phê duyệt - hiện khi status là draft VÀ user có quyền approve */}
+                {maintenanceData.status === 'draft' && hasPermission('maintenance.approve') && (
                     <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                         <Button
                             variant="contained"

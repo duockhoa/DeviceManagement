@@ -190,7 +190,7 @@ function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
         // Load mechanical electrical staff
         const loadMechanicalStaff = async () => {
             try {
-                console.log('🔄 Loading mechanical electrical staff...');
+                console.log('[LOAD] Loading mechanical electrical staff...');
                 const staff = await getMechanicalElectricalTechniciansService();
                 console.log('Loaded staff:', staff);
                 setMechanicalStaff(staff || []);
@@ -385,7 +385,7 @@ function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
         if (field === 'asset_id' && value) {
             try {
                 const assetConsumablesData = await getAssetConsumables(value);
-                console.log('🔧 Asset consumables loaded:', assetConsumablesData);
+                console.log('[ASSET] Asset consumables loaded:', assetConsumablesData);
                 
                 // Lưu vào state để dùng cho dropdown
                 setAssetConsumables(assetConsumablesData || []);
@@ -589,7 +589,7 @@ function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
                 scheduled_date: new Date(formData.scheduled_date).toISOString(),
                 estimated_duration: parseInt(formData.estimated_duration),
                 estimated_cost: estimatedCost > 0 ? estimatedCost : null,
-                status: 'pending',
+                status: 'draft',
                 // Convert spare_parts array to JSON string for storage
                 spare_parts: JSON.stringify(formData.spare_parts),
                 // Filter valid consumables and add default consumable_category_id if using asset_consumable
@@ -620,7 +620,7 @@ function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
                         task_type: 'cleaning',
                         description: 'Vệ sinh thiết bị',
                         assigned_to: defaultTasks.cleaning.assignedTo,
-                        status: 'pending',
+                        status: 'draft',
                         order_index: 0
                     }] : []),
                     ...(defaultTasks.inspection.checked ? [{
@@ -628,7 +628,7 @@ function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
                         task_type: 'inspection',
                         description: 'Kiểm tra tình trạng thiết bị',
                         assigned_to: defaultTasks.inspection.assignedTo,
-                        status: 'pending',
+                        status: 'draft',
                         order_index: 1
                     }] : []),
                     ...(defaultTasks.maintenance.checked ? [{
@@ -636,7 +636,7 @@ function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
                         task_type: 'maintenance',
                         description: 'Bảo trì thiết bị',
                         assigned_to: defaultTasks.maintenance.assignedTo,
-                        status: 'pending',
+                        status: 'draft',
                         order_index: 2
                     }] : []),
                     // Công việc tùy chỉnh
@@ -646,7 +646,7 @@ function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
                         description: task.description || null,
                         assigned_to: task.assigned_to || [],
                         estimated_hours: task.estimated_hours || null,
-                        status: 'pending',
+                        status: 'draft',
                         priority: task.priority || 'medium',
                         order_index: 3 + index
                     }))
@@ -718,7 +718,7 @@ function AddMaintenanceForm({ handleClose, onReload, incidentData }) {
             assigned_to: [], // Array để chọn nhiều người
             estimated_hours: '',
             priority: 'medium',
-            status: 'pending'
+            status: 'draft'
         }]);
     };
 

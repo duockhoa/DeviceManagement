@@ -57,17 +57,17 @@ function MaintenanceReport() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        console.log('🚀 MaintenanceReport mounted, fetching data...');
+        console.log('[MOUNT] MaintenanceReport mounted, fetching data...');
         fetchReportData();
     }, [period, selectedMonth, selectedYear]);
 
     const fetchReportData = async () => {
         try {
             setLoading(true);
-            console.log('🔄 Fetching report data... period:', period);
+            console.log('[FETCH] Fetching report data... period:', period);
             
             // Lấy báo cáo tổng hợp với tháng/năm được chọn
-            console.log('📊 Calling API: /maintenance/reports/summary');
+            console.log('[API] Calling API: /maintenance/reports/summary');
             const summaryRes = await customAxios.get(`/maintenance/reports/summary?period=${period}&month=${selectedMonth}&year=${selectedYear}`);
             console.log('Summary response:', summaryRes.data);
             setSummaryData(summaryRes.data.data);
